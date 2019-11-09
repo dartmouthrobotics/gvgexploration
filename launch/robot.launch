@@ -1,0 +1,19 @@
+<!-- Robot nodes. -->
+<launch>
+  <arg name="robot_name"/>
+ <arg name="robot_type"/>
+ <arg name="base_stations" default=''/>
+ <arg name="frontier_robots" default=''/>
+ <arg name="relay_robots" default=''/>
+  <group ns="$(arg robot_name)">
+    <node pkg="gvgexploration" type="robot.py" name="node$(arg robot_name)" >
+            <param name="robot_id" value="$(arg robot_name)"/>
+            <param name="robot_type" value="$(arg robot_type)"/>
+            <param name="base_stations" value="$(arg base_stations)"/>
+            <param name="frontier_robots" value="$(arg frontier_robots)"/>
+            <param name="relay_robots" value="$(arg relay_robots)"/>
+<!--             <remap from="received_data_in" to="/roscbt/robot_$(arg robot_name)/received_data" />-->
+<!--             <remap from="rendezvous_points_in" to="/roscbt/robot_$(arg robot_name)/rendezvous" />-->
+    </node>
+  </group>
+</launch>

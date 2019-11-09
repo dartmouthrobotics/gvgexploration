@@ -1,0 +1,61 @@
+include "p3at.inc"
+include "floorplan.inc"
+
+name                    "Navigation-2D Multi-Robot Tutorial"
+interval_sim            10
+quit_time                 0
+resolution                0.025
+show_clock                0
+show_clock_interval     100
+threads                 6
+
+# Load an environment bitmap
+floorplan
+(
+  name "tutorial"
+  bitmap "autolab_fill.png"
+  size [68.000 60.000 1.000]
+  pose [0.000 0.000 0.000 0.000]
+)
+
+# Put  robots into the world
+pioneer3at
+(
+  name "robot1"
+  pose [0.000 -1.000 0.000 0.000]
+)
+
+# Put two robots into the world
+pioneer3at
+(
+  name "robot2"
+  pose [0.000 -2.000 0.000 0.000]
+)
+
+# Put two robots into the world
+pioneer3at
+(
+  name "robot3"
+  pose [-2.000 -1.000 0.000 180.000]
+)
+
+# Put two robots into the world
+pioneer3at
+(
+  name "robot4"
+  pose [-2.000 -2.000 0.000 180.000]
+)
+
+# Put two robots into the world
+pioneer3at
+(
+  name "robot5"
+  pose [0.000 -4.000 0.000 270.000]
+)
+
+# Put two robots into the world
+pioneer3at
+(
+  name "robot6"
+  pose [-2.000 -4.000 0.000 270.000]
+)

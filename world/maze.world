@@ -1,0 +1,151 @@
+include "turtlebot.inc"
+
+define floorplan model
+(
+  # sombre, sensible, artistic
+  color "gray30"
+
+  # most maps will need a bounding box
+  boundary 1
+
+  gui_nose 0
+  gui_grid 0
+  gui_outline 0
+  gripper_return 0
+  fiducial_return 0
+  laser_return 1
+)
+
+resolution 0.02
+interval_sim 100  # simulation timestep in milliseconds
+
+window
+(
+  size [ 600.0 700.0 ]
+  center [ 0.0 0.0 ]
+  rotate [ 0.0 0.0 ]
+  scale 60
+)
+
+floorplan
+(
+  name "maze"
+  bitmap "maze.png"
+  size [ 10.0 10.0 2.0 ]
+  pose [  5.0  5.0 0.0 0.0 ]
+)
+
+# throw in a robot
+turtlebot
+(
+  pose [ 0.0 10.0 0.0 0.0 ]
+  name "base_station"
+  color "red"
+)
+
+turtlebot
+(
+  pose [ 0.0 11.0 0.0 0.0 ]
+  name "rr_1"
+  color "blue"
+)
+
+turtlebot
+(
+  pose [ 0.0 15.0 0.0 0.0 ]
+  name "rr_2"
+  color "blue"
+)
+
+
+turtlebot
+(
+  pose [ 0.0 9.0 0.0 0.0 ]
+  name "rr_3"
+  color "blue"
+)
+
+turtlebot
+(
+  pose [ 0.0 5.0 0.0 0.0 ]
+  name "rr_4"
+  color "blue"
+)
+
+turtlebot
+(
+  pose [ 0.0 12.0 0.0 0.0 ]
+  name "fr_11"
+  color "black"
+)
+
+turtlebot
+(
+  pose [ 0.0 13.0 0.0 0.0 ]
+  name "fr_12"
+  color "black"
+)
+
+turtlebot
+(
+  pose [ 0.0 14.0 0.0 0.0 ]
+  name "fr_13"
+  color "black"
+)
+
+
+turtlebot
+(
+  pose [ 0.0 16.0 0.0 0.0 ]
+  name "fr_21"
+  color "black"
+)
+turtlebot
+(
+  pose [ 0.0 17.0 0.0 0.0 ]
+  name "fr_22"
+  color "black"
+)
+turtlebot
+(
+  pose [ 0.0 18.0 0.0 0.0 ]
+  name "fr_23"
+  color "black"
+)
+turtlebot
+(
+  pose [ 0.0 8.0 0.0 0.0 ]
+  name "fr_31"
+  color "black"
+)
+turtlebot
+(
+  pose [ 0.0 7.0 0.0 0.0 ]
+  name "fr_32"
+  color "black"
+)
+turtlebot
+(
+  pose [ 0.0 6.0 0.0 0.0 ]
+  name "fr_33"
+  color "black"
+)
+
+turtlebot
+(
+  pose [ 0.0 4.0 0.0 0.0 ]
+  name "fr_41"
+  color "black"
+)
+turtlebot
+(
+  pose [ 0.0 3.0 0.0 0.0 ]
+  name "fr_42"
+  color "black"
+)
+turtlebot
+(
+  pose [ 0.0 2.0 0.0 0.0 ]
+  name "fr_43"
+  color "black"
+)
