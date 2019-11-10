@@ -19,7 +19,7 @@ from std_srvs.srv import Trigger
 from time import sleep
 from threading import Thread, Lock
 import copy
-
+from os import path
 import tf
 import pickle
 import os
@@ -47,7 +47,8 @@ LOST = 9  # An action client can determine that a goal is LOST. This should not 
 START_SCAN = '1'
 STOP_SCAN = '0'
 MAX_ATTEMPTS = 2
-MIN_SIGNAL_STRENGTH = -1*65.0
+MIN_SIGNAL_STRENGTH = -1 * 65.0
+
 
 class Robot:
     def __init__(self, robot_id, robot_type=0, base_stations=[], relay_robots=[], frontier_robots=[]):
@@ -136,13 +137,13 @@ class Robot:
         r = rospy.Rate(0.1)
         self.clear_data()
         while not rospy.is_shutdown():
-            try:
+            # try:
                 if self.is_exploring:
                     self.check_data_sharing_status()
                 r.sleep()
-            except Exception as e:
-                rospy.logerr('Error: {}'.format(e))
-                break
+            # except Exception as e:
+            #     rospy.logerr('Error: {}'.format(e))
+            #     break
 
     def callback_rendezvous_points(self, data):
         if int(data.header.frame_id) < int(self.robot_id):
@@ -164,6 +165,8 @@ class Robot:
                 self.total_exploration_time = data.exploration_time
                 self.move_attempt = 0
                 self.move_robot_to_goal(self.frontier_point, direction)
+                self.save_data([{'time': rospy.Time.now().secs, 'pose': robot_pose, 'frontier': new_point}],
+                               'plots/frontiers_{}.pickle'.format(self.robot_id))
                 rospy.logerr("Robot {} going to frontier: {}".format(self.robot_id, self.frontier_point))
             else:
                 rospy.logerr("Robot {} No frontier to go to...".format(self.robot_id))
@@ -211,15 +214,19 @@ class Robot:
 
     def check_data_sharing_status(self):
         robot_pose = self.get_robot_pose()
-        vertext_dict = self.graph_processor.get_close_ridge(robot_pose)
+        time_stamp = rospy.Time.now().secs
+        vertext_dict = self.graph_processor.get_close_ridge(robot_pose,self.robot_id)
+        rospy.logerr("Common edges: {}".format(vertext_dict))
         self.vertex_descriptions.update(vertext_dict)
         if self.vertex_descriptions:
             intersections = self.graph_processor.process_decision(self.vertex_descriptions)
             if intersections and self.signal_strength:
-                most_recent_signals=self.signal_strength[max(list(self.signal_strength))]
+                most_recent_signals = self.signal_strength[max(list(self.signal_strength))]
                 for signal in most_recent_signals:
-                    rospy.logerr("Robot {} sending data to Robot {}".format(self.robot_id,signal[0]))
+                    rospy.logerr("Robot {} sending data to Robot {}".format(self.robot_id, signal[0]))
                     self.push_messages_to_receiver([str(signal[0])])
+                self.save_data([{'time': time_stamp, 'pose': robot_pose, 'intersections': intersections}],
+                               'plots/interconnections_{}.pickle'.format(self.robot_id))
 
     def move_robot_to_goal(self, goal, direction=1):
         id_val = "robot_{}_{}_{}".format(self.robot_id, self.goal_count, direction)
@@ -263,6 +270,7 @@ class Robot:
         for rs in signals:
             robots.append([rs.robot_id, rs.rssi])
         self.signal_strength[time_stamp] = robots
+        self.save_data([{'time': time_stamp, 'devices': robots}], 'plots/signal_strengths_{}.pickle'.format(self.robot_id))
 
     def move_result_callback(self, data):
         id_0 = "robot_{}_{}_{}".format(self.robot_id, self.goal_count - 1, TO_FRONTIER)
@@ -315,7 +323,7 @@ class Robot:
                 rospy.logerr("Robot {}: Computing frontier points...".format(self.robot_id))
                 robot_pose = self.get_robot_pose()
                 rounded_pose = (math.floor(robot_pose[0]), math.floor(robot_pose[1]))
-                frontier_points = self.graph_processor.get_frontiers(rounded_pose)
+                frontier_points = self.graph_processor.get_frontiers(self.robot_id,rounded_pose,len(self.candidate_robots)+1)
                 if frontier_points:
                     self.publish_rendezvous_points(frontier_points, self.candidate_robots, direction=TO_FRONTIER)
                     optimal_points = self.get_available_points(frontier_points)
@@ -327,6 +335,7 @@ class Robot:
                         self.frontier_point = new_point
                         self.move_attempt = 0
                         self.move_robot_to_goal(new_point, TO_FRONTIER)
+                        self.save_data([{'time': rospy.Time.now().secs, 'pose': robot_pose,'frontier': new_point}],'plots/frontiers_{}.pickle'.format(self.robot_id))
                         rospy.logerr("Robot {}: Moving to new frontier".format(self.robot_id))
                     else:
                         rospy.logerr("Robot {}: No valid frontier points".format(self.robot_id))
@@ -513,6 +522,27 @@ class Robot:
         elif a <= 0 < b:  # 4th Quad
             rel_angle = math.radians(270) + rel_angle
         return rel_angle
+
+    def save_data(self, data, file_name):
+        saved_data = []
+        if not path.exists(file_name):
+            f = open(file_name, "wb+")
+            f.close()
+        else:
+            saved_data = self.load_data_from_file(file_name)
+        saved_data += [data]
+        with open(file_name, 'wb') as fp:
+            pickle.dump(saved_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load_data_from_file(self, file_name):
+        data_dict = []
+        if path.exists(file_name) and path.getsize(file_name) > 0:
+            with open(file_name, 'rb') as fp:
+                try:
+                    data_dict = pickle.load(fp)
+                except Exception as e:
+                    rospy.logerr("error: {}".format(e))
+        return data_dict
 
 
 if __name__ == "__main__":

@@ -1,4 +1,7 @@
 #!/usr/bin/python
+import pickle
+from os import path
+
 import rospy
 import tf
 import math
@@ -308,108 +311,45 @@ class roscbt:
                         data['distance_{}_{}'.format(sid, rid)] = distance
                         data['sent_data_{}_{}'.format(sid, rid)] = sd
 
-            json_data = json.dumps(data)
-
-            with open('hrm_performance{}_{}.txt'.format(len(self.robot_ids), self.communication_model), 'a+') as fd:
-                fd.write("{}\n".format(json_data))
+            self.save_data([data],'plots/roscbt_performance.pickle')
             self.lasttime_before_performance_calc = current_time
         except Exception as e:
             rospy.logerr("getting error: {}".format(e.message))
         finally:
             self.lock.release()
 
-    '''
-     Determine the points through which the signal is transmitted from the transmitter to the receiver (only considering line of sight)
-    '''
-
-    def compute_signal_path(self, transmitter_id, receiver_id):
-        tx_pose = self.robot_pose[transmitter_id]
-        rx_pose = self.robot_pose[receiver_id]
-        x1 = tx_pose.x
-        y1 = tx_pose.y
-
-        x2 = rx_pose.x
-        y2 = rx_pose.y
-        way_points = []
-        dy = y2 - y1
-        dx = x2 - y2
-        m = dy / dx
-        if m > 1:
-            x1 = rx_pose.y
-            y1 = rx_pose.x
-            x2 = rx_pose.y
-            y2 = rx_pose.x
-
-            dx = x1 - x2
-            if dx < 0:
-                points = self.bresenham_path(x1, y1, x2, y2)
-            else:
-                points = self.bresenham_path(x2, y2, x1, y1)
-
-            # flip the raster so that bresenham algorithm can work normally. PS: remember to flip the resulting
-            # coordinates
-            way_points += [(v[1], v[0]) for v in points]
-        elif m < 1:
-            dx = x1 - x2
-            if dx < 0:
-                way_points += self.bresenham_path(x1, y1, x2, y2)
-            else:
-                # reverse the points for the sake of bresenham algorithm
-                way_points += self.bresenham_path(x2, y2, x1, y1)
-
+    def save_data(self, data, file_name):
+        saved_data = []
+        if not path.exists(file_name):
+            f = open(file_name, "wb+")
+            f.close()
         else:
-            # just pick all points along the straight line since the gradient is 1
-            dx = x1 - x2
-            if dx < 0:
-                way_points += [(v, v) for v in range(x1, x2 + 1)]
-            else:
-                way_points += [(v, v) for v in range(x2, x1 + 1)]
+            saved_data = self.load_data_from_file(file_name)
+        saved_data += [data]
+        with open(file_name, 'wb') as fp:
+            pickle.dump(saved_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
-        return way_points
+    def load_data_from_file(self, file_name):
+        data_dict = []
+        if path.exists(file_name) and path.getsize(file_name) > 0:
+            with open(file_name, 'rb') as fp:
+                try:
+                    data_dict = pickle.load(fp)
+                except Exception as e:
+                    rospy.logerr("error: {}".format(e))
+        return data_dict
 
     '''
-    Get all the points traversed by a line that connects 2 points
+      computes euclidean distance between two cartesian coordinates
     '''
-
-    def bresenham_path(self, x1, y1, x2, y2):
-        points = []
-
-        x = x1
-        y = y1
-        dx = x2 - x1
-        dy = y2 - y1
-        p = 2 * dx - dy
-        while (x <= x2):
-            points.append((x, y))
-            x += 1
-            if p < 0:
-                p = p + 2 * dy
-            else:
-                p = p + 2 * dy - 2 * dx
-                y += 1
-        return points
-
-    # computes euclidean distance between two cartesian coordinates
     def robots_inrange(self, loc1, loc2, robot1_range, robot2_range):
         distance = math.floor(math.sqrt(((loc1[0] - loc2[0]) ** 2) + ((loc1[1] - loc2[1]) ** 2)))
-        return distance, True #distance <= robot1_range+1 and distance <= robot2_range
+        return distance, True
 
     def get_robot_pose(self, robot_id):
         robot_pose = None
         if int(robot_id) in self.robot_pose:
             robot_pose=self.robot_pose[int(robot_id)]
-        # while not robot_pose:
-        #     try:
-        #         self.listener.waitForTransform("robot_{}/map".format(robot_id), "robot_{}/base_link".format(robot_id),
-        #                                        rospy.Time(), rospy.Duration(4.0))
-        #         (robot_pose_val, rot) = self.listener.lookupTransform("robot_{}/map".format(robot_id),
-        #                                                               "robot_{}/base_link".format(robot_id),
-        #                                                               rospy.Time(0))
-        #
-        #         robot_pose = (round(robot_pose_val[0], 1), round(robot_pose_val[1], 1))
-        #         sleep(1)
-        #     except:
-        #         pass
 
         return robot_pose
 

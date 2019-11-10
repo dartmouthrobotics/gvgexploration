@@ -1,12 +1,11 @@
 #!/usr/bin/python
-import matplotlib.pyplot as plt
-from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import Pose
+import matplotlib
 
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import rospy
 import math
 import numpy as np
-import copy
 from scipy.spatial import Voronoi, voronoi_plot_2d
 
 """
@@ -23,26 +22,14 @@ OUT_OF_BOUNDS = -2
 
 SMALL = 0.000000000001
 INITIAL_SIZE = 6
-MIN_WIDTH = 0.5
+MIN_WIDTH = 1.0
 PRECISION = 1
-EDGE_LENGTH = MIN_WIDTH / 4.0
+EDGE_LENGTH = MIN_WIDTH  # / 4.0
 SCAN_RADIUS = 0.8
 THETA_SC = 120
 PI = math.pi
 error_margin = 0.01
 range_margin = 0.1
-
-
-class Node:
-    def __init__(self, r):
-        self.u = r[0]
-        self.v = r[1]
-        self.parent = None
-        self.child = None
-        self.neighbors = []
-
-    def __eq__(self, other):
-        return self.v == other.v and self.u == other.u
 
 
 class Graph:
@@ -55,7 +42,7 @@ class Graph:
         self.resolution = None
         self.width = None
         self.height = None
-        self.gvg = None
+        # self.gvg = None
 
     def update_occupacygrid(self, occ_grid):
         resolution = occ_grid.info.resolution
@@ -87,34 +74,12 @@ class Graph:
                 try:
                     if data_val == OCCUPIED and p not in self.obstacles:
                         self.obstacles[p] = neighbors
-                        if p in self.unknowns:
-                            del self.unknowns[p]
-                        if p in self.free_points:
-                            del self.free_points[p]
-                        if not self.gvg:
-                            if self.is_enough_data():
-                                self.gvg = Voronoi(list(self.obstacles), incremental=True)
-                        else:
-                            self.gvg.add_points([p])
 
                     if data_val == UNKNOWN and p not in self.unknowns:
                         self.unknowns[p] = neighbors
-                        if p in self.free_points:
-                            del self.free_points[p]
-                        if p in self.obstacles:
-                            del self.obstacles[p]
-                            if len(self.obstacles) > INITIAL_SIZE:
-                                if self.is_enough_data():
-                                    self.gvg = Voronoi(list(self.obstacles), incremental=True)
+
                     if data_val == FREE and p not in self.free_points:
                         self.free_points[p] = neighbors
-                        if p in self.unknowns:
-                            del self.unknowns[p]
-                        if p in self.obstacles:
-                            del self.obstacles[p]
-                            if len(self.obstacles) > INITIAL_SIZE:
-                                if self.is_enough_data():
-                                    self.gvg = Voronoi(list(self.obstacles), incremental=True)
                 except Exception as e:
                     rospy.loginfo("map update error: {}".format(e))
                     pass
@@ -150,60 +115,43 @@ class Graph:
     # '''
     # Get the points which are closest to the unknown area
     # '''
-    def get_frontiers(self, count):
+    def get_frontiers(self, rid, pose, count):
         frontiers = []
         vor, obstacles, adj_list, edges, ridges = self.compute_hallway_points()
-        xr = [v[0] for v in obstacles]
-        yr = [v[1] for v in obstacles]
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10))
-        voronoi_plot_2d(vor, ax=ax1)
-        ax2.scatter(xr, yr, color='blue', marker='o')
-        # process edges
-        x_pairs, y_pairs = self.process_edges(edges)
-        for i in range(len(x_pairs)):
-            x = x_pairs[i]
-            y = y_pairs[i]
-            ax2.plot(x, y, 'b-')
-
         leaves = [k for k, p in adj_list.items() if len(p) == 1]
-        for p in leaves:
-            ax2.scatter(p[0], p[1], color='red', marker='*')
-
-        frontier_size = {}
-        new_information = {}
-        for leaf in leaves:
-            if leaf in self.free_points:
-                for r in ridges:
-                    P = r[0]
-                    Q = r[1]
-                    if leaf in P and P[1] == leaf:
-                        frontier_size[leaf] = self.W(leaf, Q[0])
-                        area_points = self.area(leaf)
-                        known_points = [p for p in area_points if p not in self.unknowns]
-                        unknown_points = [p for p in area_points if p not in known_points]
-                        full_area = len(area_points) * self.resolution ** 2
-                        known_area = len(known_points) * self.resolution ** 2
-                        new_information[leaf] = full_area - known_area
-                        for p in unknown_points:
-                            ax2.scatter(p[0], p[1], color='purple', marker='*')
-                        for p in known_points:
-                            ax2.scatter(p[0], p[1], color='gray', marker='+')
-
-        plt.savefig('plots/plot_{}.png'.format(rospy.Time.now().secs))
-
-        new_info_copy = copy.deepcopy(new_information)
+        new_information, known_points, unknown_points = self.compute_new_information(ridges, leaves)
         while len(new_information) > 0:
             best_point = max(new_information, key=new_information.get)
             frontiers.append(best_point)
             if len(frontiers) == count:
                 break
             del new_information[best_point]
-
-        if len(frontiers)<count:
+        if len(frontiers) < count:
             frontiers = self.get_closest_unknown_region()
-
-        # rospy.logerr("New Info: {}, Frontier Size: {}, Best positions: {}".format(new_info_copy, frontier_size,frontiers))
+        self.plot_data(rid, pose, leaves, edges, vor, obstacles, known_points, unknown_points)
         return frontiers
+
+    def compute_new_information(self, ridges, leaves):
+        frontier_size = {}
+        new_information = {}
+        known_points = {}
+        unknown_points = {}
+        for leaf in leaves:
+            if leaf in self.free_points:
+                for r in ridges:
+                    P = r[0]
+                    Q = r[1]
+                    if leaf in P:
+                        frontier_size[leaf] = self.W(leaf, Q[0])
+                        area_points = self.area(P, leaf)
+                        ks = [p for p in area_points if p not in self.unknowns]
+                        us = [p for p in area_points if p in self.unknowns]
+                        full_area = len(area_points) * self.resolution ** 2
+                        known_area = len(ks) * self.resolution ** 2
+                        new_information[leaf] = full_area - known_area
+                        known_points[leaf] = ks
+                        unknown_points[leaf] = us
+        return new_information, known_points, unknown_points
 
     def theta(self, p, q):
         dx = q[0] - p[0]
@@ -231,27 +179,32 @@ class Graph:
     def point_is_free(self, pose):
         return pose in self.free_points
 
-    def area(self, point):
+    def area(self, P, point):
+        dx = P[0][0] - P[1][0]
+        dy = P[0][1] - P[1][1]
+        if dx == 0:
+            dx = SMALL
+        orientation = math.atan2(dy, dx)
+
         points = []
         for d in np.arange(0, SCAN_RADIUS, self.resolution):
             distance_points = []
             for theta in range(THETA_SC + 1):
-                x = point[0] + d * np.cos(np.deg2rad(theta))
-                y = point[1] + d * np.sin(np.deg2rad(theta))
+                x = point[0] + d * np.cos(np.deg2rad(theta - orientation))
+                y = point[1] + d * np.sin(np.deg2rad(theta - orientation))
                 p = self.round_point((x, y))
                 distance_points.append(p)
             points += list(set(distance_points))
         return points
 
     def get_closest_unknown_region(self):
-        known_cells=list(self.free_points)
-        frontier_points=[]
+        known_cells = list(self.free_points)
+        frontier_points = []
         for k in known_cells:
-            neighbors=self.free_points[k]
+            neighbors = self.free_points[k]
             if any([p for p in neighbors if p in self.unknowns]):
                 frontier_points.append(k)
         return frontier_points
-
 
     def compute_hallway_points(self):
         obstacles = list(self.obstacles)
@@ -271,15 +224,14 @@ class Graph:
                 if self.round_point(p1) in self.free_points or self.round_point(p2) in self.free_points:
                     q1 = obstacles[ridge_point[0]]
                     q2 = obstacles[ridge_point[1]]
-                    if self.D(q1, q2) >= MIN_WIDTH and self.D(p1, p2) >= EDGE_LENGTH:
+                    if self.D(q1, q2) >= MIN_WIDTH:  # and self.D(p1, p2) >= EDGE_LENGTH:
                         r = self.clean_ridge([(p1, p2), (q1, q2)])
                         hallway_vertices += [r[0]]
                         hallway_edges.append(r)
                         points += list(r[0])
-        adj_list = self.get_adjacency_list(hallway_vertices)
+        adj_list,ridge_dict = self.get_adjacency_list(hallway_vertices)
         final_adj_list, edges = self.create_subgraph(adj_list, list(set(points)))
-
-        return vor, obstacles, adj_list, hallway_vertices, hallway_edges
+        return vor, obstacles, final_adj_list, edges, hallway_edges
 
     def create_subgraph(self, adj_list, nodes):
         trees = {}
@@ -322,8 +274,9 @@ class Graph:
     def round_point(self, p):
         return (round(p[0], PRECISION), round(p[1], PRECISION))
 
-    def get_close_ridge(self, fp):
+    def get_close_ridge(self, fp, rid):
         vor, obstacles, adj_list, edges, ridges = self.compute_hallway_points()
+        leaves = [k for k, p in adj_list.items() if len(p) == 1]
         close_ridges = []
         for r in ridges:
             p1 = r[0][0]
@@ -351,16 +304,58 @@ class Graph:
             if vertex in adj_list:
                 neighbors = adj_list[vertex]
                 for n in neighbors:
-                    desc = self.compute_robot_desc(fp, vertex)
+                    desc = self.compute_robot_desc(fp, vertex,ridges)
                     vertex_dict[(vertex, n)] = desc
+        new_information, known_points, unknown_points = self.compute_new_information(ridges, leaves)
+        self.plot_data(rid, fp, leaves, edges, vor, obstacles, known_points, unknown_points)
         return vertex_dict
+
+    def expand_ridge(self,P_raw, ridges):
+        connected_ridges=[]
+        for r in ridges:
+            if P_raw[0] in r[0] or P_raw[1] in r[0]:
+                connected_ridges.append(r)
+        if connected_ridges:
+            Px=[]
+            Py=[]
+            for c in connected_ridges:
+                Px+=[c[0][0][0], c[0][1][0]]
+                Py += [c[0][0][0], c[0][1][0]]
+
+        return P_raw
+
+    def plot_data(self, rid, fp, leaves, edges, vor, obstacles, known_points, unknown_points):
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10))
+        voronoi_plot_2d(vor, ax=ax1)
+        xr = [v[0] for v in obstacles]
+        yr = [v[1] for v in obstacles]
+        ax2.scatter(xr, yr, color='black', marker="s")
+        # process edges
+        x_pairs, y_pairs = self.process_edges(edges)
+        for i in range(len(x_pairs)):
+            x = x_pairs[i]
+            y = y_pairs[i]
+            ax2.plot(x, y, "g-o")
+        ax2.scatter(fp[0], fp[1], color='blue', marker='s')
+
+        for leaf in leaves:
+            if leaf in known_points and leaf in unknown_points:
+                ks = known_points[leaf]
+                us = unknown_points[leaf]
+                kx = [p[0] for p in ks]
+                ky = [p[1] for p in ks]
+                ux = [p[0] for p in us]
+                uy = [p[1] for p in us]
+                ax2.scatter(ux, uy, color='purple', marker="3")
+                ax2.scatter(kx, ky, color='gray', marker="3")
+                ax2.scatter(leaf[0], leaf[1], color='red', marker='*')
+
+        plt.savefig('plots/plot_{}_{}.png'.format(rid, rospy.Time.now().secs))
 
     def process_decision(self, vertex_descriptions):
         intersections = []
         v_keys = list(vertex_descriptions)
         slope_dict = {}
-        distance_dict = {}
-        width_dict = {}
         angle_dict = {}
         for k in v_keys:
             desc = vertex_descriptions[k]
@@ -392,7 +387,8 @@ class Graph:
             intersections = list(slope_set.intersection(angle_set))
         return intersections
 
-    def compute_robot_desc(self, p, q):
+    def compute_robot_desc(self, p, q,ridges):
+        connected_vertices = self.expand_ridge(p, ridges)   # do a more robust computation
         theta = round(self.theta(p, q), PRECISION)
         distance = round(self.D(p, q), PRECISION)
         slope = round(self.slope(p, q), PRECISION)
@@ -400,27 +396,9 @@ class Graph:
         desc = (theta, distance, slope, width)
         return desc
 
-    def plot_points(self, obstacles, edges, vor, file_name, points):
-        xr = [v[0] for v in obstacles]
-        yr = [v[1] for v in obstacles]
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10))
-        voronoi_plot_2d(vor, ax=ax1)
-        ax2.scatter(xr, yr, color='blue', marker='o')
-        # process edges
-        x_pairs, y_pairs = self.process_edges(edges)
-        for i in range(len(x_pairs)):
-            x = x_pairs[i]
-            y = y_pairs[i]
-            ax2.plot(x, y, 'b-')
-
-        for p in points:
-            ax2.scatter(p[0], p[1], color='red', marker='*')
-
-        plt.savefig('plot_{}'.format(file_name))
-        plt.show()
-
     def get_adjacency_list(self, hallway_vertices):
         adj_list = {}
+        obstacles = {}
         for e in hallway_vertices:
             first = e[0]
             second = e[1]
@@ -428,16 +406,12 @@ class Graph:
                 adj_list[second].append(first)
             else:
                 adj_list[second] = [first]
-
             if first in adj_list:
                 adj_list[first].append(second)
             else:
                 adj_list[first] = [second]
 
-        return adj_list
-
-    def connected_locations(self):
-        self.get_close_ridge()
+        return adj_list,obstacles
 
     def process_edges(self, edges):
         vs = []
