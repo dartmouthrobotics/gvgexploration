@@ -72,13 +72,13 @@ class Graph:
                         xrp = (xp, yp)
                         neighbors.append(xrp)
                 try:
-                    if data_val == OCCUPIED and p not in self.obstacles:
+                    if data_val == OCCUPIED:
                         self.obstacles[p] = neighbors
 
-                    if data_val == UNKNOWN and p not in self.unknowns:
+                    if data_val == UNKNOWN:
                         self.unknowns[p] = neighbors
 
-                    if data_val == FREE and p not in self.free_points:
+                    if data_val == FREE:
                         self.free_points[p] = neighbors
                 except Exception as e:
                     rospy.loginfo("map update error: {}".format(e))
@@ -117,8 +117,7 @@ class Graph:
     # '''
     def get_frontiers(self, rid, pose, count):
         frontiers = []
-        vor, obstacles, adj_list, edges, ridges = self.compute_hallway_points()
-        leaves = [k for k, p in adj_list.items() if len(p) == 1]
+        vor, obstacles, adj_list, leaves, edges, ridges = self.compute_hallway_points()
         new_information, known_points, unknown_points = self.compute_new_information(ridges, leaves)
         while len(new_information) > 0:
             best_point = max(new_information, key=new_information.get)
@@ -128,7 +127,7 @@ class Graph:
             del new_information[best_point]
         if len(frontiers) < count:
             frontiers = self.get_closest_unknown_region()
-        self.plot_data(rid, pose, leaves, edges, vor, obstacles, known_points, unknown_points)
+        self.plot_data(rid, pose, leaves, edges, vor, obstacles, known_points, unknown_points,is_initial=True)
         return frontiers
 
     def compute_new_information(self, ridges, leaves):
@@ -229,9 +228,10 @@ class Graph:
                         hallway_vertices += [r[0]]
                         hallway_edges.append(r)
                         points += list(r[0])
-        adj_list,ridge_dict = self.get_adjacency_list(hallway_vertices)
-        final_adj_list, edges = self.create_subgraph(adj_list, list(set(points)))
-        return vor, obstacles, final_adj_list, edges, hallway_edges
+        adj_list, leaves = self.get_adjacency_list(hallway_vertices)
+        final_adj_list, edges = self.create_subgraph(adj_list, list(points))
+        leaves = [k for k, p in final_adj_list.items() if len(p) == 1]
+        return vor, obstacles, adj_list, leaves, hallway_vertices, hallway_edges
 
     def create_subgraph(self, adj_list, nodes):
         trees = {}
@@ -252,7 +252,6 @@ class Graph:
 
             trees[s] = visited
             tree_size[s] = len(visited)
-
         longest = max(tree_size, key=tree_size.get)
         longest_tree = trees[longest]
         new_adj_list = {}
@@ -275,7 +274,7 @@ class Graph:
         return (round(p[0], PRECISION), round(p[1], PRECISION))
 
     def get_close_ridge(self, fp, rid):
-        vor, obstacles, adj_list, edges, ridges = self.compute_hallway_points()
+        vor, obstacles, adj_list, leaves,edges, ridges = self.compute_hallway_points()
         leaves = [k for k, p in adj_list.items() if len(p) == 1]
         close_ridges = []
         for r in ridges:
@@ -299,56 +298,58 @@ class Graph:
                 else:
                     closest_ridge[distance1] = P[0][1]
             vertex = closest_ridge[min(closest_ridge.keys())]
-
         if vertex and self.D(fp, vertex) <= range_margin:
             if vertex in adj_list:
                 neighbors = adj_list[vertex]
                 for n in neighbors:
-                    desc = self.compute_robot_desc(fp, vertex,ridges)
+                    desc = self.compute_ridge_desc(vertex, n, ridges)
                     vertex_dict[(vertex, n)] = desc
         new_information, known_points, unknown_points = self.compute_new_information(ridges, leaves)
-        self.plot_data(rid, fp, leaves, edges, vor, obstacles, known_points, unknown_points)
+        self.plot_data(rid, fp, leaves, edges, vor, obstacles, known_points, unknown_points,vertext=vertex)
         return vertex_dict
 
-    def expand_ridge(self,P_raw, ridges):
-        connected_ridges=[]
+    def expand_ridge(self, p, q, ridges):
+        rospy.logerr("P: ({} {}) ridges: {}".format(p, q, ridges))
+        connected_ridges = []
         for r in ridges:
-            if P_raw[0] in r[0] or P_raw[1] in r[0]:
+            if p in r[0] or q in r[0]:
                 connected_ridges.append(r)
         if connected_ridges:
-            Px=[]
-            Py=[]
+            Px = []
+            Py = []
             for c in connected_ridges:
-                Px+=[c[0][0][0], c[0][1][0]]
+                Px += [c[0][0][0], c[0][1][0]]
                 Py += [c[0][0][0], c[0][1][0]]
+        return (p, q)
 
-        return P_raw
-
-    def plot_data(self, rid, fp, leaves, edges, vor, obstacles, known_points, unknown_points):
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10))
-        voronoi_plot_2d(vor, ax=ax1)
+    def plot_data(self, rid, fp, leaves, edges, vor, obstacles, known_points, unknown_points, is_initial=False,vertext=None):
+        fig, ax = plt.subplots(figsize=(16, 10))
         xr = [v[0] for v in obstacles]
         yr = [v[1] for v in obstacles]
-        ax2.scatter(xr, yr, color='black', marker="s")
-        # process edges
+        ax.scatter(xr, yr, color='black', marker="s")
         x_pairs, y_pairs = self.process_edges(edges)
         for i in range(len(x_pairs)):
             x = x_pairs[i]
             y = y_pairs[i]
-            ax2.plot(x, y, "g-o")
-        ax2.scatter(fp[0], fp[1], color='blue', marker='s')
+            ax.plot(x, y, "g-.")
+        ax.scatter(fp[0], fp[1], color='blue', marker='s')
 
+        if vertext:
+            ax.scatter(vertext[0], vertext[1], color='purple', marker=">")
         for leaf in leaves:
-            if leaf in known_points and leaf in unknown_points:
-                ks = known_points[leaf]
-                us = unknown_points[leaf]
-                kx = [p[0] for p in ks]
-                ky = [p[1] for p in ks]
-                ux = [p[0] for p in us]
-                uy = [p[1] for p in us]
-                ax2.scatter(ux, uy, color='purple', marker="3")
-                ax2.scatter(kx, ky, color='gray', marker="3")
-                ax2.scatter(leaf[0], leaf[1], color='red', marker='*')
+            ax.scatter(leaf[0], leaf[1], color='red', marker='*')
+        if is_initial:
+            for leaf in leaves:
+                if leaf in known_points and leaf in unknown_points:
+                    ks = known_points[leaf]
+                    us = unknown_points[leaf]
+                    kx = [p[0] for p in ks]
+                    ky = [p[1] for p in ks]
+                    ux = [p[0] for p in us]
+                    uy = [p[1] for p in us]
+                    ax.scatter(ux, uy, color='purple', marker="3")
+                    ax.scatter(kx, ky, color='gray', marker="3")
+                    ax.scatter(leaf[0], leaf[1], color='red', marker='*')
 
         plt.savefig('plots/plot_{}_{}.png'.format(rid, rospy.Time.now().secs))
 
@@ -387,31 +388,58 @@ class Graph:
             intersections = list(slope_set.intersection(angle_set))
         return intersections
 
-    def compute_robot_desc(self, p, q,ridges):
-        connected_vertices = self.expand_ridge(p, ridges)   # do a more robust computation
-        theta = round(self.theta(p, q), PRECISION)
-        distance = round(self.D(p, q), PRECISION)
-        slope = round(self.slope(p, q), PRECISION)
-        width = round(self.W(p, q), PRECISION)
-        desc = (theta, distance, slope, width)
+    def compute_ridge_desc(self, p, q, ridges):
+        connected_ridges = []
+        pq_slope = self.slope(p, q)
+        pq_ridge = [r for r in ridges if (p, q) == r[0]][0]
+        vertices = []
+        for r in ridges:
+            if p == r[0][0] or q == r[0][0]:
+                if self.slope(r[0][0], r[0][1]) == pq_slope:
+                    vertices += [r[0][0], r[0][1]]
+                    connected_ridges.append(r)
+        furthest = {}
+        for v in vertices:
+            for v1 in vertices:
+                furthest[(v, v1)] = self.D(v, v1)
+        furthest_point = max(furthest, key=furthest.get)
+        center = ((furthest_point[0][0] + furthest_point[1][0]) / 2.0, (furthest_point[0][1] + furthest_point[1][1]) / 2.0)
+        p1 = furthest_point[0]
+        p2 = furthest_point[1]
+        q1 = pq_ridge[1][0]
+        q2 = pq_ridge[1][1]
+        q1 = (q1[0] + self.T(q1, center), q1[1] + self.W(q1, center))
+        q2 = (q2[0] + self.T(q2, center), q2[1] + self.W(q2, center))
+        thet = round(self.theta(p1, p2), PRECISION)
+        distance = round(self.D(p1, p2), PRECISION)
+        slop = pq_slope
+        width = round(self.W(q1, q2), PRECISION)
+        desc = (thet, distance, slop, width)
         return desc
 
     def get_adjacency_list(self, hallway_vertices):
         adj_list = {}
-        obstacles = {}
+        directed_list = {}
         for e in hallway_vertices:
             first = e[0]
             second = e[1]
-            if second in adj_list:
-                adj_list[second].append(first)
+            if first in directed_list:
+                directed_list[first].append(second)
             else:
-                adj_list[second] = [first]
+                directed_list[first] = [second]
+            if second in directed_list:
+                directed_list[second].append(first)
+            else:
+                directed_list[second] = [first]
+        for e in hallway_vertices:
+            first = e[0]
+            second = e[1]
             if first in adj_list:
                 adj_list[first].append(second)
             else:
                 adj_list[first] = [second]
-
-        return adj_list,obstacles
+        leaves = [k for k, p in directed_list.items() if len(p) == 1]
+        return directed_list, leaves
 
     def process_edges(self, edges):
         vs = []
