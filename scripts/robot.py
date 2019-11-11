@@ -89,6 +89,7 @@ class Robot:
         self.move_attempt = 0
         self.is_initial_rendezvous_sharing = True
         self.received_choices = {}
+        self.sent_data = False
 
         self.candidate_robots = self.frontier_robots + self.base_stations
         for rid in self.candidate_robots:
@@ -138,12 +139,12 @@ class Robot:
         self.clear_data()
         while not rospy.is_shutdown():
             # try:
-                if self.is_exploring:
-                    self.check_data_sharing_status()
-                r.sleep()
-            # except Exception as e:
-            #     rospy.logerr('Error: {}'.format(e))
-            #     break
+            if self.is_exploring:
+                self.check_data_sharing_status()
+            r.sleep()
+        # except Exception as e:
+        #     rospy.logerr('Error: {}'.format(e))
+        #     break
 
     def callback_rendezvous_points(self, data):
         if int(data.header.frame_id) < int(self.robot_id):
@@ -211,11 +212,12 @@ class Robot:
             buffered_data.alert_flag = is_alert
             self.publisher_map[receiver_id].publish(buffered_data)
             self.delete_data_for_id(receiver_id)
+            self.sent_data = True
 
     def check_data_sharing_status(self):
         robot_pose = self.get_robot_pose()
         time_stamp = rospy.Time.now().secs
-        vertext_dict = self.graph_processor.get_close_ridge(robot_pose,self.robot_id)
+        vertext_dict = self.graph_processor.get_close_ridge(robot_pose, self.robot_id)
         rospy.logerr("Common edges: {}".format(vertext_dict))
         self.vertex_descriptions.update(vertext_dict)
         if self.vertex_descriptions:
@@ -239,7 +241,6 @@ class Robot:
         move.goal.target_pose.y = goal[1]
         self.moveTo_pub.publish(move)
         self.goal_count += 1
-
         chosen_point = ChosenPoint()
         chosen_point.header.frame_id = '{}'.format(self.robot_id)
         chosen_point.x = goal[0]
@@ -270,7 +271,8 @@ class Robot:
         for rs in signals:
             robots.append([rs.robot_id, rs.rssi])
         self.signal_strength[time_stamp] = robots
-        self.save_data([{'time': time_stamp, 'devices': robots}], 'plots/signal_strengths_{}.pickle'.format(self.robot_id))
+        self.save_data([{'time': time_stamp, 'devices': robots}],
+                       'plots/signal_strengths_{}.pickle'.format(self.robot_id))
 
     def move_result_callback(self, data):
         id_0 = "robot_{}_{}_{}".format(self.robot_id, self.goal_count - 1, TO_FRONTIER)
@@ -316,34 +318,48 @@ class Robot:
         self.wait_for_map_update()
         if self.is_initial_rendezvous_sharing:
             self.push_messages_to_receiver([sender_id])
-        self.initial_data_count += 1
-        if self.initial_data_count == len(self.candidate_robots):
-            self.is_initial_rendezvous_sharing = False
-            if self.i_have_least_id():
-                rospy.logerr("Robot {}: Computing frontier points...".format(self.robot_id))
-                robot_pose = self.get_robot_pose()
-                rounded_pose = (math.floor(robot_pose[0]), math.floor(robot_pose[1]))
-                frontier_points = self.graph_processor.get_frontiers(self.robot_id,rounded_pose,len(self.candidate_robots)+1)
-                if frontier_points:
-                    self.publish_rendezvous_points(frontier_points, self.candidate_robots, direction=TO_FRONTIER)
-                    optimal_points = self.get_available_points(frontier_points)
-                    new_point = self.get_closest_point(robot_pose, optimal_points)
-                    if new_point:
-                        if not self.frontier_point:
-                            self.frontier_point = robot_pose
-                        self.previous_frontier_point = copy.deepcopy(self.frontier_point)
-                        self.frontier_point = new_point
-                        self.move_attempt = 0
-                        self.move_robot_to_goal(new_point, TO_FRONTIER)
-                        self.save_data([{'time': rospy.Time.now().secs, 'pose': robot_pose,'frontier': new_point}],'plots/frontiers_{}.pickle'.format(self.robot_id))
+            self.initial_data_count += 1
+            if self.initial_data_count == len(self.candidate_robots):
+                self.is_initial_rendezvous_sharing = False
+                if self.i_have_least_id():
+                    rospy.logerr("Robot {}: Computing frontier points...".format(self.robot_id))
+                    robot_pose = self.get_robot_pose()
+                    rounded_pose = (math.floor(robot_pose[0]), math.floor(robot_pose[1]))
+                    frontier_points = self.graph_processor.get_frontiers(self.robot_id, rounded_pose,len(self.candidate_robots) + 1)
+                    if frontier_points:
+                        self.send_frontier_points(robot_pose,frontier_points)
                         rospy.logerr("Robot {}: Moving to new frontier".format(self.robot_id))
                     else:
                         rospy.logerr("Robot {}: No valid frontier points".format(self.robot_id))
-
                 else:
-                    rospy.logerr("Robot {}: No frontier points to send...".format(self.robot_id))
+                    rospy.logerr("Robot {}: Waiting for frontier points...".format(self.robot_id))
+        else:
+            if not self.sent_data:
+                self.push_messages_to_receiver([sender_id])
             else:
-                rospy.logerr("Robot {}: Waiting for frontier points...".format(self.robot_id))
+                robot_pose = self.get_robot_pose()
+                self.sent_data = False
+                rounded_pose = (math.floor(robot_pose[0]), math.floor(robot_pose[1]))
+                if self.robot_id < int(sender_id):
+                    rospy.logerr("Robot {} Recomputing frontier points".format(self.robot_id))
+                    frontier_points = self.graph_processor.get_frontiers(self.robot_id, rounded_pose, len(self.candidate_robots) + 1)
+                    if frontier_points:
+                        self.send_frontier_points(robot_pose, frontier_points)
+
+    def send_frontier_points(self,robot_pose,frontier_points):
+        self.publish_rendezvous_points(frontier_points, self.candidate_robots, direction=TO_FRONTIER)
+        optimal_points = self.get_available_points(frontier_points)
+        new_point = self.get_closest_point(robot_pose, optimal_points)
+        if new_point:
+            if not self.frontier_point:
+                self.frontier_point = robot_pose
+                self.previous_frontier_point = copy.deepcopy(self.frontier_point)
+                self.frontier_point = new_point
+                self.move_attempt = 0
+                self.move_robot_to_goal(new_point, TO_FRONTIER)
+                self.save_data([{'time': rospy.Time.now().secs, 'pose': robot_pose, 'frontier': new_point}],'plots/frontiers_{}.pickle'.format(self.robot_id))
+            else:
+                rospy.logerr("Robot {}: No frontier points to send...".format(self.robot_id))
 
     def chosen_point_callback(self, data):
         self.received_choices[(data.x, data.y)] = data

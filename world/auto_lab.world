@@ -32,8 +32,9 @@ window
 floorplan
 (
   name "tutorial"
-  bitmap "office_d.png"
-  size [ 112.2 66.1 2.0 ]
+  bitmap "offices.png"
+  #size [ 112.2 66.1 2.0 ]
+  size [ 79.7 29.1 2.0 ]
   pose [  39.85  14.55 0.0 0.0 ]
 )
 

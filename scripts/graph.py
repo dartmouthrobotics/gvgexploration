@@ -29,7 +29,7 @@ SCAN_RADIUS = 0.8
 THETA_SC = 120
 PI = math.pi
 error_margin = 0.01
-range_margin = 0.1
+range_margin = 1.0
 
 
 class Graph:
@@ -292,16 +292,13 @@ class Graph:
             closest_ridge = {}
             for P in close_ridges:
                 distance1 = self.D(P[0][0], fp)
-                distance2 = self.D(P[0][1], fp)
-                if distance1 <= distance2:
-                    closest_ridge[distance1] = P[0][0]
-                else:
-                    closest_ridge[distance1] = P[0][1]
+                closest_ridge[distance1] = P[0][0]
             vertex = closest_ridge[min(closest_ridge.keys())]
-        if vertex and self.D(fp, vertex) <= range_margin:
-            if vertex in adj_list:
-                neighbors = adj_list[vertex]
-                for n in neighbors:
+        # if vertex and self.D(fp, vertex) <= range_margin:
+        if vertex in adj_list:
+            neighbors = adj_list[vertex]
+            for n in neighbors:
+                if (vertex,n) in [r[0] for r in ridges]:
                     desc = self.compute_ridge_desc(vertex, n, ridges)
                     vertex_dict[(vertex, n)] = desc
         new_information, known_points, unknown_points = self.compute_new_information(ridges, leaves)
