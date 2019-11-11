@@ -284,7 +284,7 @@ class Graph:
             q2 = r[1][1]
             u_check = self.T(p1, fp) < self.T(p1, q1) or self.T(p1, fp) < self.T(p1, q2)
             v_check = self.T(p2, fp) < self.T(p2, q1) or self.T(p2, fp) < self.T(p2, q2)
-            if u_check or v_check:
+            if u_check and v_check:
                 close_ridges.append(r)
         vertex = None
         vertex_dict = {}
