@@ -67,6 +67,7 @@ class Robot:
         self.robot_state = ACTIVE_STATE
         self.publisher_map = {}
         self.initial_data_count = 0
+        self.is_initial_receipt=True
         self.is_exploring = False
         self.exploration_id = None
         self.karto_messages = {}
@@ -200,6 +201,19 @@ class Robot:
     def map_callback(self, data):
         self.last_map_update_time = rospy.Time.now().secs
         self.graph_processor.update_occupacygrid(data)
+        self.save_map_data(data)
+
+
+    def save_map_data(self,data):
+        resolution = data.info.resolution
+        width = data.info.width
+        height = data.info.height
+        origin_pos = data.info.origin.position
+        grid_values = data.data
+        origin_x = origin_pos.x
+        origin_y = origin_pos.y
+        row={'resolution':resolution,'width':width,'height':height,'values':grid_values,'origin_x':origin_x,'origin_y':origin_y,'known':self.graph_processor.unknowns,'free':self.graph_processor.free_points,'obstacles':self.graph_processor.obstacles}
+        self.save_data([row],'map_message{}.pickle'.format(self.robot_id))
 
     def push_messages_to_receiver(self, receiver_ids, is_alert=0):
         for receiver_id in receiver_ids:
@@ -216,11 +230,10 @@ class Robot:
 
     def check_data_sharing_status(self):
         robot_pose = self.get_robot_pose()
+        P, intersections = self.graph_processor.compute_intersections(robot_pose)
         time_stamp = rospy.Time.now().secs
-        vertext_dict = self.graph_processor.get_close_ridge(robot_pose, self.robot_id)
-        rospy.logerr("Common edges: {}".format(vertext_dict))
-        self.vertex_descriptions.update(vertext_dict)
-        if self.vertex_descriptions:
+        if P:
+            rospy.logerr("Robot {} Opposite edges: {}".format(self.robot_id,P))
             intersections = self.graph_processor.process_decision(self.vertex_descriptions)
             if intersections and self.signal_strength:
                 most_recent_signals = self.signal_strength[max(list(self.signal_strength))]
@@ -324,8 +337,7 @@ class Robot:
                 if self.i_have_least_id():
                     rospy.logerr("Robot {}: Computing frontier points...".format(self.robot_id))
                     robot_pose = self.get_robot_pose()
-                    rounded_pose = (math.floor(robot_pose[0]), math.floor(robot_pose[1]))
-                    frontier_points = self.graph_processor.get_frontiers(self.robot_id, rounded_pose,len(self.candidate_robots) + 1)
+                    frontier_points = self.graph_processor.get_frontiers(len(self.candidate_robots) + 1)
                     if frontier_points:
                         self.send_frontier_points(robot_pose,frontier_points)
                         rospy.logerr("Robot {}: Moving to new frontier".format(self.robot_id))
@@ -339,10 +351,9 @@ class Robot:
             else:
                 robot_pose = self.get_robot_pose()
                 self.sent_data = False
-                rounded_pose = (math.floor(robot_pose[0]), math.floor(robot_pose[1]))
                 if self.robot_id < int(sender_id):
                     rospy.logerr("Robot {} Recomputing frontier points".format(self.robot_id))
-                    frontier_points = self.graph_processor.get_frontiers(self.robot_id, rounded_pose, len(self.candidate_robots) + 1)
+                    frontier_points = self.graph_processor.get_frontiers(len(self.candidate_robots) + 1)
                     if frontier_points:
                         self.send_frontier_points(robot_pose, frontier_points)
 
@@ -367,7 +378,7 @@ class Robot:
     def get_available_points(self, points):
         available_points = []
         for p in points:
-            if p not in self.received_choices and self.graph_processor.point_is_free(p):
+            if p not in self.received_choices:
                 if len(self.received_choices):
                     for point in self.received_choices:
                         distance = math.sqrt((p[0] - point[0]) ** 2 + (p[1] - point[1]) ** 2)
@@ -522,23 +533,6 @@ class Robot:
             os.remove(self.data_file_name)
         return True
 
-    def get_angle(self, a, b):
-        new_b = b
-        if b == 0:
-            new_b = INF
-        rel_angle = math.atan(a / new_b)
-        if a > 0 and b == 0:  # end of 1st Quad
-            rel_angle = math.radians(90)
-        elif a < 0 and b == 0:  # start of 4th Quad
-            rel_angle = math.radians(270)
-        if a >= 0 > b:  # 2nd Quad
-            rel_angle = math.radians(180) - rel_angle
-        elif a <= 0 and b < 0:  # 3rd Quad
-            rel_angle = math.radians(180) + rel_angle
-        elif a <= 0 < b:  # 4th Quad
-            rel_angle = math.radians(270) + rel_angle
-        return rel_angle
-
     def save_data(self, data, file_name):
         saved_data = []
         if not path.exists(file_name):
@@ -549,6 +543,7 @@ class Robot:
         saved_data += [data]
         with open(file_name, 'wb') as fp:
             pickle.dump(saved_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
+            fp.close()
 
     def load_data_from_file(self, file_name):
         data_dict = []
