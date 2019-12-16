@@ -40,7 +40,7 @@
     <include file="$(find gvgexploration)/launch/robot.launch">
         <arg name="robot_name" value="0" />
         <arg name="robot_type" value="2" />
-        <arg name="base_stations" value="1,2,3,4" />
+        <arg name="base_stations" value="1" />
     </include>
 
 </group>
@@ -67,7 +67,7 @@
     <include file="$(find gvgexploration)/launch/robot.launch">
         <arg name="robot_name" value="1" />
         <arg name="robot_type" value="2" />
-        <arg name="base_stations" value="0,2,3,4" />
+        <arg name="base_stations" value="0" />
     </include>
 </group>
 
