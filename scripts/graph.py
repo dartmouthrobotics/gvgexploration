@@ -42,48 +42,66 @@ class Graph:
     def __init__(self, robot_id=-1):
         self.call_count = 0
         self.pixel_desc = {}
+        self.obstacles = {}
         self.resolution = None
         self.point = None
         self.origin_x = None
         self.origin_y = None
+        self.grid_values = np.zeros((1, 1))
         self.robot_id = robot_id
         self.is_active = False
         self.lock = Lock()
 
+        self.obstacles = {}
+        self.adj_list = {}
+        self.leaves = {}
+        self.edges = {}
+        self.new_edges = {}
+        self.leaf_slope = {}
+        self.longest = None
+        self.adj_dict = {}
+        self.tree_size = {}
+        self.leave_dict = {}
+        self.parent_dict = {}
+
+        self.new_information = {}
+        self.known_points = {}
+        self.unknown_points = {}
+
     def update_occupacygrid(self, occ_grid):
+        # self.lock.acquire()
         start_time = time.time()
         self.resolution = occ_grid.info.resolution
         origin_pos = occ_grid.info.origin.position
-        grid_values = list(occ_grid.data)
         self.origin_x = origin_pos.x
         self.origin_y = origin_pos.y
-        grid_values = np.array(grid_values).reshape((occ_grid.info.height, occ_grid.info.width)).astype(np.float32)
-        self.get_image_desc(grid_values)
+        self.grid_values = np.array(occ_grid.data).reshape((occ_grid.info.height, occ_grid.info.width)).astype(
+            np.float32)
+        self.get_image_desc()
+        self.compute_hallway_points()
         if self.robot_id == 0:
             rospy.logerr("Robot {}: Update map time: {}".format(self.robot_id, time.time() - start_time))
+        # self.lock.release()
 
     def get_frontiers(self, pose, count):
+        self.lock.acquire()
         frontiers = []
         start_time = time.time()
-        # if not self.is_active:
-        #     self.is_active = True
-        pose = self.pose2pixel(pose)
-        vor, obstacles, adj_list, leaves, edges, ridges, ridge_width, leaf_slope = self.compute_hallway_points()
-        new_information, known_points, unknown_points = self.compute_new_information(leaves, ridge_width, leaf_slope)
+        self.compute_new_information()
         ppoints = []
-        while len(new_information) > 0:
-            best_point = max(new_information, key=new_information.get)
+        while len(self.new_information) > 0:
+            best_point = max(self.new_information, key=self.new_information.get)
             new_p = self.pixel2pose(best_point)
             frontiers.append(tuple(new_p))
             ppoints.append(best_point)
             if len(frontiers) == count:
                 break
-            del new_information[best_point]
+            del self.new_information[best_point]
         if self.robot_id == 0:
-            # self.plot_data(None, pose, leaves, edges, obstacles, known_points, unknown_points, ppoints,
-            #                is_initial=True)
-            rospy.logerr("Robot {}: getting frontier points: {}".format(self.robot_id, time.time() - start_time))
-
+            rospy.logerr("Robot {}: Get frontiers: {}".format(self.robot_id, time.time() - start_time))
+        if self.robot_id == 0:
+            self.plot_data(None, pose, ppoints, is_initial=True)
+        self.lock.release()
         return frontiers
 
     def get_point(self, point):
@@ -92,24 +110,23 @@ class Graph:
         pose = [0] * 2
         pose[INDEX_FOR_X] = x
         pose[INDEX_FOR_Y] = y
-        rospy.logerr("Received point: {} New point: {}, Origin: {}".format(point, pose, (self.origin_x, self.origin_y)))
         return tuple(pose)
 
     def compute_intersections(self, robot_pose):
+        self.lock.acquire()
         start = time.time()
         intersecs = []
         close_edge = []
         robot_pose = self.pose2pixel(robot_pose)
-        start_time=time.time()
-        vor, obstacles, adj_list, leaves, edges, ridges, ridge_width, leaf_slope = self.compute_hallway_points()
-        rospy.logerr("Robot {}: Compute hallway points: {}".format(self.robot_id, time.time() - start_time))
         vertex_dict = {}
         ri_dict = {}
         closest_ridge = {}
-        for r in edges:
-            p1 = r[0]
-            p2 = r[1]
-            width = max([ridge_width[p1], ridge_width[p2]])
+        edge_list = list(self.edges)
+        for e in edge_list:
+            p1 = e[0]
+            p2 = e[1]
+            o = self.edges[e]
+            width = self.D(o[0], o[1])
             if self.D(p1, robot_pose) < COMM_RANGE and self.D(p1, p2) > 1:
                 u_check = self.W(p1, robot_pose) < width or self.W(p2, robot_pose) < width
                 if u_check:
@@ -120,17 +137,18 @@ class Graph:
                     v[INDEX_FOR_Y] = yv
                     v = tuple(v)
                     desc = (v, width)
-                    vertex_dict[r] = desc
+                    vertex_dict[e] = desc
                     distance1 = self.D(p1, robot_pose)
                     closest_ridge[distance1] = p1
-                    ri_dict[p1] = r
+                    ri_dict[p1] = e
         if closest_ridge:
             close_point = closest_ridge[min(closest_ridge.keys())]
             close_edge = ri_dict[close_point]
             intersecs = self.process_decision(vertex_dict, close_edge)
             if self.robot_id == 0:
                 rospy.logerr("Robot {}: Compute intersections time: {}".format(self.robot_id, time.time() - start))
-            self.plot_intersections(None, close_edge, intersecs, obstacles, edges, robot_pose)
+            self.plot_intersections(None, close_edge, intersecs, robot_pose)
+        self.lock.release()
         return close_edge, intersecs
 
     def process_decision(self, vertex_descriptions, ridge):
@@ -153,19 +171,19 @@ class Graph:
                         if separation <= 0.1 / self.resolution:
                             if self.collinear(p1, p2, p3, w1):
                                 # if self.there_is_unknown_region(p2, p3):
-                                    intersections.append((ridge, j))
-                                    break
-                                # else:
-                                #     rospy.logerr("Is in unknown: {}".format(self.there_is_unknown_region(p2, p3)))
-                                #     pass
+                                intersections.append((ridge, j))
+                                break
+                            # else:
+                            #     rospy.logerr("Is in unknown: {}".format(self.there_is_unknown_region(p2, p3)))
+                            #     pass
                             else:
                                 rospy.logerr("Collinear: {}".format(self.collinear(p1, p2, p3, w1)))
                                 pass
                         else:
-                            rospy.logerr("Separation: {}".format(separation))
+                            # rospy.logerr("Separation: {}".format(separation))
                             pass
                     else:
-                        rospy.logerr("Cos theta: {}".format(cos_theta))
+                        # rospy.logerr("Cos theta: {}".format(cos_theta))
                         pass
         return intersections
 
@@ -187,21 +205,27 @@ class Graph:
                     points.append(region_point)
         return len(points) >= point_count / 2.0
 
-    def compute_new_information(self, leaves, ridge_width, ridge_slope):
+    def compute_new_information(self):
         resolution = 1
         frontier_size = {}
-        new_information = {}
-        known_points = {}
-        unknown_points = {}
-        for leaf in leaves:
-            if not self.is_obstacle(leaf):
-                frontier_size[leaf] = ridge_width[leaf]
-                ks, us = self.area(leaf, ridge_slope[leaf])
-                unknown_area = len(us) * resolution ** 2
-                new_information[leaf] = unknown_area
-                known_points[leaf] = ks
-                unknown_points[leaf] = us
-        return new_information, known_points, unknown_points
+        self.new_information.clear()
+        self.known_points.clear()
+        self.unknown_points.clear()
+        for leaf, slope in self.leaf_slope.items():
+            if leaf not in self.obstacles:
+                obs=None
+                if (self.adj_list[leaf][0], leaf) in self.edges:
+                    obs = self.edges[(self.adj_list[leaf][0], leaf)]
+                elif (leaf, self.adj_list[leaf][0]) in self.edges:
+                    obs = self.edges[(leaf, self.adj_list[leaf][0])]
+                if obs:
+                    frontier_size[leaf] = self.D(obs[0], obs[1])
+                    ks, us = self.area(leaf, slope)
+                    unknown_area = len(us) * resolution ** 2
+                    if leaf not in self.new_information:
+                        self.new_information[leaf] = unknown_area
+                    self.known_points[leaf] = ks
+                    self.unknown_points[leaf] = us
 
     def next_states(self, row, col, scale=10):
         neighbors = []
@@ -301,15 +325,12 @@ class Graph:
         return known_points, unknown_points
 
     def compute_hallway_points(self):
-        obstacles = self.get_obstacles()
+        obstacles = list(self.obstacles)
         vor = Voronoi(obstacles)
         vertices = vor.vertices
         ridge_vertices = vor.ridge_vertices
         ridge_points = vor.ridge_points
-        hallway_vertices = []
-        hallway_edges = []
-        ridge_width = {}
-        count = 0
+        self.edges.clear()
         for i in range(len(ridge_vertices)):
             ridge_vertex = ridge_vertices[i]
             ridge_point = ridge_points[i]
@@ -322,30 +343,23 @@ class Graph:
                 p2[INDEX_FOR_Y] = round(vertices[ridge_vertex[1]][INDEX_FOR_Y], 2)
                 p1 = tuple(p1)
                 p2 = tuple(p2)
-                if self.is_free(p1) and self.is_free(p2):
+                e = (p1, p2)
+                if e not in self.edges and self.is_free(p1) and self.is_free(p2):
                     q1 = obstacles[ridge_point[0]]
                     q2 = obstacles[ridge_point[1]]
-                    width = self.D(q1, q2)
-                    if width > MIN_WIDTH:
-                        r = ((tuple(p1), tuple(p2)), (q1, q2))
-                        hallway_vertices += [(tuple(p1), tuple(p2))]
-                        hallway_edges.append(r)
-                        count += 1
-                        if p1 not in ridge_width:
-                            ridge_width[p1] = width
-                        if p2 not in ridge_width:
-                            ridge_width[p2] = width
-        adj_list, leaf_nodes, leaf_slope = self.get_adjacency_list(hallway_vertices)
-        adj_list, leaf_nodes, hallway_vertices = self.connect_subtrees(adj_list, leaf_nodes)
-        adj_list, leaf_nodes, hallway_vertices, leaf_slope = self.merge_similar_edges(adj_list, leaf_nodes)
-        return vor, obstacles, adj_list, leaf_nodes, hallway_vertices, hallway_edges, ridge_width, leaf_slope
+                    o = (tuple(q1), tuple(q2))
+                    if self.D(q1, q2) > MIN_WIDTH:
+                        self.edges[e] = o
+        self.get_adjacency_list(self.edges)
+        self.connect_subtrees()
+        self.merge_similar_edges()
 
-    def merge_similar_edges(self, adj_list, nodes):
-        longest, adj_dict, tree_size, leave_dict, parent_dict = self.get_deeepest_tree_source(adj_list, nodes)
-        tree_leaves = leave_dict[longest]
-        parents = parent_dict[longest]
-        R = []
-        visited = []
+    def merge_similar_edges(self):
+        # self.get_deeepest_tree_source()
+        tree_leaves = self.leave_dict[self.longest]
+        parents = self.parent_dict[self.longest]
+        new_edges = {}
+        visited = {}
         for leaf in tree_leaves:
             u = parents[leaf]
             while u is not None:
@@ -357,35 +371,62 @@ class Graph:
                         ps = self.slope(parents[u], u)
                         if abs(us + ps) > SLOPE_MARGIN:
                             if parents[u] is not None:
-                                if (u, leaf) not in R:
-                                    R.append((u, leaf))
+                                if (u, leaf) not in new_edges:
+                                    self.add_edge((u, leaf), new_edges)
                                     leaf = u
                                 pars = copy.deepcopy(parents)
                                 for k, p in pars.items():
                                     if p == leaf and k not in visited:
                                         parents[k] = u
-                        visited.append(u)
+                        visited[u] = None
                         u = parents[u]
                     else:
-                        R.append((u, leaf))
+                        self.add_edge((u, leaf), new_edges)
                         break
-        adjlist, leaves, leaf_slope = self.get_adjacency_list(R)
-        return adjlist, leaves, R, leaf_slope
+        self.get_adjacency_list(new_edges)
+        self.edges = new_edges
 
-    def connect_subtrees(self, adj_list, nodes):
-        N = len(adj_list)
-        longest, adj_dict, tree_size, leave_dict, parent_dict = self.get_deeepest_tree_source(adj_list, nodes)
-        if N == len(adj_dict[longest]):
-            edges = []
-            leaves = []
-            for k, v in adj_list.items():
-                if len(v) == 1:
-                    leaves.append(k)
-                edges += [(k, q) for q in v]
-            return adj_list, leaves, edges
-        allnodes = list(adj_list)
-        for leaf, adj in adj_dict.items():
-            adj_leaves = leave_dict[leaf]
+    def add_edge(self, edge, new_edges):
+        p1 = edge[0]
+        neighbors = self.adj_list[p1]
+        for n in neighbors:
+            if (p1, n) in self.edges:
+                o = self.edges[(p1, n)]
+                new_edges[edge] = o
+                break
+            if (n,p1) in self.edges:
+                o = self.edges[(n, p1)]
+                new_edges[edge] = o
+                break
+
+    def get_adjacency_list(self, edge_dict):
+        edge_list = list(edge_dict)
+        self.adj_list.clear()
+        self.leaf_slope.clear()
+        for e in edge_list:
+            first = e[0]
+            second = e[1]
+            if first in self.adj_list:
+                self.adj_list[first].append(second)
+            else:
+                self.adj_list[first] = [second]
+            if second in self.adj_list:
+                self.adj_list[second].append(first)
+            else:
+                self.adj_list[second] = [first]
+        for k, v in self.adj_list.items():
+            if len(v) == 1:
+                self.leaf_slope[k] = self.theta(v[0], k)
+
+    def connect_subtrees(self):
+        N = len(self.adj_list)
+        self.get_deeepest_tree_source()
+        if N == len(self.adj_dict[self.longest]):
+            self.get_adjacency_list(self.edges)
+            return
+        allnodes = list(self.adj_list)
+        for leaf, adj in self.adj_dict.items():
+            adj_leaves = self.leave_dict[leaf]
             leaf_dist = {}
             for l in adj_leaves:
                 dist_dict = {}
@@ -399,19 +440,40 @@ class Graph:
             if longest_dist:
                 closest = min(longest_dist, key=longest_dist.get)
                 close_node = leaf_dist[closest]
-                adj_list[closest].append(close_node)
-                adj_list[close_node].append(closest)
+                cl_n = self.adj_list[close_node]
+                cls_n = self.adj_list[closest]
+                self.adj_list[closest].append(close_node)
+                self.adj_list[close_node].append(closest)
+                w1 = 0
+                w2 = 0
+                clw1 = None
+                clw2 = None
+                for cl in cl_n:
+                    clw1 = (close_node, cl)
+                    if clw1 in self.edges:
+                        w1 = self.edges[(close_node, cl)]
+                        break
+                for ad in cls_n:
+                    clw2 = (closest, ad)
+                    if (closest, ad) in self.edges:
+                        w2 = self.edges[(closest, ad)]
+                        break
+                if w1 > w2:
+                    self.edges[(close_node, closest)] = clw1
+                else:
+                    self.edges[(close_node, closest)] = clw2
 
-        leaves = [k for k, v in adj_list.items() if len(v) == 1]
-        return self.connect_subtrees(adj_list, leaves)
+        self.get_adjacency_list(self.edges)
 
-    def get_deeepest_tree_source(self, adj_list, nodes):
-        trees = {}
-        leave_dict = {}
-        adj_dict = {}
-        tree_size = {}
-        parent_dict = {}
-        for s in nodes:
+        return self.connect_subtrees()
+
+    def get_deeepest_tree_source(self):
+        self.leave_dict.clear()
+        self.adj_dict.clear()
+        self.tree_size.clear()
+        self.parent_dict.clear()
+        leaves = list(self.leaf_slope)
+        for s in leaves:
             S = [s]
             visited = []
             parents = {s: None}
@@ -419,11 +481,10 @@ class Graph:
             node_adjlist = {}
             while len(S) > 0:
                 u = S.pop()
-                if u in adj_list:
-                    neighbors = adj_list[u]
+                if u in self.adj_list:
+                    neighbors = self.adj_list[u]
                     if u not in node_adjlist:
                         node_adjlist[u] = neighbors
-
                     if len(neighbors) == 1:
                         lf.append(u)
                     for v in neighbors:
@@ -431,18 +492,19 @@ class Graph:
                             S.append(v)
                             parents[v] = u
                     visited.append(u)
-            adj_dict[s] = copy.deepcopy(node_adjlist)
-            trees[s] = copy.deepcopy(visited)
-            tree_size[s] = len(visited)
-            leave_dict[s] = copy.deepcopy(lf)
-            parent_dict[s] = parents
-        longest = max(tree_size, key=tree_size.get)
-        long_size = tree_size[longest]
-        for l, s in tree_size.items():
-            if s == long_size and l != longest:
-                del adj_dict[l]
+            self.adj_dict[s] = node_adjlist
+            # self.trees[s] = copy.            deepcopy(visited)
+            self.tree_size[s] = len(visited)
+            self.leave_dict[s] = lf
+            self.parent_dict[s] = parents
 
-        return longest, adj_dict, tree_size, leave_dict, parent_dict
+        self.longest = max(self.tree_size, key=self.tree_size.get)
+        long_size = self.tree_size[self.longest]
+        for l, s in self.tree_size.items():
+            if s == long_size and l != self.longest:
+                del self.adj_dict[l]
+
+        # return longest, adj_dict, tree_size, leave_dict, parent_dict
 
     def round_point(self, p):
         return (round(p[INDEX_FOR_X], PRECISION), round(p[INDEX_FOR_Y], PRECISION))
@@ -495,27 +557,6 @@ class Graph:
                     points.append(region_point)
         return len(points) >= point_count / 2.0
 
-    def get_adjacency_list(self, hallway_vertices):
-        adj_list = {}
-        for e in hallway_vertices:
-            first = e[0]
-            second = e[1]
-            if first in adj_list:
-                adj_list[first].append(second)
-            else:
-                adj_list[first] = [second]
-            if second in adj_list:
-                adj_list[second].append(first)
-            else:
-                adj_list[second] = [first]
-        nodes = []
-        leaf_slope = {}
-        for k, v in adj_list.items():
-            if len(v) == 1:
-                nodes.append(k)
-                leaf_slope[k] = self.theta(v[0], k)
-        return adj_list, nodes, leaf_slope
-
     def get_directed_adjacency_list(self, hallway_vertices):
         adj_list = {}
         for e in hallway_vertices:
@@ -528,10 +569,11 @@ class Graph:
         nodes = [k for k, v in adj_list.items() if len(v) == 1]
         return adj_list, nodes
 
-    def process_edges(self, edges):
+    def process_edges(self):
         x_pairs = []
         y_pairs = []
-        for edge in edges:
+        edge_list = list(self.edges)
+        for edge in edge_list:
             xh, yh = self.reject_outliers(list(edge))
             if len(xh) == 2:
                 x_pairs.append(xh)
@@ -565,7 +607,8 @@ class Graph:
         y_values = [raw_y[i] for i in range(len(raw_y)) if i not in indexes]
         return x_values, y_values
 
-    def plot_intersections(self, ax, ridge, intersections, obstacles, hallway_vertices, point):
+    def plot_intersections(self, ax, ridge, intersections, point):
+        obstacles = self.get_obstacles()
         # unknowns = list(self.unknowns)
         if not ax:
             fig, ax = plt.subplots(figsize=(16, 10))
@@ -594,7 +637,7 @@ class Graph:
         ax.scatter(x, y, color='black', marker='s')
         # ax.scatter(ux, uy, color='gray', marker='1')
 
-        x_pairs, y_pairs = self.process_edges(hallway_vertices)
+        x_pairs, y_pairs = self.process_edges()
         for i in range(len(x_pairs)):
             x = x_pairs[i]
             y = y_pairs[i]
@@ -603,18 +646,21 @@ class Graph:
         plt.savefig("plots/intersections_{}_{}.png".format(self.robot_id, time.time()))  # TODO consistent time.
         # plt.show()
 
-    def plot_data(self, ax, fp, leaves, edges, obstacles, known_points, unknown_points, frontiers, is_initial=False,
-                  vertext=None):
+    def plot_data(self, ax, fp, frontiers, is_initial=False, vertext=None):
+        # unknown_points = list(self.unknown_points)
+        obstacles = list(self.obstacles)
+        # known_points = list(self.known_points)
+        leaves = list(self.leaf_slope)
         if not ax:
             fig, ax = plt.subplots(figsize=(16, 10))
 
-        ux = [v[INDEX_FOR_X] for v in unknown_points]
-        uy = [v[INDEX_FOR_Y] for v in unknown_points]
+        # ux = [v[INDEX_FOR_X] for v in unknown_points]
+        # uy = [v[INDEX_FOR_Y] for v in unknown_points]
 
         xr = [v[INDEX_FOR_X] for v in obstacles]
         yr = [v[INDEX_FOR_Y] for v in obstacles]
         ax.scatter(xr, yr, color='black', marker="s")
-        x_pairs, y_pairs = self.process_edges(edges)
+        x_pairs, y_pairs = self.process_edges()
         for i in range(len(x_pairs)):
             x = x_pairs[i]
             y = y_pairs[i]
@@ -625,12 +671,12 @@ class Graph:
             ax.scatter(vertext[INDEX_FOR_X], vertext[INDEX_FOR_Y], color='purple', marker=">")
         for leaf in leaves:
             ax.scatter(leaf[INDEX_FOR_X], leaf[INDEX_FOR_Y], color='red', marker='*')
-        ax.scatter(ux, uy, color='gray', marker='1')
+        # ax.scatter(ux, uy, color='gray', marker='1')
         if is_initial:
             for leaf in leaves:
-                if leaf in known_points and leaf in unknown_points:
-                    ks = known_points[leaf]
-                    us = unknown_points[leaf]
+                if leaf in self.known_points and leaf in self.unknown_points:
+                    ks = self.known_points[leaf]
+                    us = self.unknown_points[leaf]
                     kx = [p[INDEX_FOR_X] for p in ks]
                     ky = [p[INDEX_FOR_Y] for p in ks]
                     ux = [p[INDEX_FOR_X] for p in us]
@@ -658,34 +704,29 @@ class Graph:
         free = [k for k, v in self.pixel_desc.items() if v == FREE]
         return free
 
-    def get_image_desc(self, grid_values):
+    def get_image_desc(self):
         self.lock.acquire()
-        height = grid_values.shape[0]
-        width = grid_values.shape[1]
-        # self.obstacles = {}
-        # self.free_points = {}
-        # self.unknowns = {}
+        height = self.grid_values.shape[0]
+        width = self.grid_values.shape[1]
         for row in range(height):
             for col in range(width):
                 index = [0] * 2
                 index[INDEX_FOR_X] = col
                 index[INDEX_FOR_Y] = row
                 index = tuple(index)
-                p = grid_values[row, col]
+                p = self.grid_values[row, col]
                 if p == -1:
                     self.pixel_desc[index] = UNKNOWN
-                    grid_values[row, col] = 128  # TODO: have a "MACRO" for these values. # TODO this is just for debug.
-                    # self.unknowns[index] = []
+                    if index in self.obstacles:
+                        del self.obstacles[index]
                 elif -1 < p <= 0:
                     self.pixel_desc[index] = FREE
-                    grid_values[row, col] = 255
-                    # self.free_points[index] = []
+                    if index in self.obstacles:
+                        del self.obstacles[index]
                 elif p > 0:
                     self.pixel_desc[index] = OCCUPIED
-                    grid_values[row, col] = 0
-                    # self.obstacles[index] = []
-        # if self.robot_id == 0:
-        #     cv2.imwrite("fullsize_{}_{}.png".format(self.robot_id, time.time()), grid_values)  # TODO consistent time.
+                    if index not in self.obstacles:
+                        self.obstacles[index] = None
         self.lock.release()
 
 
