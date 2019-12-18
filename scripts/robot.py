@@ -215,7 +215,7 @@ class Robot:
 
     def map_callback(self, data):
         self.last_map_update_time = rospy.Time.now().secs
-        if not self.others_active and not self.map_update_is_active:
+        if not self.map_update_is_active:
             rospy.logerr("Robot {}:Map update active".format(self.robot_id))
             self.map_update_is_active = True
             # self.map_update_count += 1
@@ -253,23 +253,23 @@ class Robot:
             self.delete_data_for_id(receiver_id)
 
     def direction_has_changed(self):
-        while self.map_update_is_active:
+        while self.others_active:
             continue
-        # if not self.map_update_is_active:
         self.others_active = True
-        robot_pose = self.get_robot_pose()
-        d = self.graph_processor.D((self.previous_pose[1], self.previous_pose[0]), (robot_pose[1], robot_pose[0]))
-        s = self.graph_processor.slope((self.previous_pose[1], self.previous_pose[0]),(robot_pose[1], robot_pose[0]))
-        if d > MIN_RANGE:  # and abs(s + self.prev_slope) > SLOPE_MARGIN:
-            rospy.logerr("Robot {}: Distance: {} Current Slope: {} Previous: {}".format(self.robot_id, d, s,
-                                                                                        self.prev_slope))
-            self.check_data_sharing_status()
-            self.previous_pose = robot_pose
-            self.prev_slope = s
-            rospy.logerr("Robot {}: Direction changed".format(self.robot_id))
+        rospy.logerr("Robot {}: Computing direction".format(self.robot_id))
+        # robot_pose = self.get_robot_pose()
+        # d = self.graph_processor.D((self.previous_pose[1], self.previous_pose[0]), (robot_pose[1], robot_pose[0]))
+        # s = self.graph_processor.slope((self.previous_pose[1], self.previous_pose[0]),(robot_pose[1], robot_pose[0]))
+        # if d > MIN_RANGE:  # and abs(s + self.prev_slope) > SLOPE_MARGIN:
+        #     rospy.logerr("Robot {}: Distance: {} Current Slope: {} Previous: {}".format(self.robot_id, d, s,
+        #                                                                                 self.prev_slope))
+        self.check_data_sharing_status()
+            # self.previous_pose = robot_pose
+            # self.prev_slope = s
+        rospy.logerr("Robot {}: Direction changed".format(self.robot_id))
         self.others_active = False
-        if self.robot_id == 0:
-            rospy.logerr("Robot {}: Intersection NOT active".format(self.robot_id))
+        # if self.robot_id == 0:
+        #     rospy.logerr("Robot {}: Intersection NOT active".format(self.robot_id))
     # else:
     #     if self.robot_id == 0:
     #         rospy.logerr("Robot {}: Intersection active".format(self.robot_id))
@@ -284,8 +284,7 @@ class Robot:
                 for rid in self.close_devices:
                     rospy.logerr("Robot {} sending data to Robot {}".format(self.robot_id, rid))
                     self.push_messages_to_receiver([str(rid)])
-                self.save_data([{'time': time_stamp, 'pose': robot_pose, 'intersections': intersections}],
-                               'plots/interconnections_{}.pickle'.format(self.robot_id))
+                self.save_data([{'time': time_stamp, 'pose': robot_pose, 'intersections': intersections}],'plots/interconnections_{}.pickle'.format(self.robot_id))
 
     def move_robot_to_goal(self, goal, direction=1):
         id_val = "robot_{}_{}_{}".format(self.robot_id, self.goal_count, direction)
@@ -393,12 +392,11 @@ class Robot:
                 if self.i_have_least_id():
                     rospy.logerr("Robot {}: Computing frontier points...".format(self.robot_id))
                     robot_pose = self.get_robot_pose()
-                    while self.others_active or self.map_update_is_active:
+                    while self.map_update_is_active:
                         continue
                     self.others_active = True
                     rospy.logerr("Robot {}: Computing frontier points Active".format(self.robot_id))
-                    frontier_points = self.graph_processor.get_frontiers((robot_pose[1], robot_pose[0]),
-                                                                         len(self.candidate_robots) + 1)
+                    frontier_points = self.graph_processor.get_frontiers((robot_pose[1], robot_pose[0]),len(self.candidate_robots) + 1)
                     rospy.logerr("Robot {}: Computing frontier points NOT Active".format(self.robot_id))
                     self.others_active = False
                     self.map_update_count = 0
@@ -419,8 +417,7 @@ class Robot:
                     robot_pose = self.get_robot_pose()
                     if self.robot_id < int(sender_id):
                         rospy.logerr("Robot {} Recomputing frontier points".format(self.robot_id))
-                        while self.others_active or self.map_update_is_active:
-                            self.map_update_count = 1
+                        while self.map_update_is_active:
                             continue
                         self.others_active = True
                         frontier_points = self.graph_processor.get_frontiers((robot_pose[1], robot_pose[0]),

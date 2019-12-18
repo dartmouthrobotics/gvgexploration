@@ -56,8 +56,10 @@ class Graph:
         self.adj_list = {}
         self.leaves = {}
         self.edges = {}
-        self.new_edges = {}
+        self.old_edges = {}
+        self.old_leaf_slope = {}
         self.leaf_slope = {}
+        self.old_adj_list = {}
         self.longest = None
         self.adj_dict = {}
         self.tree_size = {}
@@ -82,6 +84,36 @@ class Graph:
         if self.robot_id == 0:
             rospy.logerr("Robot {}: Update map time: {}".format(self.robot_id, time.time() - start_time))
         # self.lock.release()
+
+    def compute_hallway_points(self):
+        obstacles = list(self.obstacles)
+        vor = Voronoi(obstacles)
+        vertices = vor.vertices
+        ridge_vertices = vor.ridge_vertices
+        ridge_points = vor.ridge_points
+        self.edges.clear()
+        for i in range(len(ridge_vertices)):
+            ridge_vertex = ridge_vertices[i]
+            ridge_point = ridge_points[i]
+            if ridge_vertex[0] != -1 and ridge_vertex[1] != -1:
+                p1 = [0] * 2
+                p2 = [0] * 2
+                p1[INDEX_FOR_X] = round(vertices[ridge_vertex[0]][INDEX_FOR_X], 2)
+                p1[INDEX_FOR_Y] = round(vertices[ridge_vertex[0]][INDEX_FOR_Y], 2)
+                p2[INDEX_FOR_X] = round(vertices[ridge_vertex[1]][INDEX_FOR_X], 2)
+                p2[INDEX_FOR_Y] = round(vertices[ridge_vertex[1]][INDEX_FOR_Y], 2)
+                p1 = tuple(p1)
+                p2 = tuple(p2)
+                e = (p1, p2)
+                if e not in self.edges and self.is_free(p1) and self.is_free(p2):
+                    q1 = obstacles[ridge_point[0]]
+                    q2 = obstacles[ridge_point[1]]
+                    o = (tuple(q1), tuple(q2))
+                    if self.D(q1, q2) > MIN_WIDTH:
+                        self.edges[e] = o
+        self.get_adjacency_list(self.edges)
+        self.connect_subtrees()
+        self.merge_similar_edges()
 
     def get_frontiers(self, pose, count):
         self.lock.acquire()
@@ -121,11 +153,11 @@ class Graph:
         vertex_dict = {}
         ri_dict = {}
         closest_ridge = {}
-        edge_list = list(self.edges)
+        edge_list = list(self.old_edges)
         for e in edge_list:
             p1 = e[0]
             p2 = e[1]
-            o = self.edges[e]
+            o = self.old_edges[e]
             width = self.D(o[0], o[1])
             if self.D(p1, robot_pose) < COMM_RANGE and self.D(p1, p2) > 1:
                 u_check = self.W(p1, robot_pose) < width or self.W(p2, robot_pose) < width
@@ -211,13 +243,13 @@ class Graph:
         self.new_information.clear()
         self.known_points.clear()
         self.unknown_points.clear()
-        for leaf, slope in self.leaf_slope.items():
+        for leaf, slope in self.old_leaf_slope.items():
             if leaf not in self.obstacles:
-                obs=None
-                if (self.adj_list[leaf][0], leaf) in self.edges:
-                    obs = self.edges[(self.adj_list[leaf][0], leaf)]
-                elif (leaf, self.adj_list[leaf][0]) in self.edges:
-                    obs = self.edges[(leaf, self.adj_list[leaf][0])]
+                obs = None
+                if (self.old_adj_list[leaf][0], leaf) in self.old_edges:
+                    obs = self.old_edges[(self.old_adj_list[leaf][0], leaf)]
+                elif (leaf, self.old_adj_list[leaf][0]) in self.old_edges:
+                    obs = self.old_edges[(leaf, self.old_adj_list[leaf][0])]
                 if obs:
                     frontier_size[leaf] = self.D(obs[0], obs[1])
                     ks, us = self.area(leaf, slope)
@@ -324,36 +356,6 @@ class Graph:
                     unknown_points.append(p)
         return known_points, unknown_points
 
-    def compute_hallway_points(self):
-        obstacles = list(self.obstacles)
-        vor = Voronoi(obstacles)
-        vertices = vor.vertices
-        ridge_vertices = vor.ridge_vertices
-        ridge_points = vor.ridge_points
-        self.edges.clear()
-        for i in range(len(ridge_vertices)):
-            ridge_vertex = ridge_vertices[i]
-            ridge_point = ridge_points[i]
-            if ridge_vertex[0] != -1 and ridge_vertex[1] != -1:
-                p1 = [0] * 2
-                p2 = [0] * 2
-                p1[INDEX_FOR_X] = round(vertices[ridge_vertex[0]][INDEX_FOR_X], 2)
-                p1[INDEX_FOR_Y] = round(vertices[ridge_vertex[0]][INDEX_FOR_Y], 2)
-                p2[INDEX_FOR_X] = round(vertices[ridge_vertex[1]][INDEX_FOR_X], 2)
-                p2[INDEX_FOR_Y] = round(vertices[ridge_vertex[1]][INDEX_FOR_Y], 2)
-                p1 = tuple(p1)
-                p2 = tuple(p2)
-                e = (p1, p2)
-                if e not in self.edges and self.is_free(p1) and self.is_free(p2):
-                    q1 = obstacles[ridge_point[0]]
-                    q2 = obstacles[ridge_point[1]]
-                    o = (tuple(q1), tuple(q2))
-                    if self.D(q1, q2) > MIN_WIDTH:
-                        self.edges[e] = o
-        self.get_adjacency_list(self.edges)
-        self.connect_subtrees()
-        self.merge_similar_edges()
-
     def merge_similar_edges(self):
         # self.get_deeepest_tree_source()
         tree_leaves = self.leave_dict[self.longest]
@@ -386,6 +388,11 @@ class Graph:
         self.get_adjacency_list(new_edges)
         self.edges = new_edges
 
+        # backup
+        self.old_edges = new_edges
+        self.old_leaf_slope = copy.deepcopy(self.leaf_slope)
+        self.old_adj_list = copy.deepcopy(self.adj_list)
+
     def add_edge(self, edge, new_edges):
         p1 = edge[0]
         neighbors = self.adj_list[p1]
@@ -394,7 +401,7 @@ class Graph:
                 o = self.edges[(p1, n)]
                 new_edges[edge] = o
                 break
-            if (n,p1) in self.edges:
+            if (n, p1) in self.edges:
                 o = self.edges[(n, p1)]
                 new_edges[edge] = o
                 break
