@@ -103,6 +103,7 @@ class Robot:
         self.is_initial_data_sharing = True
         self.initial_receipt = True
         self.candidate_robots = self.frontier_robots + self.base_stations
+        self.rate = rospy.Rate(0.1)
         for rid in self.candidate_robots:
             pub = rospy.Publisher("/robot_{}/received_data".format(rid), BufferedData, queue_size=1000)
             pub1 = rospy.Publisher("/robot_{}/rendezvous_points".format(rid), RendezvousPoints, queue_size=10)
@@ -146,7 +147,7 @@ class Robot:
         rospy.loginfo("Robot {} Initialized successfully!!".format(self.robot_id))
 
     def spin(self):
-        r = rospy.Rate(0.02)
+        r = rospy.Rate(0.1)
         self.clear_data()
         while not rospy.is_shutdown():
             # try:
@@ -220,16 +221,12 @@ class Robot:
     def map_callback(self, data):
         self.last_map_update_time = rospy.Time.now().secs
         if not self.map_update_is_active:
-            rospy.logerr("Robot {}:Map update active".format(self.robot_id))
+            pose = self.get_robot_pose()
             self.map_update_is_active = True
-            # self.map_update_count += 1
-            self.graph_processor.update_occupacygrid(data)
-            # self.save_map_data(data)
+            self.graph_processor.update_occupacygrid(data, pose)
             self.map_update_is_active = False
             if self.robot_id == 0:
                 rospy.logerr("Robot {}: Map update NOT active".format(self.robot_id))
-
-
 
     def save_map_data(self, data):
         resolution = data.info.resolution
@@ -264,7 +261,6 @@ class Robot:
         self.check_data_sharing_status()
         self.others_active = False
 
-
     def check_data_sharing_status(self):
         robot_pose = self.get_robot_pose()
         P, intersections = self.graph_processor.compute_intersections((robot_pose[1], robot_pose[0]))
@@ -275,7 +271,8 @@ class Robot:
                 for rid in self.close_devices:
                     rospy.logerr("Robot {} sending data to Robot {}".format(self.robot_id, rid))
                     self.push_messages_to_receiver([str(rid)])
-                self.save_data([{'time': time_stamp, 'pose': robot_pose, 'intersections': intersections}],'plots/interconnections_{}.pickle'.format(self.robot_id))
+                self.save_data([{'time': time_stamp, 'pose': robot_pose, 'intersections': intersections}],
+                               'plots/interconnections_{}.pickle'.format(self.robot_id))
 
     def move_robot_to_goal(self, goal, direction=1):
         id_val = "robot_{}_{}_{}".format(self.robot_id, self.goal_count, direction)
@@ -384,7 +381,8 @@ class Robot:
                         continue
                     self.others_active = True
                     rospy.logerr("Robot {}: Computing frontier points Active".format(self.robot_id))
-                    frontier_points = self.graph_processor.get_frontiers((robot_pose[1], robot_pose[0]),len(self.candidate_robots) + 1)
+                    frontier_points = self.graph_processor.get_frontiers((robot_pose[1], robot_pose[0]),
+                                                                         len(self.candidate_robots) + 1)
                     rospy.logerr("Robot {}: Computing frontier points NOT Active".format(self.robot_id))
                     self.others_active = False
                     self.map_update_count = 0
@@ -600,7 +598,7 @@ class Robot:
             f.close()
         else:
             saved_data = self.load_data_from_file(file_name)
-        saved_data += [data]
+        saved_data += data
         with open(file_name, 'wb') as fp:
             pickle.dump(saved_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
             fp.close()

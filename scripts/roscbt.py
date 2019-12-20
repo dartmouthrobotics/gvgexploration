@@ -325,7 +325,7 @@ class roscbt:
             f.close()
         else:
             saved_data = self.load_data_from_file(file_name)
-        saved_data += [data]
+        saved_data += data
         with open(file_name, 'wb') as fp:
             pickle.dump(saved_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
 

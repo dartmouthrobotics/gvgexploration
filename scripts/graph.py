@@ -18,6 +18,8 @@ from os import path
 import cv2
 import rospy
 from threading import Lock
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 
 FREE = 0
 OCCUPIED = 100
@@ -25,17 +27,19 @@ UNKNOWN = -1
 SMALL = 0.000000000001
 INITIAL_SIZE = 6
 MIN_WIDTH = 0.5 / 0.05
-COMM_RANGE = 10 / 0.05
+# COMM_RANGE = 100 / 0.05
+COMM_RANGE = 400
 PRECISION = 1
 EDGE_LENGTH = MIN_WIDTH  # / 4.0
-SCAN_RADIUS = 5.0
+SCAN_RADIUS = 5.0 / 0.05
+INFO_SCAN_RADIUS = 5.0
 THETA_SC = 360
 PI = math.pi
 ERROR_MARGIN = 0.03
 RANGE_MARGIN = 1.0
 INDEX_FOR_X = 1
 INDEX_FOR_Y = 0
-SLOPE_MARGIN = 0.05
+SLOPE_MARGIN = 0.1
 
 
 class Graph:
@@ -56,10 +60,13 @@ class Graph:
         self.adj_list = {}
         self.leaves = {}
         self.edges = {}
+
         self.old_edges = {}
         self.old_leaf_slope = {}
-        self.leaf_slope = {}
+        self.old_obstacles = {}
         self.old_adj_list = {}
+
+        self.leaf_slope = {}
         self.longest = None
         self.adj_dict = {}
         self.tree_size = {}
@@ -70,8 +77,7 @@ class Graph:
         self.known_points = {}
         self.unknown_points = {}
 
-    def update_occupacygrid(self, occ_grid):
-        # self.lock.acquire()
+    def update_occupacygrid(self, occ_grid, pose):
         start_time = time.time()
         self.resolution = occ_grid.info.resolution
         origin_pos = occ_grid.info.origin.position
@@ -79,41 +85,196 @@ class Graph:
         self.origin_y = origin_pos.y
         self.grid_values = np.array(occ_grid.data).reshape((occ_grid.info.height, occ_grid.info.width)).astype(
             np.float32)
-        self.get_image_desc()
-        self.compute_hallway_points()
+        point = self.pose2pixel(pose)
+        polygon = self.create_polygon(point)
+        self.get_image_desc(polygon)
+        self.compute_hallway_points(polygon)
+        now = time.time()
+        t = now - start_time
         if self.robot_id == 0:
-            rospy.logerr("Robot {}: Update map time: {}".format(self.robot_id, time.time() - start_time))
-        # self.lock.release()
+            rospy.logerr("Robot {}: Update map time: {}".format(self.robot_id, t))
+        self.save_data([{'time': now, 'type': 0, 'robot_id': self.robot_id, 'computational_time': t}],
+                       "plots/map_update_time.pickle")
 
-    def compute_hallway_points(self):
+    def compute_hallway_points(self, polygon):
         obstacles = list(self.obstacles)
-        vor = Voronoi(obstacles)
-        vertices = vor.vertices
-        ridge_vertices = vor.ridge_vertices
-        ridge_points = vor.ridge_points
-        self.edges.clear()
-        for i in range(len(ridge_vertices)):
-            ridge_vertex = ridge_vertices[i]
-            ridge_point = ridge_points[i]
-            if ridge_vertex[0] != -1 and ridge_vertex[1] != -1:
-                p1 = [0] * 2
-                p2 = [0] * 2
-                p1[INDEX_FOR_X] = round(vertices[ridge_vertex[0]][INDEX_FOR_X], 2)
-                p1[INDEX_FOR_Y] = round(vertices[ridge_vertex[0]][INDEX_FOR_Y], 2)
-                p2[INDEX_FOR_X] = round(vertices[ridge_vertex[1]][INDEX_FOR_X], 2)
-                p2[INDEX_FOR_Y] = round(vertices[ridge_vertex[1]][INDEX_FOR_Y], 2)
-                p1 = tuple(p1)
-                p2 = tuple(p2)
-                e = (p1, p2)
-                if e not in self.edges and self.is_free(p1) and self.is_free(p2):
-                    q1 = obstacles[ridge_point[0]]
-                    q2 = obstacles[ridge_point[1]]
-                    o = (tuple(q1), tuple(q2))
-                    if self.D(q1, q2) > MIN_WIDTH:
-                        self.edges[e] = o
+        try:
+            vor = Voronoi(obstacles)
+            vertices = vor.vertices
+            ridge_vertices = vor.ridge_vertices
+            ridge_points = vor.ridge_points
+            self.edges.clear()
+            for i in range(len(ridge_vertices)):
+                ridge_vertex = ridge_vertices[i]
+                ridge_point = ridge_points[i]
+                if ridge_vertex[0] != -1 or ridge_vertex[1] != -1:
+                    p1 = [0] * 2
+                    p2 = [0] * 2
+                    p1[INDEX_FOR_X] = round(vertices[ridge_vertex[0]][INDEX_FOR_X], 2)
+                    p1[INDEX_FOR_Y] = round(vertices[ridge_vertex[0]][INDEX_FOR_Y], 2)
+                    p2[INDEX_FOR_X] = round(vertices[ridge_vertex[1]][INDEX_FOR_X], 2)
+                    p2[INDEX_FOR_Y] = round(vertices[ridge_vertex[1]][INDEX_FOR_Y], 2)
+                    if self.in_range(p1, polygon) or self.in_range(p2, polygon):
+                        p1 = tuple(p1)
+                        p2 = tuple(p2)
+                        e = (p1, p2)
+                        if e not in self.edges and self.is_free(p1) and self.is_free(p2):
+                            q1 = obstacles[ridge_point[0]]
+                            q2 = obstacles[ridge_point[1]]
+                            o = (tuple(q1), tuple(q2))
+                            if self.D(q1, q2) > 1 / self.resolution:  # MIN_WIDTH:
+                                self.edges[e] = o
+            self.get_adjacency_list(self.edges)
+            self.connect_subtrees()
+            self.merge_similar_edges()
+        except Exception as e:
+            rospy.logerr("Robot {}: Obstacle size: {}".format(self.robot_id, len(obstacles)))
+
+    def connect_subtrees(self):
+        N = len(self.adj_list)
+        self.get_deeepest_tree_source()
+        if not N:
+            return
+        if N == len(self.adj_dict[self.longest]):
+            self.get_adjacency_list(self.edges)
+            return
+        allnodes = list(self.adj_list)
+        for leaf, adj in self.adj_dict.items():
+            adj_leaves = self.leave_dict[leaf]
+            leaf_dist = {}
+            for l in adj_leaves:
+                dist_dict = {}
+                for n2 in allnodes:
+                    if n2 not in adj:
+                        dist_dict[n2] = self.D(l, n2)
+                if dist_dict:
+                    nei = min(dist_dict, key=dist_dict.get)
+                    leaf_dist[l] = nei
+            longest_dist = {k: self.D(k, v) for k, v in leaf_dist.items()}
+            if longest_dist:
+                closest = min(longest_dist, key=longest_dist.get)
+                close_node = leaf_dist[closest]
+                cl_n = self.adj_list[close_node]
+                cls_n = self.adj_list[closest]
+                self.adj_list[closest].append(close_node)
+                self.adj_list[close_node].append(closest)
+                w1 = 0
+                w2 = 0
+                clw1 = None
+                clw2 = None
+                for cl in cl_n:
+                    clw1 = (close_node, cl)
+                    if clw1 in self.edges:
+                        w1 = self.edges[(close_node, cl)]
+                        break
+                for ad in cls_n:
+                    clw2 = (closest, ad)
+                    if (closest, ad) in self.edges:
+                        w2 = self.edges[(closest, ad)]
+                        break
+                if w1 > w2:
+                    self.edges[(close_node, closest)] = clw1
+                else:
+                    self.edges[(close_node, closest)] = clw2
         self.get_adjacency_list(self.edges)
-        self.connect_subtrees()
-        self.merge_similar_edges()
+        return self.connect_subtrees()
+
+    def get_adjacency_list(self, edge_dict):
+        edge_list = list(edge_dict)
+        self.adj_list.clear()
+        self.leaf_slope.clear()
+        for e in edge_list:
+            first = e[0]
+            second = e[1]
+            if first in self.adj_list:
+                self.adj_list[first].append(second)
+            else:
+                self.adj_list[first] = [second]
+            if second in self.adj_list:
+                self.adj_list[second].append(first)
+            else:
+                self.adj_list[second] = [first]
+        for k, v in self.adj_list.items():
+            if len(v) == 1:
+                self.leaf_slope[k] = self.theta(v[0], k)
+
+    def get_deeepest_tree_source(self):
+        self.leave_dict.clear()
+        self.adj_dict.clear()
+        self.tree_size.clear()
+        self.parent_dict.clear()
+        leaves = list(self.leaf_slope)
+        for s in leaves:
+            S = [s]
+            visited = []
+            parents = {s: None}
+            lf = []
+            node_adjlist = {}
+            while len(S) > 0:
+                u = S.pop()
+                if u in self.adj_list:
+                    neighbors = self.adj_list[u]
+                    if u not in node_adjlist:
+                        node_adjlist[u] = neighbors
+                    if len(neighbors) == 1:
+                        lf.append(u)
+                    for v in neighbors:
+                        if v not in visited:
+                            S.append(v)
+                            parents[v] = u
+                    visited.append(u)
+            self.adj_dict[s] = node_adjlist
+            self.tree_size[s] = len(visited)
+            self.leave_dict[s] = lf
+            self.parent_dict[s] = parents
+        if self.tree_size:
+            self.longest = max(self.tree_size, key=self.tree_size.get)
+
+    def merge_similar_edges(self):
+        if not self.adj_list:
+            return
+        self.get_deeepest_tree_source()
+        tree_leaves = self.leave_dict[self.longest]
+        parents = self.parent_dict[self.longest]
+        new_edges = {}
+        visited = {}
+        for m in tree_leaves:
+            leaf = copy.deepcopy(m)
+            u = parents[leaf]
+            while u is not None:
+                # us = self.slope(u, leaf)
+                us = self.get_vector(leaf, u)
+                if parents[u] is None:
+                    self.add_edge((u, leaf), new_edges)
+                    break
+                else:
+                    if u not in visited:
+                        # ps = self.slope(parents[u], u)
+                        ps = self.get_vector(u, parents[u])
+                        # if abs(us + ps) > SLOPE_MARGIN:
+                        cos_theta, separation = self.compute_similarity(us, ps)
+                        match = 0.9 <= cos_theta <= 1
+                        if not match:
+                            if parents[u] is not None:
+                                if (u, leaf) not in new_edges:
+                                    self.add_edge((u, leaf), new_edges)
+                                    leaf = u
+                                pars = copy.deepcopy(parents)
+                                for k, p in pars.items():
+                                    if p == leaf and k not in visited:
+                                        parents[k] = u
+                        visited[u] = None
+                        u = parents[u]
+                    else:
+                        self.add_edge((u, leaf), new_edges)
+                        break
+        self.get_adjacency_list(new_edges)
+        self.edges = new_edges
+
+        # backup
+        self.old_edges = copy.deepcopy(self.edges)
+        self.old_leaf_slope = copy.deepcopy(self.leaf_slope)
+        self.old_adj_list = copy.deepcopy(self.adj_list)
 
     def get_frontiers(self, pose, count):
         self.lock.acquire()
@@ -124,25 +285,21 @@ class Graph:
         while len(self.new_information) > 0:
             best_point = max(self.new_information, key=self.new_information.get)
             new_p = self.pixel2pose(best_point)
-            frontiers.append(tuple(new_p))
+            frontiers.append(new_p)
             ppoints.append(best_point)
             if len(frontiers) == count:
                 break
             del self.new_information[best_point]
+        now = time.time()
+        t = (now - start_time)
         if self.robot_id == 0:
             rospy.logerr("Robot {}: Get frontiers: {}".format(self.robot_id, time.time() - start_time))
+        self.save_data([{'time': now, 'type': 2, 'robot_id': self.robot_id, 'computational_time': t}],
+                       "plots/map_update_time.pickle")
         if self.robot_id == 0:
             self.plot_data(None, pose, ppoints, is_initial=True)
         self.lock.release()
         return frontiers
-
-    def get_point(self, point):
-        x = round((point[INDEX_FOR_X] - self.origin_x) / self.resolution)
-        y = round((point[INDEX_FOR_Y] - self.origin_y) / self.resolution)
-        pose = [0] * 2
-        pose[INDEX_FOR_X] = x
-        pose[INDEX_FOR_Y] = y
-        return tuple(pose)
 
     def compute_intersections(self, robot_pose):
         self.lock.acquire()
@@ -159,15 +316,10 @@ class Graph:
             p2 = e[1]
             o = self.old_edges[e]
             width = self.D(o[0], o[1])
-            if self.D(p1, robot_pose) < COMM_RANGE and self.D(p1, p2) > 1:
-                u_check = self.W(p1, robot_pose) < width or self.W(p2, robot_pose) < width
+            if self.D(p1, robot_pose) < COMM_RANGE and self.D(p1, p2) > 1 / self.resolution:
+                u_check = self.W(p1, robot_pose) < width  # or self.W(p2, robot_pose) < width
                 if u_check:
-                    xv = p2[INDEX_FOR_X] - p1[INDEX_FOR_X]
-                    yv = p2[INDEX_FOR_Y] - p1[INDEX_FOR_Y]
-                    v = [0] * 2
-                    v[INDEX_FOR_X] = xv
-                    v[INDEX_FOR_Y] = yv
-                    v = tuple(v)
+                    v = self.get_vector(p1, p2)
                     desc = (v, width)
                     vertex_dict[e] = desc
                     distance1 = self.D(p1, robot_pose)
@@ -177,8 +329,12 @@ class Graph:
             close_point = closest_ridge[min(closest_ridge.keys())]
             close_edge = ri_dict[close_point]
             intersecs = self.process_decision(vertex_dict, close_edge)
+            now = time.time()
+            t = (now - start)
             if self.robot_id == 0:
-                rospy.logerr("Robot {}: Compute intersections time: {}".format(self.robot_id, time.time() - start))
+                rospy.logerr("Robot {}: Compute intersections time: {}".format(self.robot_id, t))
+            self.save_data([{'time': now, 'type': 1, 'robot_id': self.robot_id, 'computational_time': t}],
+                           "plots/map_update_time.pickle")
             self.plot_intersections(None, close_edge, intersecs, robot_pose)
         self.lock.release()
         return close_edge, intersecs
@@ -196,18 +352,18 @@ class Graph:
                 v2 = desc[0]
                 w2 = desc[1]
                 cos_theta, separation = self.compute_similarity(v1, v2)
-                if cos_theta < 0 and self.D(p2, p3) > SCAN_RADIUS:
+                if self.D(p2, p3) > SCAN_RADIUS:
                     # width_diff = abs(w1 - w2)
-                    if -1 <= cos_theta <= -0.7:
+                    if -1 <= cos_theta <= -0.9:
                         # if width_diff < 1 / self.resolution:
                         if separation <= 0.1 / self.resolution:
                             if self.collinear(p1, p2, p3, w1):
                                 # if self.there_is_unknown_region(p2, p3):
                                 intersections.append((ridge, j))
-                                break
-                            # else:
-                            #     rospy.logerr("Is in unknown: {}".format(self.there_is_unknown_region(p2, p3)))
-                            #     pass
+                                # break
+                                # else:
+                                #     rospy.logerr("Is in unknown: {}".format(self.there_is_unknown_region(p2, p3)))
+                                #     pass
                             else:
                                 rospy.logerr("Collinear: {}".format(self.collinear(p1, p2, p3, w1)))
                                 pass
@@ -304,8 +460,8 @@ class Graph:
 
     def pixel2pose(self, point):
         new_p = [0] * 2
-        new_p[INDEX_FOR_X] = round(self.origin_x + point[INDEX_FOR_X] * self.resolution, 2)
-        new_p[INDEX_FOR_Y] = round(self.origin_x + point[INDEX_FOR_Y] * self.resolution, 2)
+        new_p[INDEX_FOR_Y] = round(self.origin_x + point[INDEX_FOR_X] * self.resolution, 2)
+        new_p[INDEX_FOR_X] = round(self.origin_y + point[INDEX_FOR_Y] * self.resolution, 2)
         return tuple(new_p)
 
     def theta(self, p, q):
@@ -334,11 +490,20 @@ class Graph:
             return 1 / dx
         return dy / dx
 
+    def get_vector(self, p1, p2):
+        xv = p2[INDEX_FOR_X] - p1[INDEX_FOR_X]
+        yv = p2[INDEX_FOR_Y] - p1[INDEX_FOR_Y]
+        v = [0] * 2
+        v[INDEX_FOR_X] = xv
+        v[INDEX_FOR_Y] = yv
+        v = tuple(v)
+        return v
+
     def area(self, point, orientation):
         resolution = 1
         known_points = []
         unknown_points = []
-        for d in np.arange(0, SCAN_RADIUS, resolution):
+        for d in np.arange(0, INFO_SCAN_RADIUS, resolution):
             distance_points = []
             for theta in range(-1 * THETA_SC // 2, THETA_SC + 1):
                 angle = np.deg2rad(theta) + orientation
@@ -356,162 +521,33 @@ class Graph:
                     unknown_points.append(p)
         return known_points, unknown_points
 
-    def merge_similar_edges(self):
-        # self.get_deeepest_tree_source()
-        tree_leaves = self.leave_dict[self.longest]
-        parents = self.parent_dict[self.longest]
-        new_edges = {}
-        visited = {}
-        for leaf in tree_leaves:
-            u = parents[leaf]
-            while u is not None:
-                us = self.slope(u, leaf)
-                if parents[u] is None:
-                    break
-                else:
-                    if u not in visited:
-                        ps = self.slope(parents[u], u)
-                        if abs(us + ps) > SLOPE_MARGIN:
-                            if parents[u] is not None:
-                                if (u, leaf) not in new_edges:
-                                    self.add_edge((u, leaf), new_edges)
-                                    leaf = u
-                                pars = copy.deepcopy(parents)
-                                for k, p in pars.items():
-                                    if p == leaf and k not in visited:
-                                        parents[k] = u
-                        visited[u] = None
-                        u = parents[u]
-                    else:
-                        self.add_edge((u, leaf), new_edges)
-                        break
-        self.get_adjacency_list(new_edges)
-        self.edges = new_edges
-
-        # backup
-        self.old_edges = new_edges
-        self.old_leaf_slope = copy.deepcopy(self.leaf_slope)
-        self.old_adj_list = copy.deepcopy(self.adj_list)
+    def connect_root(self, node, prev_obst, new_edges):
+        if len(self.adj_dict) > 1:
+            dist = {}
+            for leaf, adj in self.adj_dict.items():
+                if node not in adj:
+                    for k, l in adj.items():
+                        dist[k] = self.D(k, node)
+            if dist:
+                nei = min(dist, key=dist.get)
+                new_edges[(nei, node)] = prev_obst
 
     def add_edge(self, edge, new_edges):
+        obst = ((0, 0), (0, 0))
         p1 = edge[0]
         neighbors = self.adj_list[p1]
         for n in neighbors:
             if (p1, n) in self.edges:
                 o = self.edges[(p1, n)]
                 new_edges[edge] = o
+                obst = 0
                 break
             if (n, p1) in self.edges:
                 o = self.edges[(n, p1)]
                 new_edges[edge] = o
+                obst = o
                 break
-
-    def get_adjacency_list(self, edge_dict):
-        edge_list = list(edge_dict)
-        self.adj_list.clear()
-        self.leaf_slope.clear()
-        for e in edge_list:
-            first = e[0]
-            second = e[1]
-            if first in self.adj_list:
-                self.adj_list[first].append(second)
-            else:
-                self.adj_list[first] = [second]
-            if second in self.adj_list:
-                self.adj_list[second].append(first)
-            else:
-                self.adj_list[second] = [first]
-        for k, v in self.adj_list.items():
-            if len(v) == 1:
-                self.leaf_slope[k] = self.theta(v[0], k)
-
-    def connect_subtrees(self):
-        N = len(self.adj_list)
-        self.get_deeepest_tree_source()
-        if N == len(self.adj_dict[self.longest]):
-            self.get_adjacency_list(self.edges)
-            return
-        allnodes = list(self.adj_list)
-        for leaf, adj in self.adj_dict.items():
-            adj_leaves = self.leave_dict[leaf]
-            leaf_dist = {}
-            for l in adj_leaves:
-                dist_dict = {}
-                for n2 in allnodes:
-                    if n2 not in adj:
-                        dist_dict[n2] = self.D(l, n2)
-                if dist_dict:
-                    nei = min(dist_dict, key=dist_dict.get)
-                    leaf_dist[l] = nei
-            longest_dist = {k: self.D(k, v) for k, v in leaf_dist.items()}
-            if longest_dist:
-                closest = min(longest_dist, key=longest_dist.get)
-                close_node = leaf_dist[closest]
-                cl_n = self.adj_list[close_node]
-                cls_n = self.adj_list[closest]
-                self.adj_list[closest].append(close_node)
-                self.adj_list[close_node].append(closest)
-                w1 = 0
-                w2 = 0
-                clw1 = None
-                clw2 = None
-                for cl in cl_n:
-                    clw1 = (close_node, cl)
-                    if clw1 in self.edges:
-                        w1 = self.edges[(close_node, cl)]
-                        break
-                for ad in cls_n:
-                    clw2 = (closest, ad)
-                    if (closest, ad) in self.edges:
-                        w2 = self.edges[(closest, ad)]
-                        break
-                if w1 > w2:
-                    self.edges[(close_node, closest)] = clw1
-                else:
-                    self.edges[(close_node, closest)] = clw2
-
-        self.get_adjacency_list(self.edges)
-
-        return self.connect_subtrees()
-
-    def get_deeepest_tree_source(self):
-        self.leave_dict.clear()
-        self.adj_dict.clear()
-        self.tree_size.clear()
-        self.parent_dict.clear()
-        leaves = list(self.leaf_slope)
-        for s in leaves:
-            S = [s]
-            visited = []
-            parents = {s: None}
-            lf = []
-            node_adjlist = {}
-            while len(S) > 0:
-                u = S.pop()
-                if u in self.adj_list:
-                    neighbors = self.adj_list[u]
-                    if u not in node_adjlist:
-                        node_adjlist[u] = neighbors
-                    if len(neighbors) == 1:
-                        lf.append(u)
-                    for v in neighbors:
-                        if v not in visited:
-                            S.append(v)
-                            parents[v] = u
-                    visited.append(u)
-            self.adj_dict[s] = node_adjlist
-            # self.trees[s] = copy.            deepcopy(visited)
-            self.tree_size[s] = len(visited)
-            self.leave_dict[s] = lf
-            self.parent_dict[s] = parents
-
-        self.longest = max(self.tree_size, key=self.tree_size.get)
-        long_size = self.tree_size[self.longest]
-        for l, s in self.tree_size.items():
-            if s == long_size and l != self.longest:
-                del self.adj_dict[l]
-
-        # return longest, adj_dict, tree_size, leave_dict, parent_dict
+        return obst
 
     def round_point(self, p):
         return (round(p[INDEX_FOR_X], PRECISION), round(p[INDEX_FOR_Y], PRECISION))
@@ -579,7 +615,7 @@ class Graph:
     def process_edges(self):
         x_pairs = []
         y_pairs = []
-        edge_list = list(self.edges)
+        edge_list = list(self.old_edges)
         for edge in edge_list:
             xh, yh = self.reject_outliers(list(edge))
             if len(xh) == 2:
@@ -615,7 +651,7 @@ class Graph:
         return x_values, y_values
 
     def plot_intersections(self, ax, ridge, intersections, point):
-        obstacles = self.get_obstacles()
+        obstacles = list(self.old_obstacles)
         # unknowns = list(self.unknowns)
         if not ax:
             fig, ax = plt.subplots(figsize=(16, 10))
@@ -649,15 +685,16 @@ class Graph:
             x = x_pairs[i]
             y = y_pairs[i]
             ax.plot(x, y, "m-.")
-
+        plt.grid()
         plt.savefig("plots/intersections_{}_{}.png".format(self.robot_id, time.time()))  # TODO consistent time.
+        plt.close()
         # plt.show()
 
     def plot_data(self, ax, fp, frontiers, is_initial=False, vertext=None):
         # unknown_points = list(self.unknown_points)
-        obstacles = list(self.obstacles)
+        obstacles = list(self.old_obstacles)
         # known_points = list(self.known_points)
-        leaves = list(self.leaf_slope)
+        leaves = list(self.old_leaf_slope)
         if not ax:
             fig, ax = plt.subplots(figsize=(16, 10))
 
@@ -697,44 +734,68 @@ class Graph:
             ax.scatter(fx, fy, color='goldenrod', marker="P")
         plt.grid()
         plt.savefig("plots/plot_{}_{}.png".format(self.robot_id, time.time()))
+        plt.close()
         # plt.show()
 
-    def get_obstacles(self):
-        obstacles = [k for k, v in self.pixel_desc.items() if v == OCCUPIED]
-        return obstacles
-
-    def get_unknowns(self):
-        unknowns = [k for k, v in self.pixel_desc.items() if v == UNKNOWN]
-        return unknowns
-
-    def get_free(self):
-        free = [k for k, v in self.pixel_desc.items() if v == FREE]
-        return free
-
-    def get_image_desc(self):
+    def get_image_desc(self, polygon):
         self.lock.acquire()
         height = self.grid_values.shape[0]
         width = self.grid_values.shape[1]
+        self.obstacles.clear()
         for row in range(height):
             for col in range(width):
                 index = [0] * 2
                 index[INDEX_FOR_X] = col
                 index[INDEX_FOR_Y] = row
-                index = tuple(index)
-                p = self.grid_values[row, col]
-                if p == -1:
-                    self.pixel_desc[index] = UNKNOWN
-                    if index in self.obstacles:
-                        del self.obstacles[index]
-                elif -1 < p <= 0:
-                    self.pixel_desc[index] = FREE
-                    if index in self.obstacles:
-                        del self.obstacles[index]
-                elif p > 0:
-                    self.pixel_desc[index] = OCCUPIED
-                    if index not in self.obstacles:
+                if self.in_range(index, polygon):
+                    index = tuple(index)
+                    p = self.grid_values[row, col]
+                    if p == -1:
+                        self.pixel_desc[index] = UNKNOWN
+                    elif -1 < p <= 0:
+                        self.pixel_desc[index] = FREE
+                    elif p > 0:
+                        self.pixel_desc[index] = OCCUPIED
                         self.obstacles[index] = None
+        self.old_obstacles = copy.deepcopy(self.obstacles)
         self.lock.release()
+
+    def in_range(self, point, polygon):
+        x = point[INDEX_FOR_X]
+        y = point[INDEX_FOR_Y]
+        return polygon[0][0] <= x <= polygon[2][0] and polygon[0][1] <= y <= polygon[2][1]
+
+    def create_polygon(self, pose):
+        x = pose[INDEX_FOR_X]
+        y = pose[INDEX_FOR_Y]
+        first = (x - COMM_RANGE, y - COMM_RANGE)
+        second = (x - COMM_RANGE, y + COMM_RANGE)
+        third = (x + COMM_RANGE, y + COMM_RANGE)
+        fourth = (x + COMM_RANGE, y - COMM_RANGE)
+        ranges = [first, second, third, fourth]
+        return ranges
+
+    def save_data(self, data, file_name):
+        saved_data = []
+        if not path.exists(file_name):
+            f = open(file_name, "wb+")
+            f.close()
+        else:
+            saved_data = self.load_data_from_file(file_name)
+        saved_data += data
+        with open(file_name, 'wb') as fp:
+            pickle.dump(saved_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
+            fp.close()
+
+    def load_data_from_file(self, file_name):
+        data_dict = []
+        if path.exists(file_name) and path.getsize(file_name) > 0:
+            with open(file_name, 'rb') as fp:
+                try:
+                    data_dict = pickle.load(fp)
+                except Exception as e:
+                    rospy.logerr("error: {}".format(e))
+        return data_dict
 
 
 if __name__ == "__main__":
