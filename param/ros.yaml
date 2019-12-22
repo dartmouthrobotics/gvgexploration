@@ -21,3 +21,18 @@ map_service: static_map
 ## Nav2d navigator
 robot_radius: 0.4
 map_inflation_radius: 1.0
+
+
+# kizito
+
+min_hallway_width: 20  # 1/0.05
+comm_range: 400     # 20/0.05
+point_precision: 2
+min_edge_length: 20  #1/0.05
+lidar_scan_radius: 100 # 5.0 / 0.05
+info_scan_radius: 20.0  #  1/0.05
+lidar_fov: 360
+slope_bias: 0.1
+opposite_vector_bias: 0.1
+separation_bias: 1.0
+

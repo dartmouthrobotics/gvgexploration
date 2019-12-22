@@ -25,14 +25,10 @@ import pickle
 import os
 from os.path import exists
 
-MIN_RANGE = 1
-SLOPE_MARGIN = 1.0
 INF = 1000000000000
 NEG_INF = -1000000000000
-# ids to identify the robot type
-BS_TYPE = 1
+MAX_ATTEMPTS = 2
 RR_TYPE = 2
-
 ROBOT_SPACE = 1
 TO_RENDEZVOUS = 1
 TO_FRONTIER = 0
@@ -43,13 +39,6 @@ ACTIVE = 1  # The goal is currently being processed by the action server
 SUCCEEDED = 3  # The goal was achieved successfully by the action server (Terminal State)
 ABORTED = 4  # The goal was aborted during execution by the action server due to some failure (Terminal State)
 LOST = 9  # An action client can determine that a goal is LOST. This should not be sent over the wire by an action
-
-# server
-
-START_SCAN = '1'
-STOP_SCAN = '0'
-MAX_ATTEMPTS = 2
-MIN_SIGNAL_STRENGTH = -1 * 65.0
 
 
 class Robot:
@@ -65,7 +54,6 @@ class Robot:
         self.rendezvous_publishers = {}
         self.frontier_point = None
         self.previous_frontier_point = None
-        self.graph_processor = Graph(robot_id)
         self.robot_state = ACTIVE_STATE
         self.publisher_map = {}
         self.initial_data_count = 0
@@ -104,6 +92,22 @@ class Robot:
         self.initial_receipt = True
         self.candidate_robots = self.frontier_robots + self.base_stations
         self.rate = rospy.Rate(0.1)
+
+        self.min_hallway_width = rospy.get_param("/robot_{}/min_hallway_width".format(self.robot_id))
+        self.comm_range = rospy.get_param("/robot_{}/comm_range".format(self.robot_id))
+        self.point_precision = rospy.get_param("/robot_{}/point_precision".format(self.robot_id))
+        self.min_edge_length = rospy.get_param("/robot_{}/min_edge_length".format(self.robot_id))
+        self.lidar_scan_radius = rospy.get_param("/robot_{}/lidar_scan_radius".format(self.robot_id))
+        self.info_scan_radius = rospy.get_param("/robot_{}/info_scan_radius".format(self.robot_id))
+        self.lidar_fov = rospy.get_param("/robot_{}/lidar_fov".format(self.robot_id))
+        self.slope_bias = rospy.get_param("/robot_{}/slope_bias".format(self.robot_id))
+        self.separation_bias = rospy.get_param("/robot_{}/separation_bias".format(self.robot_id))
+        self.opposite_vector_bias = rospy.get_param("/robot_{}/opposite_vector_bias".format(self.robot_id))
+        self.graph_processor = Graph(robot_id)
+        self.graph_processor.init(self.min_hallway_width, self.comm_range, self.point_precision, self.min_edge_length,
+                                  self.lidar_scan_radius, self.info_scan_radius, self.lidar_fov, self.slope_bias,
+                                  self.separation_bias, self.opposite_vector_bias)
+
         for rid in self.candidate_robots:
             pub = rospy.Publisher("/robot_{}/received_data".format(rid), BufferedData, queue_size=1000)
             pub1 = rospy.Publisher("/robot_{}/rendezvous_points".format(rid), RendezvousPoints, queue_size=10)
@@ -187,7 +191,12 @@ class Robot:
             self.move_robot_to_goal(self.frontier_point, direction)
             rospy.logerr("Robot {} going to frontier: {}".format(self.robot_id, self.frontier_point))
         else:
-            rospy.logerr("Robot {} No frontier to go to...".format(self.robot_id))
+            rospy.logerr("Robot {}: No frontier point to go to. Starting exploration anyway...".format(self.robot_id))
+            result = self.start_exploration()
+            if result:
+                self.exploration_start_time = rospy.Time.now()
+                self.is_exploring = True
+                self.robot_state = ACTIVE_STATE
 
     def wait_for_map_update(self):
         # r = rospy.Rate(0.1)
@@ -429,6 +438,13 @@ class Robot:
                                'plots/frontiers_{}.pickle'.format(self.robot_id))
             else:
                 rospy.logerr("Robot {}: No frontier points to send...".format(self.robot_id))
+        else:
+            rospy.logerr("Robot {}: All frontier points taken. Starting exploration anyway...".format(self.robot_id))
+            result = self.start_exploration()
+            if result:
+                self.exploration_start_time = rospy.Time.now()
+                self.is_exploring = True
+                self.robot_state = ACTIVE_STATE
 
     def chosen_point_callback(self, data):
         self.received_choices[(data.x, data.y)] = data

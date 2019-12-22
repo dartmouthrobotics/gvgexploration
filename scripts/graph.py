@@ -1,7 +1,5 @@
 #!/usr/bin/python
 import copy
-import itertools
-import operator
 import matplotlib
 
 matplotlib.use('Agg')
@@ -9,46 +7,37 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 from scipy.spatial import Voronoi, voronoi_plot_2d
-from PIL import Image
 import time
-import matplotlib.animation as animation
 import pickle
-import os
 from os import path
-import cv2
 import rospy
 from threading import Lock
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
+from numpy.linalg import norm
 
 FREE = 0
 OCCUPIED = 100
 UNKNOWN = -1
 SMALL = 0.000000000001
-INITIAL_SIZE = 6
-MIN_WIDTH = 0.5 / 0.05
-# COMM_RANGE = 100 / 0.05
-COMM_RANGE = 400
-PRECISION = 1
-EDGE_LENGTH = MIN_WIDTH  # / 4.0
-SCAN_RADIUS = 5.0 / 0.05
-INFO_SCAN_RADIUS = 5.0
-THETA_SC = 360
-PI = math.pi
-ERROR_MARGIN = 0.03
-RANGE_MARGIN = 1.0
 INDEX_FOR_X = 1
 INDEX_FOR_Y = 0
-SLOPE_MARGIN = 0.1
 
 
 class Graph:
     def __init__(self, robot_id=-1):
-        self.call_count = 0
+        self.min_hallway_width = None
+        self.comm_range = None
+        self.point_precision = None
+        self.min_edge_length = None
+        self.lidar_scan_radius = None
+        self.info_scan_radius = None
+        self.lidar_fov = None
+        self.slope_bias = None
+        self.separation_bias = None
+        self.opposite_vector_bias = None
+
         self.pixel_desc = {}
         self.obstacles = {}
         self.resolution = None
-        self.point = None
         self.origin_x = None
         self.origin_y = None
         self.grid_values = np.zeros((1, 1))
@@ -77,6 +66,19 @@ class Graph:
         self.known_points = {}
         self.unknown_points = {}
 
+    def init(self, min_hallway_width, comm_range, point_precision, min_edge_length, lidar_scan_radius, info_scan_radius,
+             lidar_fov, slope_bias, separation_bias, opposite_vector_bias):
+        self.min_hallway_width = min_hallway_width
+        self.comm_range = comm_range
+        self.point_precision = point_precision
+        self.min_edge_length = min_edge_length
+        self.lidar_scan_radius = lidar_scan_radius
+        self.info_scan_radius = info_scan_radius
+        self.lidar_fov = lidar_fov
+        self.slope_bias = slope_bias
+        self.separation_bias = separation_bias
+        self.opposite_vector_bias = opposite_vector_bias
+
     def update_occupacygrid(self, occ_grid, pose):
         start_time = time.time()
         self.resolution = occ_grid.info.resolution
@@ -98,37 +100,37 @@ class Graph:
 
     def compute_hallway_points(self, polygon):
         obstacles = list(self.obstacles)
-        try:
-            vor = Voronoi(obstacles)
-            vertices = vor.vertices
-            ridge_vertices = vor.ridge_vertices
-            ridge_points = vor.ridge_points
-            self.edges.clear()
-            for i in range(len(ridge_vertices)):
-                ridge_vertex = ridge_vertices[i]
-                ridge_point = ridge_points[i]
-                if ridge_vertex[0] != -1 or ridge_vertex[1] != -1:
-                    p1 = [0] * 2
-                    p2 = [0] * 2
-                    p1[INDEX_FOR_X] = round(vertices[ridge_vertex[0]][INDEX_FOR_X], 2)
-                    p1[INDEX_FOR_Y] = round(vertices[ridge_vertex[0]][INDEX_FOR_Y], 2)
-                    p2[INDEX_FOR_X] = round(vertices[ridge_vertex[1]][INDEX_FOR_X], 2)
-                    p2[INDEX_FOR_Y] = round(vertices[ridge_vertex[1]][INDEX_FOR_Y], 2)
-                    if self.in_range(p1, polygon) or self.in_range(p2, polygon):
-                        p1 = tuple(p1)
-                        p2 = tuple(p2)
-                        e = (p1, p2)
-                        if e not in self.edges and self.is_free(p1) and self.is_free(p2):
-                            q1 = obstacles[ridge_point[0]]
-                            q2 = obstacles[ridge_point[1]]
-                            o = (tuple(q1), tuple(q2))
-                            if self.D(q1, q2) > 1 / self.resolution:  # MIN_WIDTH:
-                                self.edges[e] = o
-            self.get_adjacency_list(self.edges)
-            self.connect_subtrees()
-            self.merge_similar_edges()
-        except Exception as e:
-            rospy.logerr("Robot {}: Obstacle size: {}".format(self.robot_id, len(obstacles)))
+        # try:
+        vor = Voronoi(obstacles)
+        vertices = vor.vertices
+        ridge_vertices = vor.ridge_vertices
+        ridge_points = vor.ridge_points
+        self.edges.clear()
+        for i in range(len(ridge_vertices)):
+            ridge_vertex = ridge_vertices[i]
+            ridge_point = ridge_points[i]
+            if ridge_vertex[0] != -1 or ridge_vertex[1] != -1:
+                p1 = [0] * 2
+                p2 = [0] * 2
+                p1[INDEX_FOR_X] = round(vertices[ridge_vertex[0]][INDEX_FOR_X], self.point_precision)
+                p1[INDEX_FOR_Y] = round(vertices[ridge_vertex[0]][INDEX_FOR_Y], self.point_precision)
+                p2[INDEX_FOR_X] = round(vertices[ridge_vertex[1]][INDEX_FOR_X], self.point_precision)
+                p2[INDEX_FOR_Y] = round(vertices[ridge_vertex[1]][INDEX_FOR_Y], self.point_precision)
+                if self.in_range(p1, polygon) or self.in_range(p2, polygon):
+                    p1 = tuple(p1)
+                    p2 = tuple(p2)
+                    e = (p1, p2)
+                    if e not in self.edges and self.is_free(p1) and self.is_free(p2):
+                        q1 = obstacles[ridge_point[0]]
+                        q2 = obstacles[ridge_point[1]]
+                        o = (tuple(q1), tuple(q2))
+                        if self.D(q1, q2) > self.min_hallway_width:
+                            self.edges[e] = o
+        self.get_adjacency_list(self.edges)
+        self.connect_subtrees()
+        self.merge_similar_edges()
+        # except Exception as e:
+        #     rospy.logerr("Robot {}: Obstacle size: {}".format(self.robot_id, len(obstacles)))
 
     def connect_subtrees(self):
         N = len(self.adj_list)
@@ -138,7 +140,11 @@ class Graph:
         if N == len(self.adj_dict[self.longest]):
             self.get_adjacency_list(self.edges)
             return
-        allnodes = list(self.adj_list)
+        # allnodes = list(self.adj_list)  considering only leaves instead of all nodes
+        allnodes = []
+        for k, v in self.leave_dict.items():
+            allnodes += v
+        allnodes = list(set(allnodes))
         for leaf, adj in self.adj_dict.items():
             adj_leaves = self.leave_dict[leaf]
             leaf_dist = {}
@@ -156,8 +162,8 @@ class Graph:
                 close_node = leaf_dist[closest]
                 cl_n = self.adj_list[close_node]
                 cls_n = self.adj_list[closest]
-                self.adj_list[closest].append(close_node)
-                self.adj_list[close_node].append(closest)
+                self.adj_list[closest].add(close_node)
+                self.adj_list[close_node].add(closest)
                 w1 = 0
                 w2 = 0
                 clw1 = None
@@ -187,16 +193,16 @@ class Graph:
             first = e[0]
             second = e[1]
             if first in self.adj_list:
-                self.adj_list[first].append(second)
+                self.adj_list[first].add(second)
             else:
-                self.adj_list[first] = [second]
+                self.adj_list[first] = {second}
             if second in self.adj_list:
-                self.adj_list[second].append(first)
+                self.adj_list[second].add(first)
             else:
-                self.adj_list[second] = [first]
+                self.adj_list[second] = {first}
         for k, v in self.adj_list.items():
             if len(v) == 1:
-                self.leaf_slope[k] = self.theta(v[0], k)
+                self.leaf_slope[k] = self.theta(list(v)[0], k)
 
     def get_deeepest_tree_source(self):
         self.leave_dict.clear()
@@ -249,15 +255,14 @@ class Graph:
                     break
                 else:
                     if u not in visited:
-                        # ps = self.slope(parents[u], u)
                         ps = self.get_vector(u, parents[u])
-                        # if abs(us + ps) > SLOPE_MARGIN:
-                        cos_theta, separation = self.compute_similarity(us, ps)
-                        match = 0.9 <= cos_theta <= 1
+                        cos_theta, separation = self.compute_similarity(us, ps,(leaf, u),(u, parents[u]))
+                        match = 1 - self.opposite_vector_bias <= cos_theta <= 1
                         if not match:
                             if parents[u] is not None:
                                 if (u, leaf) not in new_edges:
                                     self.add_edge((u, leaf), new_edges)
+                                    self.add_edge((leaf, u), new_edges)  # TODO more thought on this
                                     leaf = u
                                 pars = copy.deepcopy(parents)
                                 for k, p in pars.items():
@@ -267,14 +272,32 @@ class Graph:
                         u = parents[u]
                     else:
                         self.add_edge((u, leaf), new_edges)
+                        self.add_edge((leaf, u), new_edges)  # TODO more thought on this
                         break
         self.get_adjacency_list(new_edges)
-        self.edges = new_edges
+        self.edges = copy.deepcopy(new_edges)
 
         # backup
         self.old_edges = copy.deepcopy(self.edges)
         self.old_leaf_slope = copy.deepcopy(self.leaf_slope)
         self.old_adj_list = copy.deepcopy(self.adj_list)
+
+    def add_edge(self, edge, new_edges):
+        obst = ((0, 0), (0, 0))
+        p1 = edge[0]
+        neighbors = self.adj_list[p1]
+        for n in neighbors:
+            if (p1, n) in self.edges:
+                o = self.edges[(p1, n)]
+                new_edges[edge] = o
+                obst = 0
+                break
+            if (n, p1) in self.edges:
+                o = self.edges[(n, p1)]
+                new_edges[edge] = o
+                obst = o
+                break
+        return obst
 
     def get_frontiers(self, pose, count):
         self.lock.acquire()
@@ -308,7 +331,6 @@ class Graph:
         close_edge = []
         robot_pose = self.pose2pixel(robot_pose)
         vertex_dict = {}
-        ri_dict = {}
         closest_ridge = {}
         edge_list = list(self.old_edges)
         for e in edge_list:
@@ -316,19 +338,19 @@ class Graph:
             p2 = e[1]
             o = self.old_edges[e]
             width = self.D(o[0], o[1])
-            if self.D(p1, robot_pose) < COMM_RANGE and self.D(p1, p2) > 1 / self.resolution:
-                u_check = self.W(p1, robot_pose) < width  # or self.W(p2, robot_pose) < width
+            if self.D(p1, p2) > self.min_edge_length: #self.D(p1, robot_pose) < self.comm_range and
+                u_check = self.W(p1, robot_pose) < width or self.W(p2, robot_pose) < width
                 if u_check:
-                    v = self.get_vector(p1, p2)
-                    desc = (v, width)
+                    v1 = self.get_vector(p1, p2)
+                    desc = (v1, width)
                     vertex_dict[e] = desc
-                    distance1 = self.D(p1, robot_pose)
-                    closest_ridge[distance1] = p1
-                    ri_dict[p1] = e
+                    d = norm(np.cross(v1, self.get_vector(robot_pose, p1))) / norm(v1)
+                    closest_ridge[e] = d
         if closest_ridge:
-            close_point = closest_ridge[min(closest_ridge.keys())]
-            close_edge = ri_dict[close_point]
-            intersecs = self.process_decision(vertex_dict, close_edge)
+            cr = min(closest_ridge, key=closest_ridge.get)
+            if closest_ridge[cr] < vertex_dict[cr][1]:
+                close_edge = cr
+                intersecs = self.process_decision(vertex_dict, close_edge, robot_pose)
             now = time.time()
             t = (now - start)
             if self.robot_id == 0:
@@ -339,7 +361,7 @@ class Graph:
         self.lock.release()
         return close_edge, intersecs
 
-    def process_decision(self, vertex_descriptions, ridge):
+    def process_decision(self, vertex_descriptions, ridge, robot_pose):
         r_desc = vertex_descriptions[ridge]
         v1 = r_desc[0]
         w1 = r_desc[1]
@@ -351,22 +373,17 @@ class Graph:
                 p3 = j[1]
                 v2 = desc[0]
                 w2 = desc[1]
-                cos_theta, separation = self.compute_similarity(v1, v2)
-                if self.D(p2, p3) > SCAN_RADIUS:
-                    # width_diff = abs(w1 - w2)
-                    if -1 <= cos_theta <= -0.9:
-                        # if width_diff < 1 / self.resolution:
-                        if separation <= 0.1 / self.resolution:
+                cos_theta, separation = self.compute_similarity(v1, v2,ridge,j)
+                if self.D(robot_pose, p3) > self.lidar_scan_radius:
+                    if -1 <= cos_theta <= -1 + self.opposite_vector_bias:
+                        if separation <= max([w1,w2]):
                             if self.collinear(p1, p2, p3, w1):
-                                # if self.there_is_unknown_region(p2, p3):
-                                intersections.append((ridge, j))
-                                # break
-                                # else:
-                                #     rospy.logerr("Is in unknown: {}".format(self.there_is_unknown_region(p2, p3)))
-                                #     pass
+                                if self.there_is_unknown_region(robot_pose, p3):
+                                    intersections.append((ridge, j))
+                                else:
+                                    rospy.logerr( "Is in unknown: {}".format(self.there_is_unknown_region(robot_pose, p3)))
                             else:
                                 rospy.logerr("Collinear: {}".format(self.collinear(p1, p2, p3, w1)))
-                                pass
                         else:
                             # rospy.logerr("Separation: {}".format(separation))
                             pass
@@ -376,10 +393,10 @@ class Graph:
         return intersections
 
     def there_is_unknown_region(self, p1, p2):
-        x_min = int(round(min([p1[1], p2[1]])))
-        y_min = int(round(min([p1[0], p2[0]])))
-        x_max = int(round(max([p1[1], p2[1]])))
-        y_max = int(round(max([p1[0], p2[0]])))
+        x_min = int(round(min([p1[INDEX_FOR_X], p2[INDEX_FOR_X]])))
+        y_min = int(round(min([p1[INDEX_FOR_Y], p2[INDEX_FOR_Y]])))
+        x_max = int(round(max([p1[INDEX_FOR_X], p2[INDEX_FOR_X]])))
+        y_max = int(round(max([p1[INDEX_FOR_Y], p2[INDEX_FOR_Y]])))
         points = []
         point_count = 0
         for x in range(x_min, x_max + 1):
@@ -402,10 +419,10 @@ class Graph:
         for leaf, slope in self.old_leaf_slope.items():
             if leaf not in self.obstacles:
                 obs = None
-                if (self.old_adj_list[leaf][0], leaf) in self.old_edges:
-                    obs = self.old_edges[(self.old_adj_list[leaf][0], leaf)]
-                elif (leaf, self.old_adj_list[leaf][0]) in self.old_edges:
-                    obs = self.old_edges[(leaf, self.old_adj_list[leaf][0])]
+                if (list(self.old_adj_list[leaf])[0], leaf) in self.old_edges:
+                    obs = self.old_edges[(list(self.old_adj_list[leaf])[0], leaf)]
+                elif (leaf, list(self.old_adj_list[leaf])[0]) in self.old_edges:
+                    obs = self.old_edges[(leaf, list(self.old_adj_list[leaf])[0])]
                 if obs:
                     frontier_size[leaf] = self.D(obs[0], obs[1])
                     ks, us = self.area(leaf, slope)
@@ -414,41 +431,6 @@ class Graph:
                         self.new_information[leaf] = unknown_area
                     self.known_points[leaf] = ks
                     self.unknown_points[leaf] = us
-
-    def next_states(self, row, col, scale=10):
-        neighbors = []
-        for i in range(scale):
-            values = []
-            right = [0] * 2
-            down = [0] * 2
-            up = [0] * 2
-            left = [0] * 2
-            right[INDEX_FOR_X] = row + i
-            right[INDEX_FOR_Y] = col
-            right = tuple(right)
-
-            down[INDEX_FOR_X] = row
-            down[INDEX_FOR_Y] = col - 1
-            down = tuple(down)
-
-            up[INDEX_FOR_X] = row
-            up[INDEX_FOR_Y] = col + 1
-            up = tuple(up)
-
-            left[INDEX_FOR_X] = row - i
-            left[INDEX_FOR_Y] = col
-            left = tuple(left)
-
-            if right in self.pixel_desc:
-                values.append(self.pixel_desc[right])
-            if down in self.pixel_desc:
-                values.append(self.pixel_desc[down])
-            if up in self.pixel_desc:
-                values.append(self.pixel_desc[up])
-            if left in self.pixel_desc:
-                values.append(self.pixel_desc[left])
-            neighbors += values
-        return neighbors
 
     def pose2pixel(self, pose):
         x = round((pose[INDEX_FOR_X] - self.origin_x) / self.resolution)
@@ -460,8 +442,8 @@ class Graph:
 
     def pixel2pose(self, point):
         new_p = [0] * 2
-        new_p[INDEX_FOR_Y] = round(self.origin_x + point[INDEX_FOR_X] * self.resolution, 2)
-        new_p[INDEX_FOR_X] = round(self.origin_y + point[INDEX_FOR_Y] * self.resolution, 2)
+        new_p[INDEX_FOR_Y] = round(self.origin_x + point[INDEX_FOR_X] * self.resolution, self.point_precision)
+        new_p[INDEX_FOR_X] = round(self.origin_y + point[INDEX_FOR_Y] * self.resolution, self.point_precision)
         return tuple(new_p)
 
     def theta(self, p, q):
@@ -500,19 +482,19 @@ class Graph:
         return v
 
     def area(self, point, orientation):
-        resolution = 1
         known_points = []
         unknown_points = []
-        for d in np.arange(0, INFO_SCAN_RADIUS, resolution):
+        for d in np.arange(0, self.info_scan_radius, 1):
             distance_points = []
-            for theta in range(-1 * THETA_SC // 2, THETA_SC + 1):
+            for theta in range(-1 * self.lidar_fov // 2, self.lidar_fov + 1):
                 angle = np.deg2rad(theta) + orientation
                 x = point[INDEX_FOR_X] + d * np.cos(angle)
                 y = point[INDEX_FOR_Y] + d * np.sin(angle)
                 new_p = [0] * 2
                 new_p[INDEX_FOR_X] = x
                 new_p[INDEX_FOR_Y] = y
-                distance_points.append(tuple(new_p))
+                new_p = tuple(new_p)
+                distance_points.append(new_p)
             unique_points = list(set(distance_points))
             for p in unique_points:
                 if self.is_free(p) or self.is_obstacle(p):
@@ -521,38 +503,7 @@ class Graph:
                     unknown_points.append(p)
         return known_points, unknown_points
 
-    def connect_root(self, node, prev_obst, new_edges):
-        if len(self.adj_dict) > 1:
-            dist = {}
-            for leaf, adj in self.adj_dict.items():
-                if node not in adj:
-                    for k, l in adj.items():
-                        dist[k] = self.D(k, node)
-            if dist:
-                nei = min(dist, key=dist.get)
-                new_edges[(nei, node)] = prev_obst
-
-    def add_edge(self, edge, new_edges):
-        obst = ((0, 0), (0, 0))
-        p1 = edge[0]
-        neighbors = self.adj_list[p1]
-        for n in neighbors:
-            if (p1, n) in self.edges:
-                o = self.edges[(p1, n)]
-                new_edges[edge] = o
-                obst = 0
-                break
-            if (n, p1) in self.edges:
-                o = self.edges[(n, p1)]
-                new_edges[edge] = o
-                obst = o
-                break
-        return obst
-
-    def round_point(self, p):
-        return (round(p[INDEX_FOR_X], PRECISION), round(p[INDEX_FOR_Y], PRECISION))
-
-    def compute_similarity(self, v1, v2):
+    def compute_similarity(self, v1, v2,e1,e2):
         dv1 = np.sqrt(v1[INDEX_FOR_X] ** 2 + v1[INDEX_FOR_Y] ** 2)
         dv2 = np.sqrt(v2[INDEX_FOR_X] ** 2 + v2[INDEX_FOR_Y] ** 2)
         dotv1v2 = v1[INDEX_FOR_X] * v2[INDEX_FOR_X] + v1[INDEX_FOR_Y] * v2[INDEX_FOR_Y]
@@ -561,9 +512,9 @@ class Graph:
             v1v2 = 1
         if abs(dotv1v2) == 0:
             dotv1v2 = 0
-        cos_theta = round(dotv1v2 / v1v2, 3)
-        separation = round(dv1 * math.sin(math.acos(cos_theta)), 2)
-        return cos_theta, separation
+        cos_theta = round(dotv1v2 / v1v2, self.point_precision)
+        sep = self.separation(e1,e2)
+        return cos_theta, sep
 
     def get_linear_points(self, intersections):
         linear_ridges = []
@@ -571,7 +522,7 @@ class Graph:
             p1 = intersect[0][0]
             p2 = intersect[0][1]
             p3 = intersect[1][1]
-            if self.D(p2, p3) > SCAN_RADIUS and self.collinear(p1, p2, p3):
+            if self.D(p2, p3) > self.lidar_fov and self.collinear(p1, p2, p3):
                 linear_ridges.append(intersect)
         return linear_ridges
 
@@ -581,36 +532,6 @@ class Graph:
         if s1 == s2 or self.W(p2, p3) < width:
             return True
         return False
-
-    def there_is_unknown_region(self, p1, p2):
-        x_min = int(round(min([p1[1], p2[1]])))
-        y_min = int(round(min([p1[0], p2[0]])))
-        x_max = int(round(max([p1[1], p2[1]])))
-        y_max = int(round(max([p1[0], p2[0]])))
-        points = []
-        point_count = 0
-        for x in range(x_min, x_max + 1):
-            for y in range(y_min, y_max + 1):
-                point_count += 1
-                region_point = [0] * 2
-                region_point[INDEX_FOR_X] = x
-                region_point[INDEX_FOR_Y] = y
-                region_point = tuple(region_point)
-                if region_point in self.pixel_desc and self.pixel_desc[region_point] == UNKNOWN:
-                    points.append(region_point)
-        return len(points) >= point_count / 2.0
-
-    def get_directed_adjacency_list(self, hallway_vertices):
-        adj_list = {}
-        for e in hallway_vertices:
-            first = e[0]
-            second = e[1]
-            if first in adj_list:
-                adj_list[first].append(second)
-            else:
-                adj_list[first] = [second]
-        nodes = [k for k, v in adj_list.items() if len(v) == 1]
-        return adj_list, nodes
 
     def process_edges(self):
         x_pairs = []
@@ -623,6 +544,15 @@ class Graph:
                 y_pairs.append(yh)
         return x_pairs, y_pairs
 
+    def separation(self, e1, e2):
+        p1 = e1[0]
+        p2 = e1[1]
+        p3 = e2[0]
+        p4 = e2[1]
+        c1 = p1[INDEX_FOR_Y] - self.slope(p1, p2) * p1[INDEX_FOR_X]
+        c2 = p4[INDEX_FOR_Y] - self.slope(p3, p4) * p4[INDEX_FOR_X]
+        return abs(c1 - c2)
+
     def is_free(self, p):
         xc = np.round(p[INDEX_FOR_X])
         yc = np.round(p[INDEX_FOR_Y])
@@ -630,7 +560,20 @@ class Graph:
         new_p[INDEX_FOR_X] = xc
         new_p[INDEX_FOR_Y] = yc
         new_p = tuple(new_p)
-        return new_p in self.pixel_desc and self.pixel_desc[new_p] == FREE  # self.free_points
+        return new_p in self.pixel_desc and self.pixel_desc[new_p] == FREE
+
+    def neighbors(self, pose, scale):
+        x = pose[INDEX_FOR_X]
+        y = pose[INDEX_FOR_Y]
+        neighbors = []
+        for i in range(scale):
+            ranges = [(x - i, y - i), (x - i, y + i), (x + i, y + i), (x + i, y - i)]
+            for r in ranges:
+                if r in self.pixel_desc and self.pixel_desc[r] != OCCUPIED:
+                    neighbors.append(self.pixel_desc[r])
+        if neighbors:
+            return max(neighbors, key=neighbors.count) == FREE
+        return False
 
     def is_obstacle(self, p):
         xc = np.round(p[INDEX_FOR_X])
@@ -661,11 +604,13 @@ class Graph:
 
         x = [v[INDEX_FOR_X] for v in obstacles]
         y = [v[INDEX_FOR_Y] for v in obstacles]
-        current_x = [ridge[0][INDEX_FOR_X], ridge[1][INDEX_FOR_X]]
-        current_y = [ridge[0][INDEX_FOR_Y], ridge[1][INDEX_FOR_Y]]
+        current_x = []
+        current_y = []
+        if ridge:
+            current_x = [ridge[0][INDEX_FOR_X], ridge[1][INDEX_FOR_X]]
+            current_y = [ridge[0][INDEX_FOR_Y], ridge[1][INDEX_FOR_Y]]
         target_x = []
         target_y = []
-
         for section in intersections:
             Q = section[1]
             target_x += [Q[0][INDEX_FOR_X], Q[1][INDEX_FOR_X]]
@@ -708,7 +653,7 @@ class Graph:
         for i in range(len(x_pairs)):
             x = x_pairs[i]
             y = y_pairs[i]
-            ax.plot(x, y, "g-.")
+            ax.plot(x, y, "m-.")
         ax.scatter(fp[INDEX_FOR_X], fp[INDEX_FOR_Y], color='blue', marker='s')  # Pose in x, y -- col, row.
 
         if vertext:
@@ -757,7 +702,8 @@ class Graph:
                     elif p > 0:
                         self.pixel_desc[index] = OCCUPIED
                         self.obstacles[index] = None
-        self.old_obstacles = copy.deepcopy(self.obstacles)
+        if self.obstacles:
+            self.old_obstacles = copy.deepcopy(self.obstacles)
         self.lock.release()
 
     def in_range(self, point, polygon):
@@ -768,10 +714,10 @@ class Graph:
     def create_polygon(self, pose):
         x = pose[INDEX_FOR_X]
         y = pose[INDEX_FOR_Y]
-        first = (x - COMM_RANGE, y - COMM_RANGE)
-        second = (x - COMM_RANGE, y + COMM_RANGE)
-        third = (x + COMM_RANGE, y + COMM_RANGE)
-        fourth = (x + COMM_RANGE, y - COMM_RANGE)
+        first = (x - self.comm_range, y - self.comm_range)
+        second = (x - self.comm_range, y + self.comm_range)
+        third = (x + self.comm_range, y + self.comm_range)
+        fourth = (x + self.comm_range, y - self.comm_range)
         ranges = [first, second, third, fourth]
         return ranges
 
