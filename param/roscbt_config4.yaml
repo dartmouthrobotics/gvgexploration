@@ -1,0 +1,23 @@
+robot_ids: ['0','1','2','3']
+robot_types: {'0':2,'1':2,'2':2,'3':2}
+robot_ranges: {'0':20,'1':20,'2':20,'3':20}
+robot_map: [{'id': 0, 'comm_model': 'disc', 'connections': [1,2,3]}, {'id': 1, 'comm_model': 'disc', 'connections': [0,2,3]},{'id': 2, 'comm_model': 'disc', 'connections': [0,1,3]},{'id': 3, 'comm_model': 'disc', 'connections': [0,1,2]}]
+topics: [{'name': 'base_pose_ground_truth', 'pkg': 'nav_msgs', 'message_type': 'Odometry', 'message_pkg': 'nav_msgs', 'remap': 1, 'ns': 'robot'},{'name': 'signal_strength', 'pkg': 'gvgexploration', 'message_type': 'SignalStrength', 'message_pkg': 'gvgexploration', 'remap': 1, 'ns': 'robot'},{'name': 'chosen_point', 'pkg': 'gvgexploration', 'message_type': 'ChosenPoint', 'message_pkg': 'gvgexploration', 'remap': 1, 'ns': 'robot'},{'name': 'rendezvous_points', 'pkg': 'gvgexploration', 'message_type': 'RendezvousPoints', 'message_pkg': 'gvgexploration', 'remap': 1, 'ns': 'robot'},{'name': 'received_data', 'pkg': 'gvgexploration', 'message_type': 'BufferedData', 'message_pkg': 'gvgexploration', 'remap': 1, 'ns': 'robot'}]
+topic_remaps: [{'name': 'karto_out', 'pkg': 'nav2d_karto', 'from': 'karto_out', 'to': '/karto_out', 'message_type': 'LocalizedScan', 'message_pkg': 'nav2d_msgs', 'remap': 1}]
+shared_topics: {'0':{'1': {'received_data':'BufferedData','rendezvous_points':'RendezvousPoints','chosen_point':'ChosenPoint'},
+                     '2': {'received_data':'BufferedData','rendezvous_points':'RendezvousPoints','chosen_point':'ChosenPoint'},
+                     '3': {'received_data':'BufferedData','rendezvous_points':'RendezvousPoints','chosen_point':'ChosenPoint'}},
+                '1':{'0': {'received_data':'BufferedData','rendezvous_points':'RendezvousPoints','chosen_point':'ChosenPoint'},
+                     '2': {'received_data':'BufferedData','rendezvous_points':'RendezvousPoints','chosen_point':'ChosenPoint'},
+                     '3': {'received_data':'BufferedData','rendezvous_points':'RendezvousPoints','chosen_point':'ChosenPoint'}},
+                '2':{'0': {'received_data':'BufferedData','rendezvous_points':'RendezvousPoints','chosen_point':'ChosenPoint'},
+                     '1': {'received_data':'BufferedData','rendezvous_points':'RendezvousPoints','chosen_point':'ChosenPoint'},
+                     '3': {'received_data':'BufferedData','rendezvous_points':'RendezvousPoints','chosen_point':'ChosenPoint'}},
+                '3':{'0': {'received_data':'BufferedData','rendezvous_points':'RendezvousPoints','chosen_point':'ChosenPoint'},
+                     '1': {'received_data':'BufferedData','rendezvous_points':'RendezvousPoints','chosen_point':'ChosenPoint'},
+                     '2': {'received_data':'BufferedData','rendezvous_points':'RendezvousPoints','chosen_point':'ChosenPoint'}}}
+
+map_image_path: '/home/masaba/stage_ws/src/gvgexploration/world/cave.png'
+world_center: [40.0,15.0]
+world_scale: 10
+map_pose: [39.85,14.55]

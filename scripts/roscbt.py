@@ -70,10 +70,10 @@ class roscbt:
 
         # processing groundtruth about the map
         map_image_path = rospy.get_param("/roscbt/map_image_path", '')
-        self.map_size, self.map_pixels = self.read_map_image(map_image_path)
-        if not self.map_pixels:
-            rospy.loginfo("File not found on path: {}".format(map_image_path))
-            exit(1)
+        # self.map_size, self.map_pixels = self.read_map_image(map_image_path)
+        # if not self.map_pixels:
+        #     rospy.loginfo("File not found on path: {}".format(map_image_path))
+        #     exit(1)
         self.world_scale = rospy.get_param("/roscbt/world_scale", 1)
         self.map_pose = rospy.get_param("/roscbt/map_pose", [])
         self.world_center = rospy.get_param("/roscbt/world_center", [])

@@ -57,6 +57,7 @@ add_message_files(
    ChosenPoint.msg
    RobotSignal.msg
    SignalStrength.msg
+   RobotRange.msg
  )
 
 ## Generate services in the 'srv' folder

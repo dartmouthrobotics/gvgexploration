@@ -12,8 +12,6 @@
             <param name="base_stations" value="$(arg base_stations)"/>
             <param name="frontier_robots" value="$(arg frontier_robots)"/>
             <param name="relay_robots" value="$(arg relay_robots)"/>
-<!--             <remap from="received_data_in" to="/roscbt/robot_$(arg robot_name)/received_data" />-->
-<!--             <remap from="rendezvous_points_in" to="/roscbt/robot_$(arg robot_name)/rendezvous" />-->
     </node>
   </group>
 </launch>

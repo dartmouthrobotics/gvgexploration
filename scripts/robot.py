@@ -142,19 +142,33 @@ class Robot:
         rospy.Subscriber('/robot_{}/Explore/status'.format(self.robot_id), GoalStatusArray, self.exploration_callback)
         rospy.Subscriber("/robot_{}/navigator/plan".format(self.robot_id), GridCells, self.navigation_plan_callback)
         rospy.Subscriber("/chosen_point", ChosenPoint, self.chosen_point_callback)
-        rospy.Subscriber('/karto_out', LocalizedScan, self.robots_karto_out_callback, queue_size=1000)
+        rospy.Subscriber('/karto_out'.format(self.robot_id), LocalizedScan, self.robots_karto_out_callback, queue_size=1000)
         rospy.Subscriber("/chosen_point", ChosenPoint, self.chosen_point_callback)
         rospy.Subscriber("/robot_{}/pose".format(self.robot_id), Pose, callback=self.pose_callback)
+
+        # robot identification sensor
+        self.robot_range_pub = rospy.Publisher("/robot_{}/robot_ranges".format(self.robot_id), RobotRange, queue_size=5)
+        self.robot_poses = {}
+        all_robots = self.candidate_robots + [self.robot_id]
+        for i in all_robots:
+            s = "def a_" + str(i) + "(self, data): self.robot_poses[" + str(i) + "] = (data.pose.pose.position.x," \
+                                                                                "data.pose.pose.position.y," \
+                                                                                "data.pose.pose.position.z) "
+            exec(s)
+            exec("setattr(Robot, 'callback_pos_teammate" + str(i) + "', a_" + str(i) + ")")
+            exec("rospy.Subscriber('/robot_" + str(
+                i) + "/base_pose_ground_truth', Odometry, self.callback_pos_teammate" + str(i) + ", queue_size = 100)")
 
         # ======= pose transformations====================
         self.listener = tf.TransformListener()
         rospy.loginfo("Robot {} Initialized successfully!!".format(self.robot_id))
 
     def spin(self):
-        r = rospy.Rate(0.1)
+        r = rospy.Rate(1)
         self.clear_data()
         while not rospy.is_shutdown():
             # try:
+            self.publish_robot_ranges()
             if self.is_exploring:
                 self.direction_has_changed()
             r.sleep()
@@ -199,10 +213,9 @@ class Robot:
                 self.robot_state = ACTIVE_STATE
 
     def wait_for_map_update(self):
-        # r = rospy.Rate(0.1)
+        r = rospy.Rate(0.1)
         while not self.is_time_to_moveon():
-            # r.sleep()
-            continue
+            r.sleep()
 
     def publish_rendezvous_points(self, rendezvous_poses, receivers, direction=1, total_exploration_time=0):
         x = [float(v[0]) for v in rendezvous_poses]
@@ -219,13 +232,12 @@ class Robot:
 
     def robots_karto_out_callback(self, data):
         if data.robot_id - 1 == self.robot_id:
+            for rid in self.candidate_robots:
+                self.add_to_file(rid, [data])
             if self.is_initial_data_sharing:
                 self.push_messages_to_receiver(self.candidate_robots)
                 self.previous_pose = self.get_robot_pose()
                 self.is_initial_data_sharing = False
-            else:
-                for rid in self.candidate_robots:
-                    self.add_to_file(rid, [data])
 
     def map_callback(self, data):
         self.last_map_update_time = rospy.Time.now().secs
@@ -377,9 +389,11 @@ class Robot:
         sender_id = buff_data.header.frame_id
         if sender_id in self.candidate_robots:
             self.process_data(sender_id, buff_data)
-        rospy.logerr("Robot {} received data from {}".format(self.robot_id, sender_id))
+        # rospy.logerr("Robot {} received data from {}".format(self.robot_id, sender_id))
         self.wait_for_map_update()
         if self.initial_receipt:
+            rospy.logerr(
+                "Robot {} initial data from {}: {} files".format(self.robot_id, sender_id, len(buff_data.data)))
             self.initial_data_count += 1
             if self.initial_data_count == len(self.candidate_robots):
                 self.initial_receipt = False
@@ -390,8 +404,10 @@ class Robot:
                         continue
                     self.others_active = True
                     rospy.logerr("Robot {}: Computing frontier points Active".format(self.robot_id))
-                    frontier_points = self.graph_processor.get_frontiers((robot_pose[1], robot_pose[0]),
+                    self.graph_processor.computing_frontiers = True
+                    frontier_points = self.graph_processor.get_frontiers((robot_pose[0], robot_pose[1]),
                                                                          len(self.candidate_robots) + 1)
+                    self.graph_processor.computing_frontiers = False
                     rospy.logerr("Robot {}: Computing frontier points NOT Active".format(self.robot_id))
                     self.others_active = False
                     self.map_update_count = 0
@@ -416,8 +432,10 @@ class Robot:
                     while self.map_update_is_active:
                         continue
                     self.others_active = True
+                    self.graph_processor.computing_frontiers = True
                     frontier_points = self.graph_processor.get_frontiers((robot_pose[1], robot_pose[0]),
                                                                          len(self.candidate_robots) + 1)
+                    self.graph_processor.computing_frontiers = False
                     self.others_active = False
                     self.map_update_count = 0
                     if frontier_points:
@@ -507,7 +525,7 @@ class Robot:
                 (robot_loc_val, rot) = self.listener.lookupTransform("robot_{}/map".format(self.robot_id),
                                                                      "robot_{}/base_link".format(self.robot_id),
                                                                      rospy.Time(0))
-                robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]))
+                robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]),robot_loc_val[2])
                 sleep(1)
             except:
                 # rospy.logerr("Robot {}: Can't fetch robot pose from tf".format(self.robot_id))
@@ -551,12 +569,12 @@ class Robot:
         return True
 
     def add_to_file(self, rid, data):
-        self.lock.acquire()
+        # self.lock.acquire()
         if rid in self.karto_messages:
             self.karto_messages[rid] += data
         else:
             self.karto_messages[rid] = data
-        self.lock.release()
+        # self.lock.release()
         return True
 
     def load_data_for_id(self, rid):
@@ -578,6 +596,14 @@ class Robot:
         return data_dict
 
     def load_data(self):
+        data_dict = []
+        if path.exists(self.data_file_name) and path.getsize(self.data_file_name) > 0:
+            with open(self.data_file_name, 'rb') as fp:
+                try:
+                    data_dict = pickle.load(fp)
+                except Exception as e:
+                    rospy.logerr("error: {}".format(e))
+
         return self.karto_messages
 
     def update_file(self, data):
@@ -628,6 +654,59 @@ class Robot:
                 except Exception as e:
                     rospy.logerr("error: {}".format(e))
         return data_dict
+
+    def save_data(self, data, file_name):
+        saved_data = []
+        if not path.exists(file_name):
+            f = open(file_name, "wb+")
+            f.close()
+        else:
+            saved_data = self.load_data_from_file(file_name)
+        saved_data += data
+        with open(file_name, 'wb') as fp:
+            pickle.dump(saved_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
+            fp.close()
+
+    def load_data_from_file(self, file_name):
+        data_dict = []
+        if path.exists(file_name) and path.getsize(file_name) > 0:
+            with open(file_name, 'rb') as fp:
+                try:
+                    data_dict = pickle.load(fp)
+                except Exception as e:
+                    rospy.logerr("error: {}".format(e))
+        return data_dict
+
+    def theta(self, p, q):
+        dx = q[0] - p[0]
+        dy = q[1] - p[1]
+        if dx == 0:
+            dx = 0.000001
+        return math.atan2(dy, dx)
+
+    def D(self, p, q):
+        dx = q[0] - p[0]
+        dy = q[1] - p[1]
+        return math.sqrt(dx ** 2 + dy ** 2)
+
+    def publish_robot_ranges(self):
+        if self.robot_id in self.robot_poses:
+            current_pose = self.robot_poses[self.robot_id]
+            distances = []
+            angles = []
+            for rid in self.candidate_robots:
+                if int(rid) in self.robot_poses:
+                    rpose = self.robot_poses[int(rid)]
+                    d = self.D(current_pose, rpose)
+                    th = self.theta(current_pose, rpose)
+                    distances.append(d)
+                    angles.append(th)
+            robot_range = RobotRange()
+            robot_range.distances = distances
+            robot_range.angles = angles
+            robot_range.robot_id = self.robot_id
+            robot_range.header.stamp = rospy.Time.now()
+            self.robot_range_pub.publish(robot_range)
 
 
 if __name__ == "__main__":

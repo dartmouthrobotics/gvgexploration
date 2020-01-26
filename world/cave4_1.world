@@ -32,22 +32,35 @@ window
 floorplan
 (
   name "tutorial"
-  bitmap "maze.png"
-  size [ 80.0 80.0 2.0 ]
+  bitmap "cave.png"
+  size [ 80.0 80.1 2.0 ]
   pose [  39.85  14.55 0.0 0.0 ]
 )
 
 pioneer3at
 (
   name "robot1"
-  color "red"
-  pose [2.0 20.0 0.0 0.0]
+  color "purple"
+  pose [28.0 -6.0 0.0 0.0]
 )
 
 # Put two robots into the world
 pioneer3at
 (
   name "robot2"
-  color "blue"
-  pose [2.0 18.0 0.0 0.0]
+  color "purple"
+  pose [36.0 -2.0 0.0 0.0]
+)
+pioneer3at
+(
+  name "robot3"
+  color "purple"
+  pose [34.0 -12.0 0.0 0.0]
+)
+
+pioneer3at
+(
+  name "robot4"
+  color "purple"
+  pose [40.0 -6.0 0.0 0.0]
 )

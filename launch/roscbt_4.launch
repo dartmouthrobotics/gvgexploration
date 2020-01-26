@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+<param name="use_sim_time" value="true" />
+<group ns="robot_0">
+<node pkg="nav2d_karto" name="Mapper" type="mapper">
+    <remap from="karto_out" to="/karto_out" />
+</node>
+</group>
+<group ns="robot_1">
+<node pkg="nav2d_karto" name="Mapper" type="mapper">
+    <remap from="karto_out" to="/karto_out" />
+</node>
+</group>
+<group ns="robot_2">-
+<node pkg="nav2d_karto" name="Mapper" type="mapper">
+<remap from="karto_out" to="/karto_out" />
+</node>
+ </group>
+
+ <group ns="robot_3">
+<node pkg="nav2d_karto" name="Mapper" type="mapper">
+ <remap from="karto_out" to="/karto_out" />
+</node>
+</group>
+
+<node name="roscbt" pkg="gvgexploration" type="roscbt.py" respawn="true">
+    <rosparam file="$(find gvgexploration)/param/roscbt_config4.yaml"/>
+</node>
+
+</launch>
