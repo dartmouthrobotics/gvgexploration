@@ -10,7 +10,8 @@ map_frame: map
 
 ### ROS topics ############################################
 map_topic: map
-laser_topic: base_scan
+laser_topic: filtered_scan
+#laser_topic: base_scan
 
 scan_subscriber_status: scan_status  # @kizito
 
@@ -25,15 +26,15 @@ map_inflation_radius: 0.75
 
 # kizito
 robot_pose: base_pose_ground_truth
-robot_count: 10
-min_hallway_width: 20  # 1/0.05
-comm_range: 400     # 20/0.05
+robot_count: 2
+min_hallway_width: 1
+comm_range: 20
 point_precision: 2
-min_edge_length: 20  #1/0.05
-lidar_scan_radius: 100 # 5.0 / 0.05
-info_scan_radius: 40.0  #  8/0.05
+min_edge_length: 1
+lidar_scan_radius: 10
+info_scan_radius: 10
 lidar_fov: 360
 slope_bias: 0.1
-opposite_vector_bias: 0.1
-separation_bias: 1.0
+opposite_vector_bias: 0.25
+separation_bias: 20
 

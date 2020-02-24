@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   nav2d_msgs
   sensor_msgs
+  actionlib_msgs
   message_generation
 )
 
@@ -45,7 +46,7 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add "message_runtime" and every package in MSG_DEP_SET to
 ##     catkin_package(CATKIN_DEPENDS ...)
 ##   * uncomment the add_*_files sections below as needed
-##     and list every .msg/.srv/.action file to be processed
+##     and list every .msg/.action/.action file to be processed
 ##   * uncomment the generate_messages entry below
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
@@ -58,21 +59,27 @@ add_message_files(
    RobotSignal.msg
    SignalStrength.msg
    RobotRange.msg
+   Receipient.msg
+   EdgeList.msg
+   Pixel.msg
+   Coverage.msg
+   Ridge.msg
  )
 
-## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+## Generate services in the 'action' folder
+add_service_files(
+  FILES
+  FrontierPoint.srv
+  Intersections.srv
+#  Service2.srv
+)
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
+add_action_files(
+  FILES
+  GvgExplore.action
 #   Action2.action
-# )
+)
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
@@ -80,6 +87,7 @@ generate_messages(
    std_msgs
    nav2d_msgs
    sensor_msgs
+   actionlib_msgs
  )
 
 ################################################
@@ -116,6 +124,7 @@ catkin_package(
 #  LIBRARIES finalproject
 #  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
+CATKIN_DEPENDS actionlib_msgs
 )
 
 ###########

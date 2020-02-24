@@ -3,10 +3,8 @@ geometry_msgs/Pose pose
 ---
 #result definition
 string result
-float32[] final_point
-float32 final_y
+geometry_msgs/Pose[] explored_points
 ---
 #feedback
 string progress
-float32[] visted_points_x
-float32[] visted_points_y
+geometry_msgs/Pose current_point
