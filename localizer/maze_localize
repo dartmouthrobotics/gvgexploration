@@ -17,4 +17,3 @@ pose:
 #rosservice call /robot_2/StartExploration "{}"
 #rosservice call /robot_3/StartExploration "{}"
 #rosservice call /robot_4/StartExploration "{}"
-

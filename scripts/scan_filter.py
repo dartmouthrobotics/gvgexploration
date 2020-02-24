@@ -1,8 +1,7 @@
 #!/usr/bin/python
 import rospy
 from sensor_msgs.msg import LaserScan
-from gvgexploration.msg import RobotRange
-from message_filters import ApproximateTimeSynchronizer, Subscriber
+from message_filters import ApproximateTimeSynchronizer
 import message_filters
 from nav_msgs.msg import Odometry
 import numpy as np

@@ -104,16 +104,6 @@ class Robot:
         self.trans_matrices = {}
         self.inverse_trans_matrices = {}
         self.prev_intersects = []
-        all_robots = self.candidate_robots + [self.robot_id]
-        for i in all_robots:
-            s = "def a_" + str(i) + "(self, data): self.robot_poses[" + str(i) + "] = (data.pose.pose.position.x," \
-                                                                                 "data.pose.pose.position.y," \
-                                                                                 "(data.pose.pose.orientation.x,data.pose.pose.orientation.y,data.pose.pose.orientation.z,data.pose.pose.orientation.w)) "
-            exec (s)
-            exec ("setattr(Robot, 'callback_pos_teammate" + str(i) + "', a_" + str(i) + ")")
-            exec ("rospy.Subscriber('/robot_" + str(
-                i) + "/base_pose_ground_truth', Odometry, self.callback_pos_teammate" + str(i) + ", queue_size = 100)")
-
         # ======= pose transformations====================
         self.listener = tf.TransformListener()
         self.exploration = SimpleActionClient("/robot_{}/gvg_explore".format(self.robot_id), GvgExploreAction)
