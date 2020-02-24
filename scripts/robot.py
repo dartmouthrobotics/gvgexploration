@@ -12,10 +12,10 @@ from geometry_msgs.msg import *
 import math
 from graph import Graph
 from gvgexploration.msg import *
+from gvgexploration.srv import *
 from nav2d_navigator.msg import MoveToPosition2DActionGoal, MoveToPosition2DActionResult
 from actionlib_msgs.msg import GoalStatusArray, GoalID
-from std_srvs.srv import Trigger
-
+import numpy as np
 from time import sleep
 from threading import Thread, Lock
 import copy
@@ -24,6 +24,9 @@ import tf
 import pickle
 import os
 from os.path import exists
+from actionlib import SimpleActionClient
+
+MAX_COVERAGE_RATIO = 0.8
 
 INF = 1000000000000
 NEG_INF = -1000000000000
@@ -39,6 +42,7 @@ ACTIVE = 1  # The goal is currently being processed by the action server
 SUCCEEDED = 3  # The goal was achieved successfully by the action server (Terminal State)
 ABORTED = 4  # The goal was aborted during execution by the action server due to some failure (Terminal State)
 LOST = 9  # An action client can determine that a goal is LOST. This should not be sent over the wire by an action
+TURNING_ANGLE = np.deg2rad(45)
 
 
 class Robot:
@@ -53,169 +57,128 @@ class Robot:
         self.candidate_robots = []
         self.rendezvous_publishers = {}
         self.frontier_point = None
-        self.previous_frontier_point = None
         self.robot_state = ACTIVE_STATE
         self.publisher_map = {}
         self.initial_data_count = 0
         self.is_exploring = False
-        self.exploration_id = None
+        self.exploration_started = False
         self.karto_messages = {}
-        self.last_map_update_time = rospy.Time.now().secs
-        self.last_buffered_data_time = rospy.Time.now().secs
-        self.goal_count = 0
-        self.exploration_start_time = None
-        self.total_exploration_time = None
-        self.moveTo_pub = None
         self.start_exploration = None
-        self.move_to_stop = None
-        self.cancel_explore_pub = None
         self.received_choices = {}
-        self.vertex_descriptions = {}
-        self.navigation_plan = None
-        self.waiting_for_plan = False
-        self.start_now = None
         self.robot_pose = None
         self.signal_strength = {}
         self.close_devices = []
         self.received_devices = 0
-        self.move_attempt = 0
-        self.is_initial_rendezvous_sharing = True
-        self.received_choices = {}
+        self.is_initial_sharing = True
         self.is_sender = False
         self.previous_pose = None
-        self.prev_slope = -1
-        self.is_initialization = True
-        self.map_update_is_active = False
-        self.others_active = False
-        self.map_update_count = 0
         self.is_initial_data_sharing = True
         self.initial_receipt = True
+        self.is_initial_move = True
+        self.exploration_data_senders = {}
+        self.frontier_points = []
+        self.coverage_ratio = 0.0
+        self.goal_handle = None
+
         self.candidate_robots = self.frontier_robots + self.base_stations
         self.rate = rospy.Rate(0.1)
-
-        self.min_hallway_width = rospy.get_param("/robot_{}/min_hallway_width".format(self.robot_id))
-        self.comm_range = rospy.get_param("/robot_{}/comm_range".format(self.robot_id))
-        self.point_precision = rospy.get_param("/robot_{}/point_precision".format(self.robot_id))
-        self.min_edge_length = rospy.get_param("/robot_{}/min_edge_length".format(self.robot_id))
-        self.lidar_scan_radius = rospy.get_param("/robot_{}/lidar_scan_radius".format(self.robot_id))
-        self.info_scan_radius = rospy.get_param("/robot_{}/info_scan_radius".format(self.robot_id))
-        self.lidar_fov = rospy.get_param("/robot_{}/lidar_fov".format(self.robot_id))
-        self.slope_bias = rospy.get_param("/robot_{}/slope_bias".format(self.robot_id))
-        self.separation_bias = rospy.get_param("/robot_{}/separation_bias".format(self.robot_id))
-        self.opposite_vector_bias = rospy.get_param("/robot_{}/opposite_vector_bias".format(self.robot_id))
-        self.graph_processor = Graph(robot_id)
-        self.graph_processor.init(self.min_hallway_width, self.comm_range, self.point_precision, self.min_edge_length,
-                                  self.lidar_scan_radius, self.info_scan_radius, self.lidar_fov, self.slope_bias,
-                                  self.separation_bias, self.opposite_vector_bias)
-
+        self.run = rospy.get_param("~run")
         for rid in self.candidate_robots:
             pub = rospy.Publisher("/robot_{}/received_data".format(rid), BufferedData, queue_size=1000)
             pub1 = rospy.Publisher("/robot_{}/rendezvous_points".format(rid), RendezvousPoints, queue_size=10)
             self.publisher_map[rid] = pub
             self.rendezvous_publishers[rid] = pub1
-            rospy.Subscriber("/robot_{}/start_exploration".format(rid), String, self.start_exploration_callback)
 
         self.karto_pub = rospy.Publisher("/robot_{}/karto_in".format(self.robot_id), LocalizedScan, queue_size=1000)
-        self.chose_point_pub = rospy.Publisher("/chosen_point", ChosenPoint, queue_size=1000)
-        self.auction_point_pub = rospy.Publisher("/auction_point", ChosenPoint, queue_size=1000)
-        self.start_exploration_pub = rospy.Publisher("/robot_{}/start_exploration".format(self.robot_id), String,
-                                                     queue_size=10)
-        self.moveTo_pub = rospy.Publisher("/robot_{}/MoveTo/goal".format(self.robot_id), MoveToPosition2DActionGoal,
-                                          queue_size=10)
-        self.chose_point_pub = rospy.Publisher("/chosen_point", ChosenPoint, queue_size=1000)
-        self.cancel_explore_pub = rospy.Publisher("/robot_{}/Explore/cancel".format(self.robot_id), GoalID,
-                                                  queue_size=10)
-        self.pose_publisher = rospy.Publisher("/robot_{}/cmd_vel".format(self.robot_id), Twist, queue_size=1)
-        self.start_exploration = rospy.ServiceProxy('/robot_{}/StartExploration'.format(self.robot_id), Trigger)
-        self.move_to_stop = rospy.ServiceProxy('/robot_{}/Stop'.format(self.robot_id), Trigger)
-
-        rospy.Subscriber('/roscbt/robot_{}/received_data'.format(self.robot_id), BufferedData,
-                         self.buffered_data_callback, queue_size=100)
-        rospy.Subscriber('/roscbt/robot_{}/rendezvous_points'.format(self.robot_id), RendezvousPoints,
-                         self.callback_rendezvous_points)
-        rospy.Subscriber("/roscbt/robot_{}/signal_strength".format(self.robot_id), SignalStrength,
-                         self.signal_strength_callback)
-        rospy.Subscriber("/robot_{}/map".format(self.robot_id), OccupancyGrid, self.map_callback, queue_size=1)
-        rospy.Subscriber("/robot_{}/MoveTo/status".format(self.robot_id), GoalStatusArray, self.move_status_callback)
-        rospy.Subscriber("/robot_{}/MoveTo/result".format(self.robot_id), MoveToPosition2DActionResult,
-                         self.move_result_callback)
-        rospy.Subscriber('/robot_{}/Explore/status'.format(self.robot_id), GoalStatusArray, self.exploration_callback)
-        rospy.Subscriber("/robot_{}/navigator/plan".format(self.robot_id), GridCells, self.navigation_plan_callback)
-        rospy.Subscriber("/chosen_point", ChosenPoint, self.chosen_point_callback)
-        rospy.Subscriber('/karto_out'.format(self.robot_id), LocalizedScan, self.robots_karto_out_callback, queue_size=1000)
-        rospy.Subscriber("/chosen_point", ChosenPoint, self.chosen_point_callback)
-        rospy.Subscriber("/robot_{}/pose".format(self.robot_id), Pose, callback=self.pose_callback)
+        rospy.Subscriber('/roscbt/robot_{}/received_data'.format(self.robot_id), BufferedData,self.buffered_data_callback, queue_size=100)
+        rospy.Subscriber("/roscbt/robot_{}/signal_strength".format(self.robot_id), SignalStrength,self.signal_strength_callback)
+        rospy.Subscriber('/karto_out'.format(self.robot_id), LocalizedScan, self.robots_karto_out_callback,queue_size=1000)
+        rospy.Subscriber("/robot_{}/rendezvous_points".format(self.robot_id), RendezvousPoints,self.callback_rendezvous_points)
+        self.fetch_frontier_points = rospy.ServiceProxy('/robot_{}/frontier_points'.format(self.robot_id),FrontierPoint)
+        self.check_intersections = rospy.ServiceProxy('/robot_{}/check_intersections'.format(self.robot_id),Intersections)
+        rospy.Subscriber('/robot_{}/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
 
         # robot identification sensor
         self.robot_range_pub = rospy.Publisher("/robot_{}/robot_ranges".format(self.robot_id), RobotRange, queue_size=5)
         self.robot_poses = {}
+        self.trans_matrices = {}
+        self.inverse_trans_matrices = {}
+        self.prev_intersects = []
         all_robots = self.candidate_robots + [self.robot_id]
         for i in all_robots:
             s = "def a_" + str(i) + "(self, data): self.robot_poses[" + str(i) + "] = (data.pose.pose.position.x," \
-                                                                                "data.pose.pose.position.y," \
-                                                                                "data.pose.pose.position.z) "
-            exec(s)
-            exec("setattr(Robot, 'callback_pos_teammate" + str(i) + "', a_" + str(i) + ")")
-            exec("rospy.Subscriber('/robot_" + str(
+                                                                                 "data.pose.pose.position.y," \
+                                                                                 "(data.pose.pose.orientation.x,data.pose.pose.orientation.y,data.pose.pose.orientation.z,data.pose.pose.orientation.w)) "
+            exec (s)
+            exec ("setattr(Robot, 'callback_pos_teammate" + str(i) + "', a_" + str(i) + ")")
+            exec ("rospy.Subscriber('/robot_" + str(
                 i) + "/base_pose_ground_truth', Odometry, self.callback_pos_teammate" + str(i) + ", queue_size = 100)")
 
         # ======= pose transformations====================
         self.listener = tf.TransformListener()
+        self.exploration = SimpleActionClient("/robot_{}/gvg_explore".format(self.robot_id), GvgExploreAction)
+        self.exploration.wait_for_server()
         rospy.loginfo("Robot {} Initialized successfully!!".format(self.robot_id))
 
     def spin(self):
-        r = rospy.Rate(1)
-        self.clear_data()
+        r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
-            # try:
-            self.publish_robot_ranges()
-            if self.is_exploring:
-                self.direction_has_changed()
-            r.sleep()
-        # except Exception as e:
-        #     rospy.logerr('Error: {}'.format(e))
-        #     break
+            if self.coverage_ratio > MAX_COVERAGE_RATIO:
+                self.cancel_exploration()
+                rospy.logerr("Robot {} Coverage: {}".format(self.robot_id, self.coverage_ratio))
+                rospy.is_shutdown()  # experiment done
+                break
+            else:
+                # try:
+                self.publish_robot_ranges()
+                if self.exploration_started:
+                    self.check_data_sharing_status()
+                r.sleep()
+            # except Exception as e:
+            #     rospy.logerr('Error: {}'.format(e))
+            #     break
+
+    def check_data_sharing_status(self):
+        robot_pose = self.get_robot_pose()
+        poses = list(self.robot_poses.values())
+        actual_poses = []
+        for p in poses:
+            ap = Pose()
+            ap.position.x = p[0]
+            ap.position.y = p[1]
+            actual_poses.append(ap)
+        response = self.check_intersections(IntersectionsRequest(poses=actual_poses))
+        time_stamp = rospy.Time.now().secs
+        # same_as_previous = all([p for p in intersections if p not in self.prev_intersects])
+        # if P and intersections:
+        if response.result:
+            if self.close_devices:  # and not same_as_previous:
+                rospy.logerr("Robot {} sending data to Robot {}".format(self.robot_id, self.close_devices))
+                self.is_sender = True
+                self.push_messages_to_receiver(self.close_devices)
+                self.save_data([{'time': time_stamp, 'pose': robot_pose, 'intersections': []}],
+                               'gvg/interconnections_{}_{}.pickle'.format(self.robot_id,self.run))
+            self.prev_intersects = []
+
+    def coverage_callback(self, data):
+        self.coverage_ratio = data.coverage
 
     def callback_rendezvous_points(self, data):
-        # if int(data.header.frame_id) < int(self.robot_id):
         rospy.logerr("Robot {} received points from {}".format(self.robot_id, data.header.frame_id))
         x = data.x
         y = data.y
-        direction = data.direction
         received_points = [(x[i], y[i]) for i in range(len(x))]
-        self.wait_for_map_update()
-
         robot_pose = self.get_robot_pose()
         valid_points = self.get_available_points(received_points)
         new_point = self.get_closest_point(robot_pose, valid_points)
         if new_point:
             if not self.frontier_point:
                 self.frontier_point = robot_pose
-            self.previous_frontier_point = copy.deepcopy(self.frontier_point)
             self.frontier_point = new_point
-            self.total_exploration_time = data.exploration_time
-            self.move_attempt = 0
-            self.save_data([{'time': rospy.Time.now().secs, 'pose': robot_pose, 'frontier': new_point}],
-                           'plots/frontiers_{}.pickle'.format(self.robot_id))
-
-            if not self.is_initial_rendezvous_sharing:
-                self.move_to_stop()
-            else:
-                self.is_initial_rendezvous_sharing = False
-            self.move_robot_to_goal(self.frontier_point, direction)
-            rospy.logerr("Robot {} going to frontier: {}".format(self.robot_id, self.frontier_point))
-        else:
-            rospy.logerr("Robot {}: No frontier point to go to. Starting exploration anyway...".format(self.robot_id))
-            result = self.start_exploration()
-            if result:
-                self.exploration_start_time = rospy.Time.now()
-                self.is_exploring = True
-                self.robot_state = ACTIVE_STATE
-
-    def wait_for_map_update(self):
-        r = rospy.Rate(0.1)
-        while not self.is_time_to_moveon():
-            r.sleep()
+            self.save_data([{'time': rospy.Time.now().secs, 'pose': robot_pose, 'frontier': new_point}],'gvg/frontiers_{}_{}.pickle'.format(self.robot_id,self.run))
+            if self.is_initial_sharing:
+                self.is_initial_sharing = False
+            self.start_exploration_action(self.frontier_point)
 
     def publish_rendezvous_points(self, rendezvous_poses, receivers, direction=1, total_exploration_time=0):
         x = [float(v[0]) for v in rendezvous_poses]
@@ -236,31 +199,7 @@ class Robot:
                 self.add_to_file(rid, [data])
             if self.is_initial_data_sharing:
                 self.push_messages_to_receiver(self.candidate_robots)
-                self.previous_pose = self.get_robot_pose()
                 self.is_initial_data_sharing = False
-
-    def map_callback(self, data):
-        self.last_map_update_time = rospy.Time.now().secs
-        if not self.map_update_is_active:
-            pose = self.get_robot_pose()
-            self.map_update_is_active = True
-            self.graph_processor.update_occupacygrid(data, pose)
-            self.map_update_is_active = False
-            if self.robot_id == 0:
-                rospy.logerr("Robot {}: Map update NOT active".format(self.robot_id))
-
-    def save_map_data(self, data):
-        resolution = data.info.resolution
-        width = data.info.width
-        height = data.info.height
-        origin_pos = data.info.origin.position
-        grid_values = data.data
-        origin_x = origin_pos.x
-        origin_y = origin_pos.y
-        row = {'resolution': resolution, 'width': width, 'height': height, 'values': grid_values, 'origin_x': origin_x,
-               'origin_y': origin_y, 'known': self.graph_processor.unknowns, 'free': self.graph_processor.free_points,
-               'obstacles': self.graph_processor.obstacles}
-        self.save_data([row], 'map_message{}.pickle'.format(self.robot_id))
 
     def push_messages_to_receiver(self, receiver_ids, is_alert=0):
         for receiver_id in receiver_ids:
@@ -271,63 +210,9 @@ class Robot:
             buffered_data.secs = []
             buffered_data.data = message_data
             buffered_data.alert_flag = is_alert
-            self.publisher_map[receiver_id].publish(buffered_data)
+            self.publisher_map[str(receiver_id)].publish(buffered_data)
             self.delete_data_for_id(receiver_id)
 
-    def direction_has_changed(self):
-        while self.others_active:
-            continue
-        self.others_active = True
-        rospy.logerr("Robot {}: Computing direction".format(self.robot_id))
-        self.check_data_sharing_status()
-        self.others_active = False
-
-    def check_data_sharing_status(self):
-        robot_pose = self.get_robot_pose()
-        P, intersections = self.graph_processor.compute_intersections((robot_pose[1], robot_pose[0]))
-        time_stamp = rospy.Time.now().secs
-        if P and intersections:
-            if self.close_devices:
-                self.is_sender = True
-                for rid in self.close_devices:
-                    rospy.logerr("Robot {} sending data to Robot {}".format(self.robot_id, rid))
-                    self.push_messages_to_receiver([str(rid)])
-                self.save_data([{'time': time_stamp, 'pose': robot_pose, 'intersections': intersections}],
-                               'plots/interconnections_{}.pickle'.format(self.robot_id))
-
-    def move_robot_to_goal(self, goal, direction=1):
-        id_val = "robot_{}_{}_{}".format(self.robot_id, self.goal_count, direction)
-        move = MoveToPosition2DActionGoal()
-        move.header.frame_id = '/robot_{}/map'.format(self.robot_id)
-        goal_id = GoalID()
-        goal_id.id = id_val
-        move.goal_id = goal_id
-        move.goal.target_pose.x = goal[0]
-        move.goal.target_pose.y = goal[1]
-        self.moveTo_pub.publish(move)
-        self.goal_count += 1
-        chosen_point = ChosenPoint()
-        chosen_point.header.frame_id = '{}'.format(self.robot_id)
-        chosen_point.x = goal[0]
-        chosen_point.y = goal[1]
-        chosen_point.direction = direction
-        self.chose_point_pub.publish(chosen_point)
-        self.robot_state = PASSIVE_STATE
-
-    def rotate_robot(self):
-        deg_360 = math.radians(360)
-        if self.robot_pose:
-            while self.robot_pose[2] < deg_360:
-                self.move_robot((0, 1))
-
-    def move_status_callback(self, data):
-        id_0 = "robot_{}_{}_{}".format(self.robot_id, self.goal_count - 1, TO_FRONTIER)
-        if data.status_list:
-            goal_status = data.status_list[0]
-            if goal_status.goal_id.id:
-                if goal_status.goal_id.id == id_0:
-                    if goal_status.status == ACTIVE:
-                        rospy.loginfo("Robot type, {} Heading to Frontier point...".format(self.robot_type))
 
     def signal_strength_callback(self, data):
         signals = data.signals
@@ -336,45 +221,11 @@ class Robot:
         devices = []
         for rs in signals:
             robots.append([rs.robot_id, rs.rssi])
-            devices.append(rs.robot_id)
-        self.signal_strength[time_stamp] = robots
-        self.save_data([{'time': time_stamp, 'devices': robots}],
-                       'plots/signal_strengths_{}.pickle'.format(self.robot_id))
+            devices.append(str(rs.robot_id))
         self.close_devices = devices
-
-    def move_result_callback(self, data):
-        id_0 = "robot_{}_{}_{}".format(self.robot_id, self.goal_count - 1, TO_FRONTIER)
-        if data.status:
-            if data.status.status == ABORTED:
-                rospy.logerr("Robot {} failed to move".format(self.robot_id))
-                if data.status.goal_id.id == id_0:
-                    if self.move_attempt < MAX_ATTEMPTS:
-                        rospy.logerr("Robot {}: Navigation failed. Trying again..".format(self.robot_id))
-                        self.rotate_robot()
-                        self.move_robot_to_goal(self.frontier_point, TO_FRONTIER)
-                        self.move_attempt += 1
-                    else:
-                        result = self.start_exploration()
-                        if result:
-                            self.exploration_start_time = rospy.Time.now()
-                            self.is_exploring = True
-                            self.robot_state = ACTIVE_STATE
-
-                        # rospy.logerr("Robot {}: Navigation failed!".format(self.robot_id))
-
-            elif data.status.status == SUCCEEDED:
-                if data.status.goal_id.id == id_0:
-                    if self.robot_type == RR_TYPE:
-                        rospy.logerr("Robot {} arrived at goal..".format(self.robot_id))
-                        result = self.start_exploration()
-                        if result:
-                            self.exploration_start_time = rospy.Time.now()
-                            self.is_exploring = True
-                            self.robot_state = ACTIVE_STATE
 
     def process_data(self, sender_id, buff_data):
         data_vals = buff_data.data
-        self.last_map_update_time = rospy.Time.now().secs
         counter = 0
         r = rospy.Rate(1)
         for scan in data_vals:
@@ -387,41 +238,35 @@ class Robot:
 
     def buffered_data_callback(self, buff_data):
         sender_id = buff_data.header.frame_id
-        if sender_id in self.candidate_robots:
-            self.process_data(sender_id, buff_data)
-        # rospy.logerr("Robot {} received data from {}".format(self.robot_id, sender_id))
-        self.wait_for_map_update()
+        rospy.logerr("Robot {} data from {}: {} files".format(self.robot_id, sender_id, len(buff_data.data)))
+        if self.is_exploring:
+            self.exploration_data_senders[sender_id] = None
+        self.process_data(sender_id, buff_data)
         if self.initial_receipt:
-            rospy.logerr(
-                "Robot {} initial data from {}: {} files".format(self.robot_id, sender_id, len(buff_data.data)))
+            rospy.logerr("Robot {} initial data from {}: {} files".format(self.robot_id, sender_id, len(buff_data.data)))
             self.initial_data_count += 1
             if self.initial_data_count == len(self.candidate_robots):
                 self.initial_receipt = False
                 if self.i_have_least_id():
                     rospy.logerr("Robot {}: Computing frontier points...".format(self.robot_id))
                     robot_pose = self.get_robot_pose()
-                    while self.map_update_is_active:
-                        continue
-                    self.others_active = True
-                    rospy.logerr("Robot {}: Computing frontier points Active".format(self.robot_id))
-                    self.graph_processor.computing_frontiers = True
-                    frontier_points = self.graph_processor.get_frontiers((robot_pose[0], robot_pose[1]),
-                                                                         len(self.candidate_robots) + 1)
-                    self.graph_processor.computing_frontiers = False
-                    rospy.logerr("Robot {}: Computing frontier points NOT Active".format(self.robot_id))
-                    self.others_active = False
-                    self.map_update_count = 0
+                    frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(self.candidate_robots) + 1))
+                    frontier_points = self.parse_frontier_response(frontier_point_response)
                     if frontier_points:
-                        self.send_frontier_points(robot_pose, frontier_points)
-                        rospy.logerr("Robot {}: Moving to new frontier".format(self.robot_id))
+                        self.frontier_points = frontier_points
+                        self.send_frontier_points(robot_pose, frontier_points, self.candidate_robots)
                     else:
                         rospy.logerr("Robot {}: No valid frontier points".format(self.robot_id))
                 else:
                     rospy.logerr("Robot {}: Waiting for frontier points...".format(self.robot_id))
         else:
+            rospy.logerr("Robot {} received data from {}: {} files".format(self.robot_id, sender_id, len(buff_data.data)))
             if not self.is_sender:
+                rospy.logerr( "Robot {} exploration data {}: {} files".format(self.robot_id, sender_id, len(buff_data.data)))
                 self.push_messages_to_receiver([sender_id])
+                self.cancel_exploration()
             else:
+                rospy.logerr("Robot {} exploration response from {}: {} files".format(self.robot_id, sender_id,len(buff_data.data)))
                 self.received_devices += 1
                 if self.received_devices == len(self.close_devices):
                     self.received_devices = 0
@@ -429,40 +274,44 @@ class Robot:
                     robot_pose = self.get_robot_pose()
                     # if self.robot_id < int(sender_id):
                     rospy.logerr("Robot {} Recomputing frontier points".format(self.robot_id))
-                    while self.map_update_is_active:
-                        continue
-                    self.others_active = True
-                    self.graph_processor.computing_frontiers = True
-                    frontier_points = self.graph_processor.get_frontiers((robot_pose[1], robot_pose[0]),
-                                                                         len(self.candidate_robots) + 1)
-                    self.graph_processor.computing_frontiers = False
-                    self.others_active = False
-                    self.map_update_count = 0
-                    if frontier_points:
-                        self.send_frontier_points(robot_pose, frontier_points)
+                    self.cancel_exploration()
+                    frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(self.candidate_robots) + 1))
+                    frontier_points = self.parse_frontier_response(frontier_point_response)
+                    rospy.logerr("Robot {} Sending new  frontier points to: {}".format(self.robot_id,
+                                                                                       self.exploration_data_senders))
+                    self.send_frontier_points(robot_pose, frontier_points, self.exploration_data_senders)
+                    self.exploration_data_senders.clear()
 
-    def send_frontier_points(self, robot_pose, frontier_points):
-        self.publish_rendezvous_points(frontier_points, self.candidate_robots, direction=TO_FRONTIER)
+    def send_frontier_points(self, robot_pose, frontier_points, robot_ids):
+        self.publish_rendezvous_points(frontier_points, robot_ids, direction=TO_FRONTIER)
+        rospy.logerr("Robot {}: Sending frontier points to: {}".format(self.robot_id, self.candidate_robots))
         optimal_points = self.get_available_points(frontier_points)
         new_point = self.get_closest_point(robot_pose, optimal_points)
         if new_point:
-            if not self.frontier_point:
-                self.frontier_point = robot_pose
-                self.previous_frontier_point = copy.deepcopy(self.frontier_point)
-                self.frontier_point = new_point
-                self.move_attempt = 0
-                self.move_robot_to_goal(new_point, TO_FRONTIER)
-                self.save_data([{'time': rospy.Time.now().secs, 'pose': robot_pose, 'frontier': new_point}],
-                               'plots/frontiers_{}.pickle'.format(self.robot_id))
-            else:
-                rospy.logerr("Robot {}: No frontier points to send...".format(self.robot_id))
+            self.frontier_point = new_point
         else:
-            rospy.logerr("Robot {}: All frontier points taken. Starting exploration anyway...".format(self.robot_id))
-            result = self.start_exploration()
-            if result:
-                self.exploration_start_time = rospy.Time.now()
-                self.is_exploring = True
-                self.robot_state = ACTIVE_STATE
+            self.frontier_point = frontier_points[0]
+        self.start_exploration_action(self.frontier_point)
+
+    def start_exploration_action(self, new_point):
+        pose = Pose()
+        pose.position.x = new_point[0]
+        pose.position.y = new_point[1]
+        goal = GvgExploreGoal(pose=pose)
+        self.exploration.wait_for_server()
+        self.goal_handle = self.exploration.send_goal(goal)
+        self.exploration_started = True
+        self.exploration.wait_for_result()
+        self.exploration.get_result()  # A
+
+    def parse_frontier_response(self, data):
+        frontier_points = []
+        if data:
+            x_vals = data.frontier_points.x
+            y_vals = data.frontier_points.y
+            for i in range(len(x_vals)):
+                frontier_points.append((x_vals[i], y_vals[i]))
+        return frontier_points
 
     def chosen_point_callback(self, data):
         self.received_choices[(data.x, data.y)] = data
@@ -484,7 +333,7 @@ class Robot:
         distance = {}
         closest_point = None
         for p in optimal_points:
-            distance[p] = self.graph_processor.D(robot_pose, p)
+            distance[p] = self.D(robot_pose, p)
         if distance:
             closest_point = min(distance, key=distance.get)
         return closest_point
@@ -493,27 +342,6 @@ class Robot:
         id = int(self.robot_id)
         least = min([int(i) for i in self.candidate_robots])
         return id < least
-
-    def navigation_plan_callback(self, data):
-        if self.waiting_for_plan:
-            self.navigation_plan = data.cells
-
-    def start_exploration_callback(self, data):
-        self.start_now = data
-
-    def get_total_navigation_time(self, origin, plan):
-        total_time = 60  # 1 min by default
-        if plan:
-            ordered_points = self.graph_processor.get_distances(origin, plan)
-            if ordered_points:
-                farthest_point = ordered_points[-1]
-                distance = math.sqrt((origin[0] - farthest_point[0]) ** 2 + (origin[1] - farthest_point[1]) ** 2)
-                total_time = 2 * distance / 1.0  # distance/speed
-        return total_time
-
-    def is_time_to_moveon(self):
-        diff = rospy.Time.now().secs - self.last_map_update_time
-        return diff > 10
 
     def get_robot_pose(self):
         robot_pose = None
@@ -525,7 +353,7 @@ class Robot:
                 (robot_loc_val, rot) = self.listener.lookupTransform("robot_{}/map".format(self.robot_id),
                                                                      "robot_{}/base_link".format(self.robot_id),
                                                                      rospy.Time(0))
-                robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]),robot_loc_val[2])
+                robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
                 sleep(1)
             except:
                 # rospy.logerr("Robot {}: Can't fetch robot pose from tf".format(self.robot_id))
@@ -533,40 +361,11 @@ class Robot:
 
         return robot_pose
 
-    def exploration_callback(self, data):
-        if data.status_list:
-            goal_status = data.status_list[0]
-            gid = goal_status.goal_id.id
-            if gid and self.exploration_id != gid:
-                self.exploration_id = gid
-                status = goal_status.status
-                if status == ABORTED:
-                    rospy.logerr("Robot {}: Robot stopped share data..".format(self.robot_id))
-
     def cancel_exploration(self):
-        if self.exploration_id:
-            rospy.logerr("Robot {} Cancelling exploration...".format(self.robot_id))
-            goal_id = GoalID()
-            goal_id.id = self.exploration_id
-            self.cancel_explore_pub.publish(goal_id)
-        else:
-            rospy.logerr("Exploration ID not set...")
+        if self.goal_handle:
+            self.goal_handle.cancel()
+            rospy.logerr("Robot {} Canceling exploration ...".format(self.robot_id))
 
-    def add_map_to_file(self, rid, data):
-        self.lock.acquire()
-        if int(rid) == 1:
-            filename = "map_messages1.pickle"
-            saved_data = {}
-            if not exists(filename):
-                os.remove(filename)
-                f = open(filename, "wb+")
-                f.close()
-            with open(filename, 'wb') as fp:
-                pickle.dump(data[0], fp, protocol=pickle.HIGHEST_PROTOCOL)
-            rospy.logerr("Robot {} Saved map message..".format(self.robot_id))
-        sleep(2)
-        self.lock.release()
-        return True
 
     def add_to_file(self, rid, data):
         # self.lock.acquire()
@@ -584,32 +383,6 @@ class Robot:
 
         return message_data
 
-    def load_map_data(self):
-        filename = "map_messages1.pickle"
-        data_dict = {}
-        if exists(filename) and os.path.getsize(filename) > 0:
-            with open(filename, 'rb') as fp:
-                try:
-                    data_dict = pickle.load(fp)
-                except Exception as e:
-                    rospy.logerr("error: {}".format(e))
-        return data_dict
-
-    def load_data(self):
-        data_dict = []
-        if path.exists(self.data_file_name) and path.getsize(self.data_file_name) > 0:
-            with open(self.data_file_name, 'rb') as fp:
-                try:
-                    data_dict = pickle.load(fp)
-                except Exception as e:
-                    rospy.logerr("error: {}".format(e))
-
-        return self.karto_messages
-
-    def update_file(self, data):
-        with open(self.data_file_name, 'wb+') as fp:
-            pickle.dump(data, fp, protocol=pickle.HIGHEST_PROTOCOL)
-        return True
 
     def delete_data_for_id(self, rid):
         self.lock.acquire()
@@ -618,21 +391,6 @@ class Robot:
         self.lock.release()
         return True
 
-    def pose_callback(self, msg):
-        pose = (msg.x, msg.y, msg.theta)
-        self.robot_pose = pose
-
-    def move_robot(self, vel):
-        vel_msg = Twist()
-        vel_msg.linear.x = vel[0]
-        vel_msg.angular.z = vel[1]
-        self.pose_publisher.publish(vel_msg)
-
-    def clear_data(self):
-        if exists(self.data_file_name):
-            os.remove(self.data_file_name)
-        return True
-
     def save_data(self, data, file_name):
         saved_data = []
         if not path.exists(file_name):
@@ -652,29 +410,7 @@ class Robot:
                 try:
                     data_dict = pickle.load(fp)
                 except Exception as e:
-                    rospy.logerr("error: {}".format(e))
-        return data_dict
-
-    def save_data(self, data, file_name):
-        saved_data = []
-        if not path.exists(file_name):
-            f = open(file_name, "wb+")
-            f.close()
-        else:
-            saved_data = self.load_data_from_file(file_name)
-        saved_data += data
-        with open(file_name, 'wb') as fp:
-            pickle.dump(saved_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
-            fp.close()
-
-    def load_data_from_file(self, file_name):
-        data_dict = []
-        if path.exists(file_name) and path.getsize(file_name) > 0:
-            with open(file_name, 'rb') as fp:
-                try:
-                    data_dict = pickle.load(fp)
-                except Exception as e:
-                    rospy.logerr("error: {}".format(e))
+                    rospy.logerr("error saving data: {}".format(e))
         return data_dict
 
     def theta(self, p, q):
@@ -690,23 +426,59 @@ class Robot:
         return math.sqrt(dx ** 2 + dy ** 2)
 
     def publish_robot_ranges(self):
-        if self.robot_id in self.robot_poses:
-            current_pose = self.robot_poses[self.robot_id]
-            distances = []
-            angles = []
-            for rid in self.candidate_robots:
-                if int(rid) in self.robot_poses:
-                    rpose = self.robot_poses[int(rid)]
-                    d = self.D(current_pose, rpose)
-                    th = self.theta(current_pose, rpose)
-                    distances.append(d)
-                    angles.append(th)
-            robot_range = RobotRange()
-            robot_range.distances = distances
-            robot_range.angles = angles
-            robot_range.robot_id = self.robot_id
-            robot_range.header.stamp = rospy.Time.now()
-            self.robot_range_pub.publish(robot_range)
+        if len(self.robot_poses) == len(self.candidate_robots) + 1:
+            self.generate_transformation_matrices()
+            if len(self.trans_matrices) == len(self.candidate_robots) + 1:
+                pose = self.robot_poses[self.robot_id]
+                yaw = self.get_elevation(pose[2])
+                robotV = np.asarray([pose[0], pose[1], yaw, 1])
+
+                distances = []
+                angles = []
+                for rid in self.candidate_robots:
+                    robot_c = self.get_robot_coordinate(rid, robotV)
+                    distance = self.D(pose, robot_c)
+                    angle = self.theta(pose, robot_c)
+                    distances.append(distance)
+                    angles.append(angle)
+                if distances != []:
+                    robot_range = RobotRange()
+                    robot_range.distances = distances
+                    robot_range.angles = angles
+                    robot_range.robot_id = self.robot_id
+                    robot_range.header.stamp = rospy.Time.now()
+                    self.robot_range_pub.publish(robot_range)
+            else:
+                rospy.logerr("Robot {}: Not enough Transformation matrices".format(self.robot_id))
+
+    def get_elevation(self, quaternion):
+        euler = tf.transformations.euler_from_quaternion(quaternion)
+        yaw = euler[2]
+        return yaw
+
+    def generate_transformation_matrices(self):
+        map_origin = (0, 0, 0, 1)
+        for rid in self.candidate_robots + [self.robot_id]:
+            p = self.robot_poses[int(rid)]
+            theta = self.theta(map_origin, p)
+            M = [[np.cos(theta), -1 * np.sin(theta), 0], [np.sin(theta), np.cos(theta), 0], [0, 0, 1]]
+            T = copy.deepcopy(M)
+            T.append([0, 0, 0, 1])
+            yaw = self.get_elevation(p[2])
+            T[0].append(p[0])
+            T[1].append(p[1])
+            T[2].append(yaw)
+            tT = np.asarray(T)
+            self.trans_matrices[rid] = tT
+            tT_inv = np.linalg.inv(tT)
+            self.inverse_trans_matrices[int(rid)] = tT_inv
+
+    def get_robot_coordinate(self, rid, V):
+        other_T = self.trans_matrices[rid]  # oTr2
+        robot_T = self.inverse_trans_matrices[self.robot_id]  #
+        cTr = other_T.dot(robot_T)
+        other_robot_pose = cTr.dot(V)
+        return other_robot_pose.tolist()
 
 
 if __name__ == "__main__":

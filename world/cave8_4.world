@@ -40,34 +40,54 @@ floorplan
 pioneer3at
 (
   name "robot1"
-  color "red"
-  pose [12.0 12.0 0.0 0.0]
+  color "purple"
+  pose [36.0 -2.0 0.0 0.0]
 )
 
 # Put two robots into the world
 pioneer3at
 (
   name "robot2"
-  color "blue"
-  pose [12.0 15.0 0.0 0.0]
+  color "purple"
+  pose [36.0 -4.0 0.0 0.0]
 )
 pioneer3at
 (
   name "robot3"
-  color "blue"
-  pose [12.0 9.0 0.0 0.0]
+  color "purple"
+  pose [36.0 -8.0 0.0 0.0]
 )
 
 pioneer3at
 (
   name "robot4"
-  color "black"
-  pose [12.0 18.0 0.0 0.0]
+  color "purple"
+  pose [36.0 -10.0 0.0 0.0]
+)
+pioneer3at
+(
+  name "robot5"
+  color "purple"
+  pose [38.0 -2.0 0.0 0.0]
+)
+
+# Put two robots into the world
+pioneer3at
+(
+  name "robot6"
+  color "purple"
+  pose [38.0 -4.0 0.0 0.0]
+)
+pioneer3at
+(
+  name "robot7"
+  color "purple"
+  pose [38.0 -8.0 0.0 0.0]
 )
 
 pioneer3at
 (
-  name "robot5"
-  color "black"
-  pose [12.0 6.0 0.0 0.0]
+  name "robot8"
+  color "purple"
+  pose [38.0 -10.0 0.0 0.0]
 )

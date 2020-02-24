@@ -33,41 +33,34 @@ floorplan
 (
   name "tutorial"
   bitmap "city.png"
-  size [ 80.0 80.0 2.0 ]
+  size [ 80.0 80.0 10.0 ]
   pose [  39.85  14.55 0.0 0.0 ]
 )
 
 pioneer3at
 (
   name "robot1"
-  color "red"
-  pose [12.0 12.0 0.0 0.0]
+  color "purple"
+  pose [52.0 0.0 0.0 1.0]
 )
 
 # Put two robots into the world
 pioneer3at
 (
   name "robot2"
-  color "blue"
-  pose [12.0 15.0 0.0 0.0]
+  color "purple"
+  pose [42.0 6.0 0.0 0.0]
 )
 pioneer3at
 (
   name "robot3"
-  color "blue"
-  pose [12.0 9.0 0.0 0.0]
+  color "purple"
+  pose [46.0 7.0 0.0 0.0]
 )
 
 pioneer3at
 (
   name "robot4"
-  color "black"
-  pose [12.0 18.0 0.0 0.0]
-)
-
-pioneer3at
-(
-  name "robot5"
-  color "black"
-  pose [12.0 6.0 0.0 0.0]
+  color "purple"
+  pose [46.0 2.0 0.0 0.0]
 )
