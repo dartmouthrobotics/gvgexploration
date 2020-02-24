@@ -18,29 +18,24 @@ class ScanFilter:
         self.robot_id = rospy.get_param('~robot_id')
         self.all_poses = {}
         self.robot_pose = (0, 0, 0)
-        self.scan_subscriber = message_filters.Subscriber('base_scan', LaserScan)
-        self.scan_pub = rospy.Publisher('filtered_scan', LaserScan, queue_size=1)
-        self.base_pose_subscriber = message_filters.Subscriber('base_pose_ground_truth', Odometry)
-        ats = ApproximateTimeSynchronizer([self.base_pose_subscriber, self.scan_subscriber], 10, 1)
-        ats.registerCallback(self.topic_callback)
 
         for i in range(self.robot_count):
             self.all_poses[i] = {}
-            s = "def a_{0}(self, data): self.all_poses[{0}][rospy.Time.now().secs] = (data.pose.pose.position.x," \
+            s = "def a_{0}(self, data): self.all_poses[{0}] = (data.pose.pose.position.x," \
                 "data.pose.pose.position.y," \
                 "(data.pose.pose.orientation.x,data.pose.pose.orientation.y,data.pose.pose.orientation.z," \
-                "data.pose.pose.orientation.w))".format(i)
+                "data.pose.pose.orientation.w), data.header.stamp.to_sec())".format(i)
             exec (s)
             exec ("setattr(ScanFilter, 'callback_pos_teammate{0}', a_{0})".format(i))
             exec ("rospy.Subscriber('/robot_{0}/base_pose_ground_truth', Odometry, self.callback_pos_teammate{0}, "
                   "queue_size = 100)".format(i))
-        rospy.spin()
 
-    def spin(self):
-        rospy.spin()
+        self.scan_subscriber = message_filters.Subscriber('base_scan', LaserScan)
+        self.scan_pub = rospy.Publisher('filtered_scan', LaserScan, queue_size=1)
+        self.base_pose_subscriber = message_filters.Subscriber('base_pose_ground_truth', Odometry)
+        ats = ApproximateTimeSynchronizer([self.base_pose_subscriber, self.scan_subscriber], 10, 0.1)
+        ats.registerCallback(self.topic_callback)
 
-    def robot_range_callback(self, data):
-        self.range_angle[data.header.stamp.secs] = {'ranges': data.distances, 'angles': data.angles}
 
     def process_scan_message(self, msg, robot_ranges, robot_angles):
         angle_min = msg.angle_min
@@ -87,7 +82,7 @@ class ScanFilter:
         pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y, pose_msg.pose.pose.orientation.z,
         pose_msg.pose.pose.orientation.w))
         scan_time = scan_msg.scan_time  # time (sec) between scans
-        msg_time = scan_msg.header.stamp.secs
+        msg_time = scan_msg.header.stamp.to_sec()
         robot_ranges, robot_angles = self.find_other_robots(robot_pose, msg_time, scan_time)
         self.process_scan_message(scan_msg, robot_ranges, robot_angles)
 
@@ -99,16 +94,18 @@ class ScanFilter:
         pose_arr = np.asarray([robot_pose[0],robot_pose[1], yaw, 1])
         robot_ids = list(self.all_poses)
         for rid in robot_ids:
-            temporal_poses = self.all_poses[rid]  # {time:pose}
-            for t, other_pose in temporal_poses.items():
-                if abs(t - msg_time) <= scan_time:
-                    oTm, mTo = self.generate_transformation_matrices(other_pose)
-                    oTr = oTm.dot(mTr)
-                    other_robot_relative_pose = oTr.dot(pose_arr)
-                    distance = pu.D(robot_pose, other_robot_relative_pose)
-                    angle = pu.theta(robot_pose, other_robot_relative_pose)
-                    robot_ranges.append(distance)
-                    robot_angles.append(angle)
+            t = self.all_poses[rid][3]
+            if abs(t - msg_time) <= 0.15: # TODO value that can be inferred.
+                other_pose = self.all_poses[rid]
+                oTm, mTo = self.generate_transformation_matrices(other_pose)
+                oTr = oTm.dot(mTr)
+                other_robot_relative_pose = oTr.dot(pose_arr)
+                distance = pu.D(robot_pose, other_robot_relative_pose)
+                angle = pu.theta(robot_pose, other_robot_relative_pose)
+                robot_ranges.append(distance)
+                robot_angles.append(angle)
+            else:
+                rospy.logerr("difference {} {}".format(t- msg_time, scan_time))
         return robot_ranges, robot_angles
 
     def generate_transformation_matrices(self, pose):
@@ -133,4 +130,4 @@ class ScanFilter:
 
 if __name__ == '__main__':
     filter = ScanFilter()
-    filter.spin()
+    rospy.spin()
