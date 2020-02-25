@@ -15,7 +15,7 @@ import actionlib
 import rospy
 import math
 from gvgexploration.msg import GvgExploreFeedback, GvgExploreGoal, GvgExploreResult, EdgeList, \
-    ChosenPoint, BufferedData, Receipient
+    ChosenPoint, BufferedData
 from gvgexploration.msg import *
 from nav2d_navigator.msg import MoveToPosition2DActionGoal, MoveToPosition2DActionResult
 from actionlib_msgs.msg import GoalStatusArray, GoalID
@@ -99,7 +99,6 @@ class GVGExplore:
         rospy.Subscriber("/robot_{}/odom".format(self.robot_id), Odometry, callback=self.pose_callback)
         rospy.Subscriber("/chosen_point", ChosenPoint, self.chosen_point_callback)
         self.chose_point_pub = rospy.Publisher("/chosen_point", ChosenPoint, queue_size=1000)
-        self.share_pub = rospy.Publisher("/robot_{}/share_data".format(self.robot_id), Receipient, queue_size=1000)
         rospy.Subscriber('/robot_{}/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         self.exploration_feedback = GvgExploreFeedback()
         self.exploration_result = GvgExploreResult()
@@ -176,12 +175,12 @@ class GVGExplore:
             if not child_leaf:
                 new_robot_pose = self.get_robot_pose()
                 new_pose = scale_up(new_robot_pose)
-                child_leaf = self.get_closest_leaf(new_pose,visited_nodes)
+                child_leaf = self.get_closest_ridge(new_pose, visited_nodes, is_initial=True)
             if child_leaf:
                 S.append(child_leaf[1])
                 parents[child_leaf[1]] = child_leaf[0]
 
-    def get_closest_ridge(self, robot_pose, all_visited):
+    def get_closest_ridge(self, robot_pose, all_visited, is_initial=False):
         close_edge = None
         closest_ridge = {}
         edge_list = list(self.edges)
@@ -198,7 +197,11 @@ class GVGExplore:
                 d = min([D(robot_pose, e[0]), D(robot_pose, e[1])])
                 closest_ridge[e] = d
         if closest_ridge:
-            close_edge = min(closest_ridge, key=closest_ridge.get)
+            if is_initial:
+                edge = max(closest_ridge, key=closest_ridge.get)
+            else:
+                edge = min(closest_ridge, key=closest_ridge.get)
+            close_edge = self.get_child_leaf(edge[1], edge[0], all_visited)
 
         return close_edge
 
@@ -211,7 +214,8 @@ class GVGExplore:
             if not self.is_visited(p, visited_nodes):
                 closest_leaf_edge[e] = D(pose, p)
         if closest_leaf_edge:
-            close_edge = max(closest_leaf_edge, key=closest_leaf_edge.get)
+            close_edge = min(closest_leaf_edge, key=closest_leaf_edge.get)
+
         return close_edge
 
     def get_edge(self, goal):
@@ -468,27 +472,6 @@ class GVGExplore:
         pose = (position.x, position.y, round(yaw, 2))
         self.robot_pose = pose
 
-    def save_data(self, data, file_name):
-        saved_data = []
-        if not path.exists(file_name):
-            f = open(file_name, "wb+")
-            f.close()
-        else:
-            saved_data = self.load_data_from_file(file_name)
-        saved_data += data
-        with open(file_name, 'wb') as fp:
-            pickle.dump(saved_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
-            fp.close()
-
-    def load_data_from_file(self, file_name):
-        data_dict = []
-        if path.exists(file_name) and path.getsize(file_name) > 0:
-            with open(file_name, 'rb') as fp:
-                try:
-                    data_dict = pickle.load(fp)
-                except Exception as e:
-                    rospy.logerr("error: {}".format(e))
-        return data_dict
 
     def get_elevation(self, quaternion):
         euler = tf.transformations.euler_from_quaternion(quaternion)
