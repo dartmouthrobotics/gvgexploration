@@ -56,11 +56,12 @@ class ScanFilter:
                     if (abs(robot_ranges[j] - r) < self.map_inflation_radius) and (
                             abs(robot_angles[j] - angle) < 0.6): # TODO angle based on distance.
                     """
-                    if abs(r_x - robot_poses[j][0]) < self.map_inflation_radius and abs(r_y - robot_poses[j][1]):
+                    if abs(r_x - robot_poses[j][0]) < self.map_inflation_radius 
+                            and abs(r_y - robot_poses[j][1]) < self.map_inflation_radius:
                         is_robot = True
                         break
                 if is_robot:
-                    new_ranges[i] = 0.0
+                    new_ranges[i] = -1.0
                 else:
                     new_ranges[i] = r
             else:
