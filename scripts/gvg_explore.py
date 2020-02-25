@@ -176,12 +176,12 @@ class GVGExplore:
             if not child_leaf:
                 new_robot_pose = self.get_robot_pose()
                 new_pose = scale_up(new_robot_pose)
-                child_leaf = self.get_closest_leaf(new_pose,visited_nodes)
+                child_leaf = self.get_closest_ridge(new_pose, visited_nodes, is_initial=True)
             if child_leaf:
                 S.append(child_leaf[1])
                 parents[child_leaf[1]] = child_leaf[0]
 
-    def get_closest_ridge(self, robot_pose, all_visited):
+    def get_closest_ridge(self, robot_pose, all_visited, is_initial=False):
         close_edge = None
         closest_ridge = {}
         edge_list = list(self.edges)
@@ -198,7 +198,11 @@ class GVGExplore:
                 d = min([D(robot_pose, e[0]), D(robot_pose, e[1])])
                 closest_ridge[e] = d
         if closest_ridge:
-            close_edge = min(closest_ridge, key=closest_ridge.get)
+            if is_initial:
+                edge = max(closest_ridge, key=closest_ridge.get)
+            else:
+                edge = min(closest_ridge, key=closest_ridge.get)
+            close_edge = self.get_child_leaf(edge[1], edge[0], all_visited)
 
         return close_edge
 
@@ -211,7 +215,8 @@ class GVGExplore:
             if not self.is_visited(p, visited_nodes):
                 closest_leaf_edge[e] = D(pose, p)
         if closest_leaf_edge:
-            close_edge = max(closest_leaf_edge, key=closest_leaf_edge.get)
+            close_edge = min(closest_leaf_edge, key=closest_leaf_edge.get)
+
         return close_edge
 
     def get_edge(self, goal):
