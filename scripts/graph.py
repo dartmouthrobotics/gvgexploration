@@ -854,7 +854,10 @@ class Graph:
         data_dict = []
         if path.exists(file_name) and path.getsize(file_name) > 0:
             with open(file_name, 'rb') as fp:
-                data_dict = pickle.load(fp)
+                try:
+                    data_dict = pickle.load(fp)
+                except Exception as e:
+                    rospy.logerr("error: {}".format(e))
         return data_dict
 
     def get_coverage_ratio(self):

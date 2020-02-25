@@ -61,7 +61,7 @@ class ScanFilter:
                         is_robot = True
                         break
                 if is_robot:
-                    new_ranges[i] = -1.0
+                    new_ranges[i] = 0
                 else:
                     new_ranges[i] = r
             else:
@@ -83,9 +83,7 @@ class ScanFilter:
 
     def topic_callback(self, pose_msg, scan_msg):
         if len(self.all_poses) == self.robot_count:
-            robot_pose = (pose_msg.pose.pose.position.x, pose_msg.pose.pose.position.y, (
-                pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y, pose_msg.pose.pose.orientation.z,
-                pose_msg.pose.pose.orientation.w))
+            robot_pose = (pose_msg.pose.pose.position.x, pose_msg.pose.pose.position.y, (pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y, pose_msg.pose.pose.orientation.z,pose_msg.pose.pose.orientation.w))
             scan_time = scan_msg.scan_time  # time (sec) between scans
             msg_time = scan_msg.header.stamp.to_sec()
             robot_poses = self.find_other_robots(robot_pose, msg_time, scan_time) #robot_ranges, robot_angles
