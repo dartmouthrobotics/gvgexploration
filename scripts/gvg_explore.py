@@ -69,7 +69,7 @@ class GVGExplore:
         self.publisher_map = {}
         self.close_devices = []
         self.is_exploring = False
-        self.moving_to_frontier=False
+        self.moving_to_frontier = False
         self.start_time = 0
         self.prev_pose = 0
         rospy.init_node("gvg_explore", anonymous=True)
@@ -93,7 +93,8 @@ class GVGExplore:
         rospy.Subscriber("/robot_{}/navigator/plan".format(self.robot_id), GridCells, self.navigation_plan_callback)
         rospy.Subscriber("/robot_{}/edge_list".format(self.robot_id), EdgeList, self.edge_list_callback)
         self.move_to_stop = rospy.ServiceProxy('/robot_{}/Stop'.format(self.robot_id), Trigger)
-        self.moveTo_pub = rospy.Publisher("/robot_{}/MoveTo/goal".format(self.robot_id), MoveToPosition2DActionGoal,queue_size=10)
+        self.moveTo_pub = rospy.Publisher("/robot_{}/MoveTo/goal".format(self.robot_id), MoveToPosition2DActionGoal,
+                                          queue_size=10)
         self.pose_publisher = rospy.Publisher("/robot_{}/cmd_vel".format(self.robot_id), Twist, queue_size=1)
         rospy.Subscriber("/robot_{}/odom".format(self.robot_id), Odometry, callback=self.pose_callback)
         rospy.Subscriber("/chosen_point", ChosenPoint, self.chosen_point_callback)
@@ -129,33 +130,18 @@ class GVGExplore:
         success = True
         visited_nodes = {}
         robot_pose = (goal.pose.position.x, goal.pose.position.y, goal.pose.position.z)
-        self.moving_to_frontier=True
+        self.moving_to_frontier = True
         self.move_robot_to_goal(robot_pose)
+        rospy.logerr("Robot {} going to frontier....".format(self.robot_id))
         while self.moving_to_frontier:
             continue
-        pose = scale_up(robot_pose)
-        edge = self.get_closest_leaf(pose, visited_nodes)
-        if not edge:
-            pose = self.get_robot_pose()
-            point = scale_up(pose)
-            rospy.logerr("Robot {}: Starting from different goal.. {}".format(self.robot_id,pose))
-            edge = self.get_closest_ridge(point, visited_nodes)
-            # self.exploration_result.result = "Invalid ridge"
-            # self.action_server.set_succeeded(self.exploration_result)
+        rospy.logerr("Robot {} arrived at frontier. Starting Exploration now...".format(self.robot_id))
         while self.coverage_ratio < 0.8:
             try:
                 rospy.loginfo('gvg exploration: Recomputing frontier')
-                if edge:
-                    # rospy.logerr("Robot {}: DFS starting".format(self.robot_id))
-                    self.is_exploring = True
-                    self.run_dfs(edge, visited_nodes)
-                    self.is_exploring = False
-                    edge = None
-                    # rospy.logerr("Robot {}: DFS complete: Coverage: {}".format(self.robot_id,self.coverage_ratio))
-                else:
-                    pose = self.get_robot_pose()
-                    point = scale_up(pose)
-                    edge = self.get_closest_ridge(point, visited_nodes)
+                self.is_exploring = True
+                self.run_dfs(visited_nodes)
+                self.is_exploring = False
             except Exception as e:
                 rospy.logerr(e.message)
 
@@ -164,42 +150,36 @@ class GVGExplore:
             rospy.loginfo('gvg exploration: Succeeded')
             self.action_server.set_succeeded(self.exploration_result)
 
-    def run_dfs(self, edge, visited_nodes):
+    def run_dfs(self, visited_nodes):
+        robot_pose = self.get_robot_pose()
+        pose = scale_up(robot_pose)
+        edge = self.get_closest_ridge(pose, visited_nodes)
         leaf = edge[1]
         leaf_parent = edge[0]
-        self.create_feedback(leaf)
         S = [leaf]
         parents = {leaf: leaf_parent}
         # --------- DFS -------
-        # rospy.logerr("Robot {}: Starting DFS..".format(self.robot_id))
+        rospy.logerr("Robot {}: Starting DFS..".format(self.robot_id))
         while len(S) > 0:
             u = S.pop()
             unvisited_ans = [u]
             # for plotting
-            # if self.robot_id == 0:
-            #     pose = self.get_robot_pose()
-            #     point = scale_up(pose)
-            #     self.plot_intersections(point, u)
+            if self.robot_id == 0:
+                pose = self.get_robot_pose()
+                point = scale_up(pose)
+                self.plot_intersections(point, u)
             # for plotting ends here
             self.explore_point(u)
             visited_nodes[u] = None
             self.bfs(unvisited_ans, visited_nodes)
             child_leaf = self.get_child_leaf(u, parents[u], visited_nodes)
+            if not child_leaf:
+                new_robot_pose = self.get_robot_pose()
+                new_pose = scale_up(new_robot_pose)
+                child_leaf = self.get_closest_leaf(new_pose,visited_nodes)
             if child_leaf:
-                leaf_node = child_leaf[1]
-                leaf_parent = child_leaf[0]
-                S.append(leaf_node)
-                parents[leaf_node] = leaf_parent
-            # else:
-            #     if self.robot_id == 0:
-            #         rospy.logerr("Robot {}: No New leaf..".format(self.robot_id))
-            # else:
-            #     if u in self.adj_list:
-            #         neighbors = self.adj_list[u]
-            #         for v in neighbors:
-            #             if not self.is_visited(v, visited):
-            #                 S.append(v)
-            #                 parents[v] = u
+                S.append(child_leaf[1])
+                parents[child_leaf[1]] = child_leaf[0]
 
     def get_closest_ridge(self, robot_pose, all_visited):
         close_edge = None
@@ -209,7 +189,7 @@ class GVGExplore:
         for e in edge_list:
             p1 = e[0]
             p2 = e[1]
-            if not self.is_visited(p1,all_visited) or not self.is_visited(p2,all_visited):
+            if not self.is_visited(p1, all_visited) or not self.is_visited(p2, all_visited):
                 o = self.edges[e]
                 width = D(o[0], o[1])
                 v1 = get_vector(p1, p2)
@@ -453,14 +433,14 @@ class GVGExplore:
                     # rospy.logerr("Robot {} can't reach goal..".format(self.robot_id))
                     self.navigation_failed = True
                     if self.moving_to_frontier:
-                        self.moving_to_frontier=False
+                        self.moving_to_frontier = False
             elif data.status.status == SUCCEEDED:
                 if data.status.goal_id.id == id_0:
                     # rospy.logerr("Robot {} arrived at goal..".format(self.robot_id))
                     # self.rotate_robot()
                     self.has_arrived = True
                     if self.moving_to_frontier:
-                        self.moving_to_frontier=False
+                        self.moving_to_frontier = False
 
     def chosen_point_callback(self, data):
         self.received_choices[(data.x, data.y)] = data
@@ -547,7 +527,7 @@ class GVGExplore:
         ax.scatter(robot_pose[INDEX_FOR_X], robot_pose[INDEX_FOR_Y], marker='*', color='blue')
         ax.scatter(next_leaf[INDEX_FOR_X], next_leaf[INDEX_FOR_Y], marker='*', color='green')
         plt.grid()
-        plt.savefig("gvg/current_leaves_{}_{}_{}.png".format(self.robot_id, time.time(),self.run))
+        plt.savefig("gvg/current_leaves_{}_{}_{}.png".format(self.robot_id, time.time(), self.run))
         plt.close(fig)
         # plt.show()
 

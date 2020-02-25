@@ -140,7 +140,7 @@ class roscbt:
         rospy.loginfo("ROSCBT Initialized Successfully!")
 
     def spin(self):
-        r = rospy.Rate(0.1)
+        r = rospy.Rate(10)
         while not rospy.is_shutdown():
             try:
                 self.share_signal_strength()
@@ -170,7 +170,7 @@ class roscbt:
         sender_id = None
         if topic == 'received_data':
             sender_id = data.header.frame_id
-        elif topic == 'rendezvous_points':
+        elif topic == 'auction_points':
             sender_id = data.header.frame_id
         if sender_id == str(robot_id1):
             return sender_id
@@ -180,7 +180,7 @@ class roscbt:
 
     def main_callback(self, robot_id1, robot_id2, data, topic):
         current_time = rospy.Time.now().secs
-        sender_id = self.resolve_sender(robot_id1, topic, data)
+        sender_id = data.header.frame_id #self.resolve_sender(robot_id1, topic, data)
         receiver_id = self.resolve_receiver(robot_id2, topic, data)
         if sender_id and receiver_id:
             combn = (sender_id, receiver_id)
@@ -191,7 +191,7 @@ class roscbt:
             else:
                 self.distances[combn] = {current_time: distance}
             if in_range:
-                rospy.logerr("Robot {} and {}:  {}".format(receiver_id, sender_id, distance))
+                rospy.logerr("Data sent from {} to {} on topic: {}".format(receiver_id, sender_id, topic))
                 self.publisher_map[topic][receiver_id].publish(data)
 
                 data_size = sys.getsizeof(data)

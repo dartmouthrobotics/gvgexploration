@@ -13,6 +13,7 @@ from os import path
 import rospy
 from threading import Lock
 from nav_msgs.msg import OccupancyGrid
+from geometry_msgs.msg import Pose
 from gvgexploration.msg import *
 from gvgexploration.srv import *
 from numpy.linalg import norm
@@ -157,39 +158,36 @@ class Graph:
                 now = time.time()
                 t = now - start_time
                 self.save_data([{'time': now, 'type': 0, 'robot_id': self.robot_id, 'computational_time': t}],
-                               "gvg/performance_{}_{}_{}.pickle".format(self.environment, self.robot_count,self.run))
+                               "gvg/performance_{}_{}_{}.pickle".format(self.environment, self.robot_count, self.run))
             except Exception as e:
                 rospy.logerr('Robot {}: Error in graph computation: {}'.format(self.robot_id, e.message))
             self.update_active = False
 
     def frontier_point_handler(self, request):
         count = request.count
+        rospy.logerr("Robot Count received: {}".format(count))
         start_time = time.time()
         self.compute_new_information()
         ppoints = []
-        frontier_x = []
-        frontier_y = []
+        selected_poses = []
         while len(self.new_information) > 0:
             best_point = max(self.new_information, key=self.new_information.get)
             new_p = pu.scale_down(best_point)
-            frontier_x.append(new_p[INDEX_FOR_X])
-            frontier_y.append(new_p[INDEX_FOR_Y])
+            pose = Pose()
+            pose.position.x = new_p[INDEX_FOR_X]
+            pose.position.y = new_p[INDEX_FOR_Y]
+            selected_poses.append(pose)
             ppoints.append(best_point)
             del self.new_information[best_point]
-            if len(frontier_x) == count:
+            if len(selected_poses) == count:
                 break
         now = time.time()
         t = (now - start_time)
         self.save_data([{'time': now, 'type': 2, 'robot_id': self.robot_id, 'computational_time': t}],
-                       "gvg/performance_{}_{}_{}.pickle".format(self.environment, self.robot_count,self.run))
+                       "gvg/performance_{}_{}_{}.pickle".format(self.environment, self.robot_count, self.run))
         if not self.plot_data_acive:
             self.plot_data(ppoints, is_initial=True)
-        rv_points = RendezvousPoints()
-        rv_points.x = frontier_x
-        rv_points.y = frontier_y
-        rv_points.header.frame_id = '{}'.format(self.robot_id)
-        rv_points.direction = 0
-        return FrontierPointResponse(frontier_points=rv_points)
+        return FrontierPointResponse(poses=selected_poses)
 
     def intersection_handler(self, data):
         pose_data = data.poses
@@ -236,7 +234,7 @@ class Graph:
                 now = time.time()
                 t = (now - start)
                 self.save_data([{'time': now, 'type': 1, 'robot_id': self.robot_id, 'computational_time': t}],
-                               "gvg/performance_{}_{}_{}.pickle".format(self.environment, self.robot_count,self.run))
+                               "gvg/performance_{}_{}_{}.pickle".format(self.environment, self.robot_count, self.run))
 
         return close_edge, intersecs
 
@@ -256,7 +254,8 @@ class Graph:
                     if pu.there_is_unknown_region(p2, p3, self.pixel_desc):
                         if pu.collinear(p1, p2, p3, w1, self.slope_bias):
                             cos_theta, separation = pu.compute_similarity(v1, v2, ridge, j)
-                            if -1 <= cos_theta <= -1 + self.opposite_vector_bias and abs(separation-w1) < self.separation_bias:
+                            if -1 <= cos_theta <= -1 + self.opposite_vector_bias and abs(
+                                    separation - w1) < self.separation_bias:
                                 # intersections.append((ridge, j))
                                 intesec_pose[pu.D(robot_pose, p3)] = (ridge, j)
                             else:
@@ -515,7 +514,7 @@ class Graph:
             ax.plot(y, x, "g-o")
         plt.grid()
         plt.axis('off')
-        plt.savefig("gvg/map_update_{}_{}_{}.png".format(self.robot_id, time.time(),self.run))
+        plt.savefig("gvg/map_update_{}_{}_{}.png".format(self.robot_id, time.time(), self.run))
 
         plt.close()
         # plt.show()
@@ -646,15 +645,18 @@ class Graph:
         self.new_information.clear()
         self.known_points.clear()
         self.unknown_points.clear()
-        for leaf, slope in self.old_leaf_slope.items():
-            new_p = pu.scale_down(leaf)
+        leaf_copy = copy.deepcopy(self.leaf_slope)
+        edges_copy = copy.deepcopy(self.edges)
+        adjlist_copy=copy.deepcopy(self.adj_list)
+        for leaf, slope in leaf_copy.items():
+            # new_p = pu.scale_down(leaf)
             # is_good_point = self.check_point(new_p)
             # if is_good_point:
             obs = None
-            if (list(self.old_adj_list[leaf])[0], leaf) in self.old_edges:
-                obs = self.old_edges[(list(self.old_adj_list[leaf])[0], leaf)]
-            elif (leaf, list(self.old_adj_list[leaf])[0]) in self.old_edges:
-                obs = self.old_edges[(leaf, list(self.old_adj_list[leaf])[0])]
+            if (list(adjlist_copy[leaf])[0], leaf) in edges_copy:
+                obs = edges_copy[(list(adjlist_copy[leaf])[0], leaf)]
+            elif (leaf, list(adjlist_copy[leaf])[0]) in edges_copy:
+                obs = edges_copy[(leaf, list(adjlist_copy[leaf])[0])]
             if obs:
                 frontier_size[leaf] = pu.D(obs[0], obs[1])
                 ks, us = self.area(leaf, slope)
@@ -737,7 +739,7 @@ class Graph:
         except:
             pass
         # plt.axis('off')
-        plt.savefig("gvg/plot_{}_{}_{}.png".format(self.robot_id, time.time(),self.run))
+        plt.savefig("gvg/plot_{}_{}_{}.png".format(self.robot_id, time.time(), self.run))
         plt.close()
         # plt.show()
         self.plot_data_acive = False
@@ -792,7 +794,8 @@ class Graph:
             ax.plot(x, y, "g-.")
         # plt.axis('off')
         plt.grid()
-        plt.savefig("gvg/intersections_{}_{}_{}.png".format(self.robot_id, time.time(),self.run))  # TODO consistent time.
+        plt.savefig(
+            "gvg/intersections_{}_{}_{}.png".format(self.robot_id, time.time(), self.run))  # TODO consistent time.
         plt.close(fig)
         # plt.show()
         self.plot_intersection_active = False

@@ -53,13 +53,13 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
    FILES
-   RendezvousPoints.msg
+   Auction.msg
    BufferedData.msg
    ChosenPoint.msg
    RobotSignal.msg
    SignalStrength.msg
    RobotRange.msg
-   Receipient.msg
+   Frontier.msg
    EdgeList.msg
    Pixel.msg
    Coverage.msg
