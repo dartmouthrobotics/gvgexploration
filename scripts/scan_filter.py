@@ -89,19 +89,16 @@ class ScanFilter:
     def find_other_robots(self, robot_pose, msg_time, scan_time):
         robot_ranges = []
         robot_angles = []
-        rTm, mTr = self.generate_transformation_matrices(robot_pose)
-        yaw = self.get_bearing(robot_pose[2])
-        pose_arr = np.asarray([robot_pose[0], robot_pose[1], yaw, 1])
+        mTr, rTm = self.generate_transformation_matrices(robot_pose)
         robot_ids = list(self.all_poses)
         for rid in robot_ids:
             t = self.all_poses[rid][3]
             if abs(t - msg_time) <= 0.15:  # TODO value that can be inferred.
                 other_pose = self.all_poses[rid]
-                oTm, mTo = self.generate_transformation_matrices(other_pose)
-                oTr = oTm.dot(mTr)
-                other_robot_relative_pose = oTr.dot(pose_arr)
-                distance = pu.D(robot_pose, other_robot_relative_pose)
-                angle = pu.theta(robot_pose, other_robot_relative_pose)
+                mTo, oTm = self.generate_transformation_matrices(other_pose)
+                rTo = rTm.dot(mTo)
+                distance = np.linalg.norm(rTo[0:3,3])
+                angle = tf.transformations.euler_from_matrix(rTo[0:3,0:3])[2]
                 robot_ranges.append(distance)
                 robot_angles.append(angle)
             else:
@@ -109,23 +106,11 @@ class ScanFilter:
         return robot_ranges, robot_angles
 
     def generate_transformation_matrices(self, pose):
-        map_origin = (0, 0, 0, 1)
-        theta = pu.theta(map_origin, pose)
-        M1 = [[np.cos(theta), -1 * np.sin(theta), 0], [np.sin(theta), np.cos(theta), 0], [0, 0, 1]]
-        T = deepcopy(M1)
-        T.append([0, 0, 0, 1])
-        yaw = self.get_bearing(pose[2])
-        T[0].append(pose[0])
-        T[1].append(pose[1])
-        T[2].append(yaw)
-        tT = np.asarray(T)
-        tT_inv = np.linalg.inv(tT)
-        return tT, tT_inv
-
-    def get_bearing(self, quaternion):
-        euler = tf.transformations.euler_from_quaternion(quaternion)
-        yaw = euler[2]
-        return yaw
+        mTr = tf.transformations.quaternion_matrix(pose[2])
+        mTr[0,3] = pose[0]
+        mTr[1,3] = pose[1]
+        mTr_inv = np.linalg.inv(mTr)
+        return mTr, mTr_inv
 
 
 if __name__ == '__main__':
