@@ -276,6 +276,8 @@ class Robot:
                 rospy.logerr("Robot {}: No frontier point left! ".format(self.robot_id))
             self.all_feedbacks.clear()
             self.auction_feedback.clear()
+            self.exploration_data_senders.clear()
+            self.waiting_for_response = False
         else:
             rospy.logerr('Robot {}: Waiting for more bids: {}, {}'.format(self.robot_id, self.close_devices,
                                                                           self.auction_feedback))
@@ -404,8 +406,7 @@ class Robot:
                     # if self.robot_id < int(sender_id):
                     rospy.logerr("Robot {} Recomputing frontier points".format(self.robot_id))
                     self.cancel_exploration()
-                    frontier_point_response = self.fetch_frontier_points(
-                        FrontierPointRequest(count=len(self.candidate_robots) + 1))
+                    frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(self.candidate_robots) + 1))
                     frontier_points = self.parse_frontier_response(frontier_point_response)
                     rospy.logerr('Robot {}: Received frontier points: {}'.format(self.robot_id, frontier_points))
                     if frontier_points:
@@ -414,8 +415,7 @@ class Robot:
                                                     direction=TO_FRONTIER)
                     else:
                         rospy.logerr("Robot {}: No valid frontier points".format(self.robot_id))
-                    self.exploration_data_senders.clear()
-                    self.waiting_for_response = False
+
 
     def start_exploration_action(self, pose):
         goal = GvgExploreGoal(pose=pose)

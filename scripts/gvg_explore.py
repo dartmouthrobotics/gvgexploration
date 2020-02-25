@@ -15,7 +15,7 @@ import actionlib
 import rospy
 import math
 from gvgexploration.msg import GvgExploreFeedback, GvgExploreGoal, GvgExploreResult, EdgeList, \
-    ChosenPoint, BufferedData, Receipient
+    ChosenPoint, BufferedData
 from gvgexploration.msg import *
 from nav2d_navigator.msg import MoveToPosition2DActionGoal, MoveToPosition2DActionResult
 from actionlib_msgs.msg import GoalStatusArray, GoalID
@@ -99,7 +99,6 @@ class GVGExplore:
         rospy.Subscriber("/robot_{}/odom".format(self.robot_id), Odometry, callback=self.pose_callback)
         rospy.Subscriber("/chosen_point", ChosenPoint, self.chosen_point_callback)
         self.chose_point_pub = rospy.Publisher("/chosen_point", ChosenPoint, queue_size=1000)
-        self.share_pub = rospy.Publisher("/robot_{}/share_data".format(self.robot_id), Receipient, queue_size=1000)
         rospy.Subscriber('/robot_{}/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         self.exploration_feedback = GvgExploreFeedback()
         self.exploration_result = GvgExploreResult()
@@ -473,27 +472,6 @@ class GVGExplore:
         pose = (position.x, position.y, round(yaw, 2))
         self.robot_pose = pose
 
-    def save_data(self, data, file_name):
-        saved_data = []
-        if not path.exists(file_name):
-            f = open(file_name, "wb+")
-            f.close()
-        else:
-            saved_data = self.load_data_from_file(file_name)
-        saved_data += data
-        with open(file_name, 'wb') as fp:
-            pickle.dump(saved_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
-            fp.close()
-
-    def load_data_from_file(self, file_name):
-        data_dict = []
-        if path.exists(file_name) and path.getsize(file_name) > 0:
-            with open(file_name, 'rb') as fp:
-                try:
-                    data_dict = pickle.load(fp)
-                except Exception as e:
-                    rospy.logerr("error: {}".format(e))
-        return data_dict
 
     def get_elevation(self, quaternion):
         euler = tf.transformations.euler_from_quaternion(quaternion)

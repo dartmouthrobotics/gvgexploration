@@ -56,7 +56,7 @@ class ScanFilter:
                         is_robot = True
                         break
                 if is_robot:
-                    new_ranges[i] = -1.0
+                    new_ranges[i] = 0.0
                 else:
                     new_ranges[i] = r
             else:
