@@ -1,5 +1,12 @@
 import math
 import numpy as np
+import pickle
+from os import path
+
+TOTAL_COVERAGE = 1
+MAXIMUM_EXPLORATION_TIME = 2
+COMMON_COVERAGE = 3
+FULL_COVERAGE = 4
 
 INDEX_FOR_X = 0
 INDEX_FOR_Y = 1
@@ -9,6 +16,39 @@ FREE = 0
 OCCUPIED = 100
 UNKNOWN = -1
 SCALE = 10.0
+
+# navigation states
+ACTIVE_STATE = 1  # This state shows that the robot is collecting messages
+PASSIVE_STATE = -1  # This state shows  that the robot is NOT collecting messages
+ACTIVE = 1  # The goal is currently being processed by the action server
+SUCCEEDED = 3  # The goal was achieved successfully by the action server (Terminal State)
+ABORTED = 4  # The goal was aborted during execution by the action server due to some failure (Terminal State)
+LOST = 9  # An action client can determine that a goal is LOST. This should not be sent over the wire by an action
+
+
+def save_data(data, file_name):
+    saved_data = []
+    if not path.exists(file_name):
+        f = open(file_name, "wb+")
+        f.close()
+    else:
+        saved_data = load_data_from_file(file_name)
+    saved_data += data
+    with open(file_name, 'wb') as fp:
+        pickle.dump(saved_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
+        fp.close()
+
+
+def load_data_from_file(file_name):
+    data_dict = []
+    if path.exists(file_name) and path.getsize(file_name) > 0:
+        with open(file_name, 'rb') as fp:
+            # try:
+            data_dict = pickle.load(fp)
+            fp.close()
+            # except Exception as e:
+            #     rospy.logerr("error saving data: {}".format(e))
+    return data_dict
 
 
 def pose2pixel(pose, origin_x, origin_y, resolution):
@@ -200,7 +240,7 @@ def reject_outliers(data):
     # x_values = [raw_x[i] for i in range(len(raw_x)) if i not in indexes]
     # y_values = [raw_y[i] for i in range(len(raw_y)) if i not in indexes]
     # return x_values, y_values
-    return raw_x,raw_y
+    return raw_x, raw_y
 
 
 def in_range(point, polygon):

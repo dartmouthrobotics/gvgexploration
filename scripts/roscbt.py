@@ -13,7 +13,8 @@ from gvgexploration.msg import SignalStrength, RobotSignal
 from time import sleep
 from nav_msgs.msg import OccupancyGrid
 import sys
-
+from project_utils import save_data
+from std_msgs.msg import String
 '''
 ROS communication benchmarking tool (ROSCBT) is a simulator of a communication link between communication devices. 
 ROSCBT is ROS node that is implemeted by this class, using settings that are specified by the user in the configuration file
@@ -65,7 +66,6 @@ class roscbt:
 
         # we can load the map as an image to determine the location of obstacles in the environment
         self.map_topic = rospy.get_param("map_topic", '')
-
         self.robot_ids = rospy.get_param("/roscbt/robot_ids", [])
         self.robot_ranges = rospy.get_param("/roscbt/robot_ranges", {})
         self.topics = rospy.get_param("/roscbt/topics", [])
@@ -75,14 +75,11 @@ class roscbt:
 
         # processing groundtruth about the map
         map_image_path = rospy.get_param("/roscbt/map_image_path", '')
-        # self.map_size, self.map_pixels = self.read_map_image(map_image_path)
-        # if not self.map_pixels:
-        #     rospy.loginfo("File not found on path: {}".format(map_image_path))
-        #     exit(1)
         self.world_scale = rospy.get_param("/roscbt/world_scale", 1)
         self.map_pose = rospy.get_param("/roscbt/map_pose", [])
         self.world_center = rospy.get_param("/roscbt/world_center", [])
 
+        self.termination_metric = rospy.get_param("/robot_0/0/node0/termination_metric")
         self.robot_count = rospy.get_param("/robot_0/0/node0/robot_count")
         self.environment = rospy.get_param("/robot_0/0/node0/environment")
         self.run = rospy.get_param("/robot_0/0/node0/run")
@@ -90,13 +87,14 @@ class roscbt:
         # difference in center of map image and actual simulation
         self.dx = self.world_center[0] - self.map_pose[0]
         self.dy = self.world_center[1] - self.map_pose[1]
+        self.exploration_data = []
 
         # import message types
         for topic in self.topics:
             msg_pkg = topic["message_pkg"]
             msg_type = topic["message_type"]
             topic_name = topic["name"]
-            exec("from {}.msg import {}\n".format(msg_pkg, msg_type))
+            exec ("from {}.msg import {}\n".format(msg_pkg, msg_type))
             # rospy.logerr("from {}.msg import {}\n".format(msg_pkg, msg_type))
             # creating publishers data structure
             self.publisher_map[topic_name] = {}
@@ -107,21 +105,21 @@ class roscbt:
         self.connected_robots = {}
         for i in self.robot_ids:
             rospy.Subscriber('/robot_{}/map'.format(i), OccupancyGrid, self.map_update_callback)
-            exec('self.signal_pub[{0}]=rospy.Publisher("/roscbt/robot_{0}/signal_strength", SignalStrength,'
-                 'queue_size=10)'.format(i))
+            exec ('self.signal_pub[{0}]=rospy.Publisher("/roscbt/robot_{0}/signal_strength", SignalStrength,'
+                  'queue_size=10)'.format(i))
             if str(i) in self.shared_topics:
                 topic_map = self.shared_topics[str(i)]
                 for id, topic_dict in topic_map.items():
                     for k, v in topic_dict.items():
-                        exec("def {0}_{1}_{2}(self, data):self.main_callback({1},{2},data,'{0}')".format(k, id, i))
-                        exec("setattr(roscbt, '{0}_callback{1}_{2}', {0}_{1}_{2})".format(k, id, i))
-                        exec(
+                        exec ("def {0}_{1}_{2}(self, data):self.main_callback({1},{2},data,'{0}')".format(k, id, i))
+                        exec ("setattr(roscbt, '{0}_callback{1}_{2}', {0}_{1}_{2})".format(k, id, i))
+                        exec (
                             "rospy.Subscriber('/robot_{1}/{2}', {3}, self.{2}_callback{0}_{1}, queue_size = 100)".format(
                                 id, i, k, v))
                         # populating publisher datastructure
-                        exec('pub=rospy.Publisher("/roscbt/robot_{}/{}", {}, queue_size=10)'.format(i, k, v))
+                        exec ('pub=rospy.Publisher("/roscbt/robot_{}/{}", {}, queue_size=10)'.format(i, k, v))
                         if i not in self.publisher_map[k]:
-                            exec('self.publisher_map["{}"]["{}"]=pub'.format(k, i))
+                            exec ('self.publisher_map["{}"]["{}"]=pub'.format(k, i))
 
         # ======= pose transformations====================
         self.robot_pose = {}
@@ -130,13 +128,14 @@ class roscbt:
             s = "def a_" + str(i) + "(self, data): self.robot_pose[" + str(i) + "] = (data.pose.pose.position.x," \
                                                                                 "data.pose.pose.position.y," \
                                                                                 "data.pose.pose.position.z) "
-            exec(s)
-            exec("setattr(roscbt, 'callback_pos_teammate" + str(i) + "', a_" + str(i) + ")")
-            exec("rospy.Subscriber('/robot_" + str(
+            exec (s)
+            exec ("setattr(roscbt, 'callback_pos_teammate" + str(i) + "', a_" + str(i) + ")")
+            exec ("rospy.Subscriber('/robot_" + str(
                 i) + "/base_pose_ground_truth', Odometry, self.callback_pos_teammate" + str(i) + ", queue_size = 100)")
 
         # self.listener = tf.TransformListener()
-
+        rospy.Subscriber('/shutdown',String,self.shutdown_callback)
+        self.already_shutdown=False
         rospy.loginfo("ROSCBT Initialized Successfully!")
 
     def spin(self):
@@ -180,7 +179,7 @@ class roscbt:
 
     def main_callback(self, robot_id1, robot_id2, data, topic):
         current_time = rospy.Time.now().secs
-        sender_id = data.header.frame_id #self.resolve_sender(robot_id1, topic, data)
+        sender_id = data.header.frame_id  # self.resolve_sender(robot_id1, topic, data)
         receiver_id = self.resolve_receiver(robot_id2, topic, data)
         if sender_id and receiver_id:
             combn = (sender_id, receiver_id)
@@ -200,7 +199,8 @@ class roscbt:
                 else:
                     self.sent_data[combn] = {current_time: data_size}
             else:
-                rospy.logerr("Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
+                rospy.logerr(
+                    "Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
 
     # method to check the constraints for robot communication
     def can_communicate(self, robot_id1, robot_id2):
@@ -309,33 +309,14 @@ class roscbt:
                 distances.append(d)
             data['distance'] = np.nansum(distances)
             self.prev_poses = robot_poses
-            self.save_data([data], 'gvg/exploration_{}_{}_{}.pickle'.format(self.environment, self.robot_count,self.run))
+            self.exploration_data.append(data)
             self.lasttime_before_performance_calc = current_time
         except Exception as e:
             rospy.logerr("getting error: {}".format(e))
         finally:
             self.lock.release()
 
-    def save_data(self, data, file_name):
-        saved_data = []
-        if not path.exists(file_name):
-            f = open(file_name, "wb+")
-            f.close()
-        else:
-            saved_data = self.load_data_from_file(file_name)
-        saved_data += data
-        with open(file_name, 'wb') as fp:
-            pickle.dump(saved_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
-    def load_data_from_file(self, file_name):
-        data_dict = []
-        if path.exists(file_name) and path.getsize(file_name) > 0:
-            with open(file_name, 'rb') as fp:
-                try:
-                    data_dict = pickle.load(fp)
-                except Exception as e:
-                    rospy.logerr("roscbt error loading data: {}".format(e))
-        return data_dict
 
     '''
       computes euclidean distance between two cartesian coordinates
@@ -424,6 +405,14 @@ class roscbt:
             self.connected_robots[current_time] = max_connected
         self.coverage[current_time] = result
         return result
+
+    def shutdown_callback(self,msg):
+        if not self.already_shutdown:
+            self.save_all_data()
+
+    def save_all_data(self):
+        save_data(self.exploration_data, 'gvg/exploration_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,self.termination_metric))
+        rospy.signal_shutdown('ROSCBT: Shutdown command received!')
 
 
 if __name__ == '__main__':
