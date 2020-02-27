@@ -3,7 +3,7 @@
 from PIL import Image
 import numpy as np
 import rospy
-from project_utils import INDEX_FOR_X, INDEX_FOR_Y, pixel2pose, FREE, OCCUPIED, save_data
+from project_utils import INDEX_FOR_X, INDEX_FOR_Y, pixel2pose, FREE, OCCUPIED, save_data,get_point
 from nav_msgs.msg import OccupancyGrid
 from gvgexploration.msg import Coverage
 
@@ -21,6 +21,7 @@ class MapAnalyzer:
         self.free_pixel_ratio = self.read_raw_image()
         self.all_coverage_data = []
         self.coverage_pub = rospy.Publisher("/coverage", Coverage, queue_size=10)
+        rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         rospy.on_shutdown(self.save_all_data)
 
     def spin(self):
@@ -32,29 +33,28 @@ class MapAnalyzer:
     def publish_coverage(self):
         all_explored_points = {}
         allpoints = {}
-        common_points = set()
+        common_points = []
         for rid in range(self.robot_count):
             map = rospy.wait_for_message('/robot_{}/map'.format(rid), OccupancyGrid)
             rid_coverage, rid_unknown = self.get_map_description(map)
             cov_set = set(list(rid_coverage.keys()))
-            if len(common_points) == 0:
-                common_points = common_points.union(cov_set)
-            common_points = common_points.intersection(cov_set)
+            common_points.append(cov_set)
             all_explored_points.update(rid_coverage)
             allpoints.update(rid_coverage)
             allpoints.update(rid_unknown)
         N = float(len(allpoints))
-        common_area = len(common_points)
+        common_area = set.intersection(*common_points)
         covered_area = len(all_explored_points)
         cov_ratio = covered_area / N
-        common_coverage = common_area / N
+        common_coverage = float(len(common_area)) / N
         cov_msg = Coverage()
         cov_msg.header.stamp = rospy.Time.now()
         cov_msg.coverage = cov_ratio
         cov_msg.expected_coverage = self.free_pixel_ratio
         cov_msg.common_coverage = common_coverage
         self.coverage_pub.publish(cov_msg)
-        self.all_coverage_data.append({'time': rospy.Time.now().to_sec, 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
+        self.all_coverage_data.append(
+            {'time': rospy.Time.now().to_sec, 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
              'expected_coverage': self.free_pixel_ratio})
 
     def get_map_description(self, occ_grid):
@@ -76,6 +76,7 @@ class MapAnalyzer:
                 index[INDEX_FOR_X] = col
                 index = tuple(index)
                 pose = pixel2pose(index, origin_x, origin_y, resolution)
+                pose = get_point(pose)
                 p = grid_values[num_rows - row - 1, col]
                 if p == FREE:
                     covered_area[pose] = None
@@ -102,11 +103,14 @@ class MapAnalyzer:
         ratio = free_point_count / float(allpixels)
         return ratio
 
+    def shutdown_callback(self,msg):
+        rospy.signal_shutdown('MapAnalyzer: Shutdown command received!')
+
     def save_all_data(self):
         save_data(self.all_coverage_data,
                   'gvg/coverage_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
                                                            self.termination_metric))
-        rospy.signal_shutdown('MapAnalyzer: Shutdown command received!')
+
 
 
 if __name__ == '__main__':

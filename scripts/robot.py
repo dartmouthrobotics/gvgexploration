@@ -538,7 +538,7 @@ class Robot:
 
     def shutdown_callback(self,data):
         if not self.is_shutdown_caller:
-            rospy.signal_shutdown('Robot {}: Received Shutdown Exploration complete!')
+            rospy.signal_shutdown('Robot {}: Received Shutdown Exploration complete!'.format(self.robot_id))
 
 
 

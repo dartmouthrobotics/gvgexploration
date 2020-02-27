@@ -694,9 +694,7 @@ class Graph:
         robot_pose = None
         while not robot_pose:
             try:
-                self.listener.waitForTransform("robot_{}/map".format(self.robot_id),
-                                               "robot_{}/base_link".format(self.robot_id), rospy.Time(),
-                                               rospy.Duration(4.0))
+                self.listener.waitForTransform("robot_{}/map".format(self.robot_id),"robot_{}/base_link".format(self.robot_id), rospy.Time(),rospy.Duration(4.0))
                 (robot_loc_val, rot) = self.listener.lookupTransform("robot_{}/map".format(self.robot_id),
                                                                      "robot_{}/base_link".format(self.robot_id),
                                                                      rospy.Time(0))
@@ -708,14 +706,14 @@ class Graph:
         return robot_pose
 
     def shutdown_callback(self, msg):
-        if not self.already_shutdown:
-            self.save_all_data()
+        self.save_all_data()
+        rospy.signal_shutdown('Graph: Shutdown command received!')
 
     def save_all_data(self):
         save_data(self.performance_data,
                   "gvg/performance_{}_{}_{}_{}_{}.pickle".format(self.environment, self.robot_count, self.run,
                                                                  self.termination_metric, self.robot_id))
-        rospy.signal_shutdown('Graph: Shutdown command received!')
+
 
 
 if __name__ == "__main__":

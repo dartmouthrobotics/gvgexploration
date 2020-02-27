@@ -35,6 +35,7 @@ class ScanFilter:
         self.base_pose_subscriber = message_filters.Subscriber('base_pose_ground_truth', Odometry)
         ats = ApproximateTimeSynchronizer([self.base_pose_subscriber, self.scan_subscriber], 10, 0.1)
         ats.registerCallback(self.topic_callback)
+        rospy.Subscriber('/shutdown', String, self.shutdown_callback)
 
     def process_scan_message(self, msg, robot_poses):#robot_ranges, robot_angles): # TODO cleanup the code.
         angle_min = msg.angle_min
@@ -116,6 +117,9 @@ class ScanFilter:
         mTr[1,3] = pose[1]
         mTr_inv = np.linalg.inv(mTr)
         return mTr, mTr_inv
+
+    def shutdown_callback(self, msg):
+        rospy.signal_shutdown('Scan Filter: Shutdown command received!')
 
 
 if __name__ == '__main__':

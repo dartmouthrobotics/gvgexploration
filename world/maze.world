@@ -23,7 +23,7 @@ interval_sim 100  # simulation timestep in milliseconds
 window
 (
   size [ 600.0 700.0 ]
-  center [ 40.0 15.0 ]
+  center [ 15.0 15.0 ]
   rotate [ 0.0 0.0 ]
   scale 10
 )
@@ -33,15 +33,15 @@ floorplan
 (
   name "tutorial"
   bitmap "basic.png"
-  size [ 60.0 43.0 2.0 ]
-  pose [  39.85  14.55 0.0 0.0 ]
+  size [ 30.0 21.5 2.0 ]
+  pose [  14.85  12.55 0.0 0.0 ]
 )
 
 pioneer3at
 (
   name "robot1"
   color "red"
-  pose [16.0 20.0 0.0 0.0]
+  pose [4.0 10.0 0.0 0.0]
 )
 
 # Put two robots into the world
@@ -49,5 +49,5 @@ pioneer3at
 (
   name "robot2"
   color "blue"
-  pose [16.0 18.0 0.0 0.0]
+  pose [4.0 8.0 0.0 0.0]
 )

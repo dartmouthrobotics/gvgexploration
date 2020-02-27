@@ -24,17 +24,5 @@ robot_radius: 0.4
 map_inflation_radius: 0.75
 
 
-# kizito
-robot_pose: base_pose_ground_truth
-robot_count: 2
-min_hallway_width: 1
-comm_range: 20
-point_precision: 2
-min_edge_length: 1
-lidar_scan_radius: 10
-info_scan_radius: 10
-lidar_fov: 360
-slope_bias: 0.1
-opposite_vector_bias: 0.25
-separation_bias: 20
+
 

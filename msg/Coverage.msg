@@ -1,2 +1,4 @@
 std_msgs/Header header
 float64 coverage
+float64 common_coverage
+float64 expected_coverage

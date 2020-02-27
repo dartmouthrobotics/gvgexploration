@@ -1,0 +1,20 @@
+debug_mode: 1
+robot_count: 2    # number of robots on the team
+min_hallway_width: 1.0   # allowed minimum separation between two pixels on the graph
+comm_range: 20  # communication range
+point_precision: 2   # allowed precision of the poses
+min_edge_length: 1   #  allowed edge length
+lidar_scan_radius: 10  # radius of the range finder
+lidar_fov: 360   # range scanner field of view
+slope_bias: 0.1   # allowed error margin in slope comparisons
+opposite_vector_bias: 0.25  # allowed error margin in vector comparisons (direction)
+separation_bias: 20  # allowed error margin in comparisons of corridor width
+max_coverage: 0.8   # allowed maximum coverage
+max_common_coverage: 50
+max_exploration_time: 20
+termination_metric: 1 # 1: TOTAL COVERAGE, 2: MAXIMUM_EXPLORATION_TIME 3: COMMON_COVERAGE, 4: FULL_COVERAGE
+map_scale: 20     # scale of the map
+map_inflation_radius: 1   # inflation radius of the robot
+map_file: '/home/masaba/stage_ws/src/gvgexploration/world/basic.png'    # environment file
+environment: 'basic'
+run: 0

@@ -71,6 +71,7 @@ add_service_files(
   FILES
   FrontierPoint.srv
   Intersections.srv
+  FetchGraph.srv
 #  Service2.srv
 )
 
