@@ -279,8 +279,6 @@ class roscbt:
             else:
                 data['shared_data'] = [np.nanmean(shared_data), np.nanvar(shared_data)]
 
-            # explored_area = [v for t, v in self.explored_area.items() if
-            #                  self.lasttime_before_performance_calc < t <= current_time]
             coverage = [v for t, v in self.coverage.items() if
                         self.lasttime_before_performance_calc < t <= current_time]
             connected = [v for t, v in self.connected_robots.items() if
@@ -305,7 +303,7 @@ class roscbt:
             data['distance'] = np.nansum(distances)
             self.prev_poses = robot_poses
             self.exploration_data.append(data)
-            self.lasttime_before_performance_calc = current_time
+            self.lasttime_before_performance_calc =  rospy.Time.now().to_sec()
         except Exception as e:
             rospy.logerr("getting error: {}".format(e))
         finally:

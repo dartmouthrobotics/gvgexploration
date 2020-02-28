@@ -114,7 +114,7 @@ class Graph:
                 break
         now = time.time()
         t = (now - start_time)
-        self.performance_data.append({'time': now, 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
+        self.performance_data.append({'time':  rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
         if self.debug_mode:
             if not self.plot_data_active:
                 self.plot_data(ppoints, is_initial=True)
@@ -167,7 +167,7 @@ class Graph:
             self.compute_hallway_points()
             now = time.time()
             t = now - start_time
-            self.performance_data.append({'time': now, 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
+            self.performance_data.append({'time':  rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
         except Exception as e:
             rospy.logerr('Robot {}: Error in graph computation: {}'.format(self.robot_id, e.message))
 
