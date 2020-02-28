@@ -261,7 +261,6 @@ class Graph:
                         # rospy.logerr("Is in Unknown region: {}".format(pu.there_is_unknown_region(p2, p3, self.pixel_desc)))
                         pass
                 else:
-                    # rospy.logerr('Distance: {}'.format(pu.D(robot_pose, p3)))
                     pass
         if intesec_pose:
             min_dist = min(intesec_pose.keys())
