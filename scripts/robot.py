@@ -86,7 +86,6 @@ class Robot:
         self.waiting_for_auction_feedback = False
         self.waiting_for_frontier_point = False
         self.waiting_for_auction = False
-        self.in_charge_of_computation = False
         self.waiting_for_response = False
         self.session_id = None
         # communinication session variables end here
@@ -221,7 +220,7 @@ class Robot:
         time_stamp = rospy.Time.now().secs
         if response.result:
             if self.close_devices and not self.session_id:  # devices available and you're not in session
-                session_id = '{}_{}'.format(self.robot_id, rospy.Time.now().nsecs)
+                session_id = '{}_{}'.format(self.robot_id, rospy.Time.now().to_sec())
                 self.session_id = session_id
                 self.is_sender = True
                 self.comm_session_time = rospy.Time.now()
