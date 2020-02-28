@@ -147,6 +147,7 @@ class GVGExplore:
         # rospy.logerr("Robot {} going to frontier....".format(self.robot_id))
         while self.moving_to_frontier:
             continue
+        self.create_feedback(self.get_robot_pose())
         visited[scale_up(goal)] = None
 
     def run_dfs(self, visited_nodes):
@@ -189,6 +190,9 @@ class GVGExplore:
         for e in edge_list:
             p1 = e[0]
             p2 = e[1]
+            if D(robot_pose,p1) > D(robot_pose,p2):
+                p1=e[1]
+                p2=e[0]
             if not self.is_visited(p1, all_visited) and not self.is_visited(p2, all_visited):
                 d = max([D(robot_pose, e[0]), D(robot_pose, e[1])])
                 closest_ridge[e] = d
@@ -241,11 +245,12 @@ class GVGExplore:
 
     def create_feedback(self, point):
         next_point = scale_down(point)
-        self.exploration_feedback.progress = "String Exploring"
+        self.exploration_feedback.progress = "Starting exploration"
         pose = Pose()
         pose.position.x = next_point[INDEX_FOR_X]
         pose.position.y = next_point[INDEX_FOR_Y]
         self.exploration_feedback.current_point = pose
+        self.action_server.publish_feedback(self.exploration_feedback)
 
     def create_result(self, visited_nodes):
         all_nodes = list(visited_nodes)

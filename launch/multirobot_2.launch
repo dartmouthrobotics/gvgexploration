@@ -69,6 +69,7 @@
             <arg name="environment" value="maze"/>
         </include>
     </group>
+
     <node pkg="gvgexploration" type="map_analyzer.py" name="map_analyzer">
         <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
     </node>

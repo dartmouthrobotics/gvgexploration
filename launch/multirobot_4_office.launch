@@ -4,7 +4,7 @@
 
     <!-- Start Stage simulator with a given environment -->
     <!--        <node name="Stage" pkg="stage_ros" type="stageros" args="$(find gvgexploration)/world/cave4_1.world">-->
-    <node name="Stage" pkg="stage_ros" type="stageros" args="$(find gvgexploration)/world/office4_4.world">
+    <node name="Stage" pkg="stage_ros" type="stageros" args="$(find gvgexploration)/world/maze.world">
         <param name="base_watchdog_timeout" value="0" />
     </node>
     <node name="R0_MapAlign" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /robot_0/map 100"/>
@@ -26,6 +26,10 @@
             <rosparam file="$(find gvgexploration)/param/navigator.yaml"/>
             <param name="robot_id" value="1"/>
         </node>
+          <node name="scan_filter" pkg="gvgexploration" type="scan_filter.py">
+            <param name="robot_id" value="0" />
+            <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
+        </node>
         <node pkg="nav2d_navigator" type="explore_client" name="explore_client"/>
         <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
         <node name="SetGoal" pkg="nav2d_navigator" type="set_goal_client" />
@@ -33,6 +37,8 @@
             <arg name="robot_name" value="0" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="1,2,3" />
+            <arg name="robot_count" value="4"/>
+            <arg name="environment" value="office"/>
         </include>
 
     </group>
@@ -51,6 +57,10 @@
             <rosparam file="$(find gvgexploration)/param/navigator.yaml"/>
             <param name="robot_id" value="2"/>
         </node>
+        <node name="scan_filter" pkg="gvgexploration" type="scan_filter.py">
+            <param name="robot_id" value="1" />
+            <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
+        </node>
         <node pkg="nav2d_navigator" type="explore_client" name="explore_client"/>
         <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
         <node name="SetGoal" pkg="nav2d_navigator" type="set_goal_client" />
@@ -59,6 +69,8 @@
             <arg name="robot_name" value="1" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="0,2,3" />
+            <arg name="robot_count" value="4"/>
+            <arg name="environment" value="office"/>
         </include>
     </group>
 
@@ -74,7 +86,11 @@
         </node>
         <node pkg="nav2d_navigator" type="navigator" name="navigator">
             <rosparam file="$(find gvgexploration)/param/navigator.yaml"/>
-            <param name="robot_id" value="3"/>
+            <param name="robot_id" value="2"/>
+        </node>
+        <node name="scan_filter" pkg="gvgexploration" type="scan_filter.py">
+            <param name="robot_id" value="2" />
+            <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
         </node>
         <node pkg="nav2d_navigator" type="explore_client" name="explore_client"/>
         <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
@@ -83,6 +99,8 @@
             <arg name="robot_name" value="2" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="0,1,3" />
+            <arg name="robot_count" value="4"/>
+            <arg name="environment" value="office"/>
         </include>
     </group>
 
@@ -96,6 +114,10 @@
             <param name="robot_frame" value="base_link"/>
             <param name="odometry_frame" value="odom"/>
         </node>
+        <node name="scan_filter" pkg="gvgexploration" type="scan_filter.py">
+            <param name="robot_id" value="3" />
+            <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
+        </node>
         <node pkg="nav2d_navigator" type="navigator" name="navigator">
             <rosparam file="$(find gvgexploration)/param/navigator.yaml"/>
             <param name="robot_id" value="4"/>
@@ -107,9 +129,13 @@
             <arg name="robot_name" value="3" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="0,1,2" />
+            <arg name="robot_count" value="4"/>
+            <arg name="environment" value="office"/>
         </include>
     </group>
-
+    <node pkg="gvgexploration" type="map_analyzer.py" name="map_analyzer">
+        <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
+    </node>
     <!-- RVIZ to view the visualization -->
     <node name="RVIZ" pkg="rviz" type="rviz" args=" -d $(find gvgexploration)/param/gvgexploration.rviz" output="screen" />
 

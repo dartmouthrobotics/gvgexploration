@@ -64,22 +64,33 @@ class Robot:
         self.robot_pose = None
         self.signal_strength = {}
         self.close_devices = []
-        self.received_devices = 0
+        self.received_devices = []
         self.is_initial_sharing = True
         self.is_sender = False
         self.previous_pose = None
         self.is_initial_data_sharing = True
         self.initial_receipt = True
         self.is_initial_move = True
-        self.exploration_data_senders = {}
         self.last_map_update_time = rospy.Time.now().secs
         self.frontier_points = []
         self.coverage = None
         self.goal_handle = None
         self.auction_feedback = {}
         self.all_feedbacks = {}
+
+        # communication synchronizatin variables
+        self.comm_session_time = 0
+        self.auction_session_time = 0
+        self.time_after_bidding = 0
+        self.auction_waiting_time = 0
+        self.waiting_for_auction_feedback = False
+        self.waiting_for_frontier_point = False
+        self.waiting_for_auction = False
         self.in_charge_of_computation = False
         self.waiting_for_response = False
+        self.session_id = None
+        # communinication session variables end here
+
         self.exploration_time = rospy.Time.now().to_sec()
         self.candidate_robots = self.frontier_robots + self.base_stations
         self.frontier_data = []
@@ -90,6 +101,7 @@ class Robot:
         self.max_exploration_time = rospy.get_param("~max_exploration_time")
         self.max_coverage = rospy.get_param("~max_coverage")
         self.max_common_coverage = rospy.get_param("~max_common_coverage")
+        self.max_wait_time = rospy.get_param("~max_wait_time")
         for rid in self.candidate_robots:
             pub = rospy.Publisher("/robot_{}/received_data".format(rid), BufferedData, queue_size=100)
             pub1 = rospy.Publisher("/robot_{}/auction_points".format(rid), Auction, queue_size=10)
@@ -116,6 +128,8 @@ class Robot:
         rospy.Subscriber('/robot_{}/allocated_point'.format(self.robot_id), Frontier, self.allocated_point_callback)
         rospy.Subscriber('/robot_{}/auction_feedback'.format(self.robot_id), Auction, self.auction_feedback_callback)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
+        rospy.Subscriber('/robot_{}/gvg_explore/feedback'.format(self.robot_id), GvgExploreActionFeedback,
+                         self.explore_feedback_callback)
         self.shutdown_pub = rospy.Publisher("/shutdown".format(self.robot_id), String, queue_size=10)
         rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         self.is_shutdown_caller = False
@@ -137,13 +151,51 @@ class Robot:
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
-            if self.exploration_started:
+            if not self.session_id:
                 self.check_data_sharing_status()
                 time_to_shutdown = self.evaluate_exploration()
                 if time_to_shutdown:
                     self.cancel_exploration()
                     rospy.signal_shutdown('Exploration complete!')
+            else:
+                time_to_go = self.evaluate_waiting()
+                if time_to_go:
+                    self.session_id = None  # you've  dropped the former commitment
+                    self.resume_exploration()  # continue with your exploration
             r.sleep()
+
+    def evaluate_waiting(self):
+        time_to_go = False
+        if self.waiting_for_response:  # after sending data
+            if (rospy.Time.now().to_sec() - self.comm_session_time) > self.max_wait_time:
+                self.request_and_share_frontiers()  # just work with whoever has replied
+
+        if self.waiting_for_frontier_point:  # after advertising an auction
+            if (rospy.Time.now().to_sec() - self.time_after_bidding) > self.max_wait_time:
+                self.waiting_for_frontier_point = False
+                self.waiting_for_frontier_point = rospy.Time.now().to_sec()
+                time_to_go = True
+
+        if self.waiting_for_auction_feedback:  # after bidding in an auction
+            if (rospy.Time.now().to_sec() - self.auction_session_time) > self.max_wait_time:
+                self.waiting_for_auction_feedback = False
+                self.auction_session_time = rospy.Time.now().to_sec(0)
+                time_to_go = True
+
+        if self.waiting_for_auction:  # after sending back data
+            if (rospy.Time.now().to_sec() - self.auction_waiting_time) > self.max_wait_time:
+                self.waiting_for_auction = False
+                self.auction_waiting_time = rospy.Time.now().to_sec()
+                time_to_go = True
+        return time_to_go
+
+    def resume_exploration(self):
+        pose = self.get_robot_pose()
+        p = Pose()
+        p.position.x = pose[pu.INDEX_FOR_X]
+        p.position.y = pose[pu.INDEX_FOR_Y]
+        self.frontier_point = p
+        self.start_exploration_action(p)
 
     def evaluate_exploration(self):
         its_time = False
@@ -161,24 +213,26 @@ class Robot:
         return its_time
 
     def check_data_sharing_status(self):
-        if not self.waiting_for_response:
-            robot_pose = self.get_robot_pose()
-            p = Pose()
-            p.position.x = robot_pose[pu.INDEX_FOR_X]
-            p.position.y = robot_pose[pu.INDEX_FOR_Y]
-            response = self.check_intersections(IntersectionsRequest(pose=p))
-            time_stamp = rospy.Time.now().secs
-            if response.result:
-                if self.close_devices:  # and not same_as_previous:
-                    rospy.logerr("Robot {} sending data to Robot {}".format(self.robot_id, self.close_devices))
-                    self.is_sender = True
-                    self.waiting_for_response = True
-                    self.push_messages_to_receiver(self.close_devices)
-                    self.interconnection_data.append({'time': time_stamp, 'pose': robot_pose, 'intersections': []})
-                    # pu.save_data([{'time': time_stamp, 'pose': robot_pose, 'intersections': []}],
-                    #              'gvg/interconnections_{}_{}.pickle'.format(self.robot_id, self.run))
+        robot_pose = self.get_robot_pose()
+        p = Pose()
+        p.position.x = robot_pose[pu.INDEX_FOR_X]
+        p.position.y = robot_pose[pu.INDEX_FOR_Y]
+        response = self.check_intersections(IntersectionsRequest(pose=p))
+        time_stamp = rospy.Time.now().secs
+        if response.result:
+            if self.close_devices and not self.session_id:  # devices available and you're not in session
+                session_id = '{}_{}'.format(self.robot_id, rospy.Time.now().nsecs)
+                self.session_id = session_id
+                self.is_sender = True
+                self.comm_session_time = rospy.Time.now()
+                self.waiting_for_response = True
 
-            self.prev_intersects = []
+                # ===== ends here ====================
+                self.push_messages_to_receiver(self.close_devices, session_id)
+                self.interconnection_data.append({'time': time_stamp, 'pose': robot_pose, 'intersections': []})
+
+    def explore_feedback_callback(self, data):
+        self.is_exploring = True
 
     def map_update_callback(self, data):
         self.last_map_update_time = rospy.Time.now().secs
@@ -193,22 +247,19 @@ class Robot:
         self.coverage = data
 
     def allocated_point_callback(self, data):
-        rospy.logerr("Robot {}: Received frontier location from {}".format(self.robot_id, data.header.frame_id))
+        # reset waiting for frontier point flags
+        self.waiting_for_frontier_point = False
+        self.time_after_bidding = rospy.Time.now().to_sec()
+        # ============ End here =================
         self.frontier_point = data.pose
         robot_pose = self.get_robot_pose()
         new_point = (data.pose.position.x, data.pose.position.y, 0)
-        self.frontier_data.append({'time': rospy.Time.now().secs, 'pose': robot_pose, 'frontier': new_point})
-        # pu.save_data([{'time': rospy.Time.now().secs, 'pose': robot_pose, 'frontier': new_point}],
-        #              'gvg/frontiers_{}_{}.pickle'.format(self.robot_id, self.run))
+        self.frontier_data.append({'time': rospy.Time.now().to_sec(), 'pose': robot_pose, 'frontier': new_point})
         if self.initial_receipt:
             self.initial_receipt = False
-        self.is_exploring = True
-        self.robot_state = ACTIVE_STATE
         self.start_exploration_action(self.frontier_point)
 
     def auction_feedback_callback(self, data):
-        global robot_distances
-        rospy.logerr("Robot {}: Received bids from {}".format(self.robot_id, data.header.frame_id))
         self.all_feedbacks[data.header.frame_id] = data
         rid = data.header.frame_id
         m = len(data.distances)
@@ -219,10 +270,10 @@ class Robot:
                 min_pose = data.poses[i]
                 min_dist = data.distances[i]
         self.auction_feedback[rid] = (min_dist, min_pose)
-        if len(self.all_feedbacks) == len(self.close_devices):
+
+        if len(self.all_feedbacks) >= len(self.received_devices):
             all_robots = list(self.auction_feedback)
             taken_poses = []
-            rospy.logerr("Computing poses for : {}".format(all_robots))
             for i in all_robots:
                 pose_i = (self.auction_feedback[i][1].position.x, self.auction_feedback[i][1].position.y)
                 conflicts = []
@@ -247,7 +298,7 @@ class Robot:
                     for k in range(len(rob_poses)):
                         p = (rob_poses[k].position.x, rob_poses[k].position.y)
                         if p != pose_i and p not in taken_poses:
-                            remaining_poses[rob_distances[k]] = p
+                            remaining_poses[rob_distances[k]] = rob_poses[k]
                     next_closest_dist = min(list(remaining_poses))
                     self.auction_feedback[conflicting_robot_id] = (
                         next_closest_dist, remaining_poses[next_closest_dist])
@@ -268,37 +319,49 @@ class Robot:
                     self.frontier_point = pose
                     break
                 del dist_dict[min_dist]
-            if self.frontier_point:
-                self.start_exploration_action(self.frontier_point)
-            else:
+            if not self.frontier_point:
                 rospy.logerr("Robot {}: No frontier point left! ".format(self.robot_id))
+                pose = Pose()
+                pose.position.x = robot_pose[pu.INDEX_FOR_X]
+                pose.position.y = robot_pose[pu.INDEX_FOR_Y]
+                self.frontier_point = pose
+
+            # reset waiting for bids flats and stop being a sender
+            self.waiting_for_auction_feedback = False
+            self.auction_session_time = rospy.Time.now().to_sec()
+            self.is_sender = False
+            # =============Ends here ==============
+            self.start_exploration_action(self.frontier_point)
             self.all_feedbacks.clear()
             self.auction_feedback.clear()
-            self.exploration_data_senders.clear()
-            self.waiting_for_response = False
-        else:
-            rospy.logerr('Robot {}: Waiting for more bids: {}, {}'.format(self.robot_id, self.close_devices,
-                                                                          self.auction_feedback))
+            self.received_devices = []
 
     def auction_points_callback(self, data):
-        rospy.logerr("Robot {} auction points received from {}".format(self.robot_id, data.header.frame_id))
-        sender_id = data.header.frame_id
-        poses = data.poses
-        received_points = []
-        distances = []
-        robot_pose = self.get_robot_pose()
-        for p in poses:
-            received_points.append(p)
-            point = (p.position.x, p.position.y,
-                     self.get_elevation((p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w)))
-            distance = pu.D(robot_pose, point)
-            distances.append(distance)
-        auction = Auction()
-        auction.header.frame_id = str(self.robot_id)
-        auction.poses = received_points
-        auction.distances = distances
-        self.auction_feedback_pub[sender_id].publish(auction)
-        rospy.logerr("Robot {} auction bids sent back to {}".format(self.robot_id, sender_id))
+        if not self.is_sender:  # only participate if you're not a sender
+            sender_id = data.header.frame_id
+            poses = data.poses
+            received_points = []
+            distances = []
+            robot_pose = self.get_robot_pose()
+            for p in poses:
+                received_points.append(p)
+                point = (p.position.x, p.position.y,
+                         self.get_elevation((p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w)))
+                distance = pu.D(robot_pose, point)
+                distances.append(distance)
+            auction = Auction()
+            auction.header.frame_id = str(self.robot_id)
+            auction.poses = received_points
+            auction.distances = distances
+            self.auction_feedback_pub[sender_id].publish(auction)
+
+            # start waiting for location after bidding
+            self.time_after_bidding = rospy.Time.now().to_sec()
+            self.waiting_for_frontier_point = True
+
+            # reset waiting for auction flags
+            self.waiting_for_auction = False
+            self.auction_waiting_time = rospy.Time.now().to_sec()
 
     def publish_auction_points(self, rendezvous_poses, receivers, direction=1, total_exploration_time=0):
         x = [float(v[0]) for v in rendezvous_poses]
@@ -317,18 +380,26 @@ class Robot:
         for id in receivers:
             self.auction_publishers[id].publish(auction)
 
+        # wait for bids from recipients
+        self.auction_session_time = rospy.Time.now().to_sec()
+        self.waiting_for_auction_feedback = True
+
     def robots_karto_out_callback(self, data):
         if data.robot_id - 1 == self.robot_id:
             for rid in self.candidate_robots:
                 self.add_to_file(rid, [data])
             if self.is_initial_data_sharing:
-                self.push_messages_to_receiver(self.candidate_robots)
+                self.push_messages_to_receiver(self.candidate_robots, None)
                 self.is_initial_data_sharing = False
 
-    def push_messages_to_receiver(self, receiver_ids, is_alert=0):
+    def push_messages_to_receiver(self, receiver_ids, session_id, is_alert=0):
         for receiver_id in receiver_ids:
             message_data = self.load_data_for_id(receiver_id)
             buffered_data = BufferedData()
+            if session_id:
+                buffered_data.session_id.data = session_id
+            else:
+                buffered_data.session_id.data = ''
             buffered_data.header.frame_id = '{}'.format(self.robot_id)
             buffered_data.header.stamp.secs = rospy.Time.now().secs
             buffered_data.secs = []
@@ -360,13 +431,11 @@ class Robot:
 
     def buffered_data_callback(self, buff_data):
         sender_id = buff_data.header.frame_id
-        if self.is_exploring:
-            self.exploration_data_senders[sender_id] = None
         self.process_data(sender_id, buff_data)
+        self.wait_for_updates()
+        # ============ used during initialization ============
         if self.initial_receipt:
             self.wait_for_updates()
-            rospy.logerr(
-                "Robot {} initial data from {}: {} files".format(self.robot_id, sender_id, len(buff_data.data)))
             self.initial_data_count += 1
             if self.initial_data_count == len(self.candidate_robots):
                 self.initial_receipt = False
@@ -383,35 +452,51 @@ class Robot:
                         rospy.logerr("Robot {}: No valid frontier points".format(self.robot_id))
                 else:
                     rospy.logerr("Robot {}: Waiting for frontier points...".format(self.robot_id))
+
+        # ===============the block below is used during exploration =====================
         else:
-            rospy.logerr(
-                "Robot {} received data from {}: {} files".format(self.robot_id, sender_id, len(buff_data.data)))
-            if not self.is_sender:
-                rospy.logerr(
-                    "Robot {} exploration data {}: {} files".format(self.robot_id, sender_id, len(buff_data.data)))
-                self.push_messages_to_receiver([sender_id])
-                self.cancel_exploration()
-            else:
-                rospy.logerr("Robot {} exploration response from {}: {} files".format(self.robot_id, sender_id,
-                                                                                      len(buff_data.data)))
-                self.received_devices += 1
-                if self.received_devices == len(self.close_devices):
-                    self.received_devices = 0
-                    self.is_sender = False
-                    robot_pose = self.get_robot_pose()
-                    # if self.robot_id < int(sender_id):
-                    rospy.logerr("Robot {} Recomputing frontier points".format(self.robot_id))
+            if not buff_data.session_id:  # only respond to data with session id
+                if not self.session_id:  # send back data and stop to wait for further communication
+                    self.session_id = buff_data.session_id
+                    self.push_messages_to_receiver([sender_id], self.session_id)
                     self.cancel_exploration()
-                    frontier_point_response = self.fetch_frontier_points(
-                        FrontierPointRequest(count=len(self.candidate_robots) + 1))
-                    frontier_points = self.parse_frontier_response(frontier_point_response)
-                    rospy.logerr('Robot {}: Received frontier points: {}'.format(self.robot_id, frontier_points))
-                    if frontier_points:
-                        self.frontier_points = frontier_points
-                        self.publish_auction_points(frontier_points, self.exploration_data_senders,
-                                                    direction=TO_FRONTIER)
-                    else:
-                        rospy.logerr("Robot {}: No valid frontier points".format(self.robot_id))
+
+                    # set auction waiting flags
+                    self.waiting_for_auction = True
+                    self.auction_waiting_time = rospy.Time.now().to_sec()
+
+                else:  # So you have a session id
+                    if buff_data.session_id == self.session_id:
+                        if self.is_sender:  # do this if you're a sender
+                            self.received_devices.append(sender_id)
+                            if len(self.received_devices) == len(self.close_devices):
+                                self.request_and_share_frontiers()
+                            else:  # do this if you're in a receive session
+                                self.push_messages_to_receiver([sender_id],
+                                                               None)  # just send back data but don't join the session
+                    else:  # do this if you're handling a send session
+                        self.push_messages_to_receiver([sender_id], None)
+            else:
+                rospy.logerr('Robot {}: Received an tagged message'.format(self.robot_id))
+
+    def request_and_share_frontiers(self):
+        frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(self.received_devices) + 1))
+        frontier_points = self.parse_frontier_response(frontier_point_response)
+        if frontier_points:
+            self.frontier_points = frontier_points
+            self.publish_auction_points(frontier_points, self.received_devices, direction=TO_FRONTIER)
+
+            # set auction waiting flags
+            self.auction_session_time = rospy.Time.now().to_sec()
+            self.waiting_for_auction_feedback = True
+        else:
+            self.received_devices = []
+            self.is_sender = False  # reset this: you're not a sender anymore
+            self.start_exploration_action()  # say nothing, just go your way
+
+        # reset the waiting flags, say nothing and move
+        self.waiting_for_response = False
+        self.comm_session_time = rospy.Time.now().to_sec()
 
     def start_exploration_action(self, pose):
         goal = GvgExploreGoal(pose=pose)
@@ -420,7 +505,7 @@ class Robot:
         self.exploration_started = True
         self.exploration_time = rospy.Time.now().to_sec()
         self.exploration.wait_for_result()
-        self.exploration.get_result()  # A
+        self.exploration.get_result()
 
     def parse_frontier_response(self, data):
         frontier_points = []
@@ -480,6 +565,7 @@ class Robot:
         return robot_pose
 
     def cancel_exploration(self):
+        self.exploration_started = False
         if self.goal_handle:
             self.goal_handle.cancel()
             rospy.logerr("Robot {} Canceling exploration ...".format(self.robot_id))
@@ -536,10 +622,9 @@ class Robot:
         self.is_shutdown_caller = True
         self.shutdown_pub.publish(msg)
 
-    def shutdown_callback(self,data):
+    def shutdown_callback(self, data):
         if not self.is_shutdown_caller:
             rospy.signal_shutdown('Robot {}: Received Shutdown Exploration complete!'.format(self.robot_id))
-
 
 
 if __name__ == "__main__":
