@@ -218,7 +218,7 @@ class Robot:
         p.position.x = robot_pose[pu.INDEX_FOR_X]
         p.position.y = robot_pose[pu.INDEX_FOR_Y]
         response = self.check_intersections(IntersectionsRequest(pose=p))
-        time_stamp = rospy.Time.now().secs
+        time_stamp = rospy.Time.now().to_sec()
         if response.result:
             if self.close_devices:  # devices available and you're not in session
                 session_id = '{}_{}'.format(self.robot_id, rospy.Time.now().to_sec())

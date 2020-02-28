@@ -55,7 +55,7 @@ class MapAnalyzer:
         cov_msg.common_coverage = common_coverage
         self.coverage_pub.publish(cov_msg)
         self.all_coverage_data.append(
-            {'time': rospy.Time.now().to_sec, 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
+            {'time': rospy.Time.now().to_sec(), 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
              'expected_coverage': self.free_pixel_ratio})
 
     def get_map_description(self, occ_grid):

@@ -228,7 +228,7 @@ class Graph:
                 now = time.time()
                 t = (now - start)
                 self.performance_data.append(
-                    {'time': now, 'type': 1, 'robot_id': self.robot_id, 'computational_time': t})
+                    {'time': rospy.Time.now().to_sec(), 'type': 1, 'robot_id': self.robot_id, 'computational_time': t})
         return close_edge, intersecs
 
     def process_decision(self, vertex_descriptions, ridge, robot_pose):

@@ -253,7 +253,7 @@ class roscbt:
         self.lock.acquire()
         try:
             current_time = rospy.Time.now().to_sec()
-            data = {'start_time': current_time}
+            data = {'start_time':  rospy.Time.now().to_sec()}
 
             shared_data = []
             comm_ranges = []
