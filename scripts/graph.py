@@ -91,7 +91,6 @@ class Graph:
             except Exception as e:
                 rospy.logerr('Robot {}: Graph node interrupted!: {}'.format(self.robot_id, e))
 
-
     def frontier_point_handler(self, request):
         count = request.count
         rospy.logerr("Robot Count received: {}".format(count))
@@ -114,7 +113,8 @@ class Graph:
                 break
         now = time.time()
         t = (now - start_time)
-        self.performance_data.append({'time':  rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
+        self.performance_data.append(
+            {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
         if self.debug_mode:
             if not self.plot_data_active:
                 self.plot_data(ppoints, is_initial=True)
@@ -130,7 +130,7 @@ class Graph:
         result = 0
         close_edge, intersecs = self.compute_intersections(robot_pose)
         if intersecs:
-            result = 1
+            result = D(pu.scale_down(intersecs[0]), intersecs[1](intersecs[1]))
         return IntersectionsResponse(result=result)
 
     def fetch_graph_handler(self, data):
@@ -167,7 +167,8 @@ class Graph:
             self.compute_hallway_points()
             now = time.time()
             t = now - start_time
-            self.performance_data.append({'time':  rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
+            self.performance_data.append(
+                {'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
         except Exception as e:
             rospy.logerr('Robot {}: Error in graph computation: {}'.format(self.robot_id, e.message))
 
@@ -692,7 +693,9 @@ class Graph:
         robot_pose = None
         while not robot_pose:
             try:
-                self.listener.waitForTransform("robot_{}/map".format(self.robot_id),"robot_{}/base_link".format(self.robot_id), rospy.Time(),rospy.Duration(4.0))
+                self.listener.waitForTransform("robot_{}/map".format(self.robot_id),
+                                               "robot_{}/base_link".format(self.robot_id), rospy.Time(),
+                                               rospy.Duration(4.0))
                 (robot_loc_val, rot) = self.listener.lookupTransform("robot_{}/map".format(self.robot_id),
                                                                      "robot_{}/base_link".format(self.robot_id),
                                                                      rospy.Time(0))
@@ -711,7 +714,6 @@ class Graph:
         save_data(self.performance_data,
                   "gvg/performance_{}_{}_{}_{}_{}.pickle".format(self.environment, self.robot_count, self.run,
                                                                  self.termination_metric, self.robot_id))
-
 
 
 if __name__ == "__main__":

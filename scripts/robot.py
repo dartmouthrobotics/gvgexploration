@@ -112,9 +112,12 @@ class Robot:
             self.auction_feedback_pub[rid] = pub3
 
         self.karto_pub = rospy.Publisher("/robot_{}/karto_in".format(self.robot_id), LocalizedScan, queue_size=100)
-        rospy.Subscriber('/robot_{}/received_data'.format(self.robot_id), BufferedData,self.buffered_data_callback, queue_size=100)
-        rospy.Subscriber("/roscbt/robot_{}/signal_strength".format(self.robot_id), SignalStrength,self.signal_strength_callback)
-        rospy.Subscriber('/karto_out'.format(self.robot_id), LocalizedScan, self.robots_karto_out_callback,queue_size=100)
+        rospy.Subscriber('/robot_{}/received_data'.format(self.robot_id), BufferedData, self.buffered_data_callback,
+                         queue_size=100)
+        rospy.Subscriber("/roscbt/robot_{}/signal_strength".format(self.robot_id), SignalStrength,
+                         self.signal_strength_callback)
+        rospy.Subscriber('/karto_out'.format(self.robot_id), LocalizedScan, self.robots_karto_out_callback,
+                         queue_size=100)
         rospy.Subscriber("/robot_{}/auction_points".format(self.robot_id), Auction, self.auction_points_callback)
         self.fetch_frontier_points = rospy.ServiceProxy('/robot_{}/frontier_points'.format(self.robot_id),
                                                         FrontierPoint)
@@ -229,7 +232,7 @@ class Robot:
 
                 # # ===== ends here ====================
                 self.push_messages_to_receiver(self.close_devices, session_id)
-                self.interconnection_data.append({'time': time_stamp, 'pose': robot_pose, 'intersections': []})
+                self.interconnection_data.append({'time': time_stamp, 'pose': robot_pose, 'intersection_range':  response.result})
 
     def explore_feedback_callback(self, data):
         self.is_exploring = True
@@ -255,7 +258,7 @@ class Robot:
             self.frontier_point = data.pose
             robot_pose = self.get_robot_pose()
             new_point = (data.pose.position.x, data.pose.position.y, 0)
-            self.frontier_data.append({'time': rospy.Time.now().to_sec(), 'pose': robot_pose, 'frontier': new_point})
+            self.frontier_data.append({'time': rospy.Time.now().to_sec(), 'distance_to_frontier': pu.D(robot_pose, new_point)})
             self.start_exploration_action(self.frontier_point)
 
     def auction_feedback_callback(self, data):
@@ -603,11 +606,11 @@ class Robot:
 
     def save_all_data(self):
         pu.save_data(self.interconnection_data,
-                     'gvg/interconnections_{}_{}_{}_{}.pickle'.format(self.robot_id, self.run, self.termination_metric,
-                                                                      self.robot_id))
+                     'gvg/interconnections_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+                                                                         self.termination_metric, self.robot_id))
         pu.save_data(self.frontier_data,
-                     'gvg/frontiers_{}_{}_{}_{}.pickle'.format(self.robot_id, self.run, self.termination_metric,
-                                                               self.robot_id))
+                     'gvg/frontiers_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+                                                                  self.termination_metric, self.robot_id))
         msg = String()
         msg.data = '{}'.format(self.robot_id)
         self.is_shutdown_caller = True
