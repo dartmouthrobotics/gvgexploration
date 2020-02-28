@@ -90,7 +90,7 @@ class Graph:
                 r.sleep()
             except Exception as e:
                 rospy.logerr('Robot {}: Graph node interrupted!: {}'.format(self.robot_id, e))
-                break
+
 
     def frontier_point_handler(self, request):
         count = request.count
@@ -138,7 +138,6 @@ class Graph:
         self.compute_graph(map_msg)
         pose_data = (data.pose.position.x, data.pose.position.y)
         point = pu.scale_up(pose_data)
-        rospy.logerr("Robot at: {}".format(point))
         alledges = list(self.edges)
         edgelist = EdgeList()
         edgelist.header.stamp = rospy.Time.now()

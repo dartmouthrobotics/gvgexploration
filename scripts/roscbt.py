@@ -105,7 +105,6 @@ class roscbt:
         self.coverage = {}
         self.connected_robots = {}
         for i in self.robot_ids:
-            rospy.Subscriber('/robot_{}/map'.format(i), OccupancyGrid, self.map_update_callback)
             exec('self.signal_pub[{0}]=rospy.Publisher("/roscbt/robot_{0}/signal_strength", SignalStrength,'
                  'queue_size=10)'.format(i))
             if str(i) in self.shared_topics:
@@ -191,7 +190,7 @@ class roscbt:
             else:
                 self.distances[combn] = {current_time: distance}
             if in_range:
-                rospy.logerr("Data sent from {} to {} on topic: {}".format(receiver_id, sender_id, topic))
+                # rospy.logerr("Data sent from {} to {} on topic: {}".format(receiver_id, sender_id, topic))
                 self.publisher_map[topic][receiver_id].publish(data)
 
                 data_size = sys.getsizeof(data)
@@ -280,17 +279,12 @@ class roscbt:
             else:
                 data['shared_data'] = [np.nanmean(shared_data), np.nanvar(shared_data)]
 
-            explored_area = [v for t, v in self.explored_area.items() if
-                             self.lasttime_before_performance_calc < t <= current_time]
+            # explored_area = [v for t, v in self.explored_area.items() if
+            #                  self.lasttime_before_performance_calc < t <= current_time]
             coverage = [v for t, v in self.coverage.items() if
                         self.lasttime_before_performance_calc < t <= current_time]
             connected = [v for t, v in self.connected_robots.items() if
                          self.lasttime_before_performance_calc < t <= current_time]
-
-            if not explored_area:
-                data['explored_area'] = [-1, -1]
-            else:
-                data['explored_area'] = [np.nanmean(explored_area), np.nanvar(explored_area)]
 
             if not coverage:
                 data['coverage'] = [-1, -1]

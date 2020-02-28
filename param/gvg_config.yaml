@@ -17,5 +17,5 @@ map_scale: 20     # scale of the map
 map_inflation_radius: 1   # inflation radius of the robot
 map_file: '/home/kmasaba/catkin_ws/src/gvgexploration/world/basic.png'    # environment file
 environment: 'basic'
-max_wait_time: 60 # secs
+max_wait_time: 120 # secs
 run: 0
