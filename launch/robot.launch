@@ -5,11 +5,7 @@
     <arg name="base_stations" default=''/>
     <arg name="frontier_robots" default=''/>
     <arg name="relay_robots" default=''/>
-    <arg name="robot_count" default=''/>
-    <arg name="environment" default=''/>
-    <arg name="map_width" default=''/>
-    <arg name="map_height" default=''/>
-    <arg name="run" default="0"/>
+<!--    <arg name="run" default="0"/>-->
     <group ns="$(arg robot_name)">
         <node pkg="gvgexploration" type="robot.py" name="node$(arg robot_name)" >
             <param name="robot_id" value="$(arg robot_name)"/>
@@ -17,39 +13,16 @@
             <param name="base_stations" value="$(arg base_stations)"/>
             <param name="frontier_robots" value="$(arg frontier_robots)"/>
             <param name="relay_robots" value="$(arg relay_robots)"/>
-            <param name="environment" value="$(arg environment)"/>
-            <param name="robot_count" value="$(arg robot_count)"/>
-            <param name="map_width" value="$(arg map_width)"/>
-            <param name="map_height" value="$(arg map_height)"/>
-            <param name="run" value="$(arg run)"/>
             <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
         </node>
 
         <node pkg="gvgexploration" type="graph.py" name="node$(arg robot_name)_graph_processor" >
             <param name="robot_id" value="$(arg robot_name)"/>
-            <param name="robot_type" value="$(arg robot_type)"/>
-            <param name="base_stations" value="$(arg base_stations)"/>
-            <param name="frontier_robots" value="$(arg frontier_robots)"/>
-            <param name="relay_robots" value="$(arg relay_robots)"/>
-            <param name="environment" value="$(arg environment)"/>
-            <param name="robot_count" value="$(arg robot_count)"/>
-            <param name="map_width" value="$(arg map_width)"/>
-            <param name="map_height" value="$(arg map_height)"/>
-            <param name="run" value="$(arg run)"/>
             <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
         </node>
 
         <node pkg="gvgexploration" type="gvg_explore.py" name="node$(arg robot_name)_explore" >
             <param name="robot_id" value="$(arg robot_name)"/>
-            <param name="robot_type" value="$(arg robot_type)"/>
-            <param name="base_stations" value="$(arg base_stations)"/>
-            <param name="frontier_robots" value="$(arg frontier_robots)"/>
-            <param name="relay_robots" value="$(arg relay_robots)"/>
-            <param name="environment" value="$(arg environment)"/>
-            <param name="robot_count" value="$(arg robot_count)"/>
-            <param name="map_width" value="$(arg map_width)"/>
-            <param name="map_height" value="$(arg map_height)"/>
-            <param name="run" value="$(arg run)"/>
             <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
         </node>
     </group>
