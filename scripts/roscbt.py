@@ -139,7 +139,7 @@ class roscbt:
         rospy.loginfo("ROSCBT Initialized Successfully!")
 
     def spin(self):
-        r = rospy.Rate(10)
+        r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             try:
                 self.share_signal_strength()
