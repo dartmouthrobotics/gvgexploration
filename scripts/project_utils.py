@@ -197,6 +197,8 @@ def process_edges(edges):
     for edge in edge_list:
         xh, yh = reject_outliers(list(edge))
         if len(xh) == 2:
+            xh = [x / SCALE for x in xh]
+            yh = [y / SCALE for y in yh]
             x_pairs.append(xh)
             y_pairs.append(yh)
     return x_pairs, y_pairs

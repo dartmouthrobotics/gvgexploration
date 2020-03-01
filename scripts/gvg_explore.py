@@ -38,7 +38,8 @@ ROBOT_SPACE = 1
 TO_RENDEZVOUS = 1
 TO_FRONTIER = 0
 FROM_EXPLORATION = 4
-
+FONT_SIZE = 16
+MARKER_SIZE = 12
 
 class GVGExplore:
     def __init__(self):
@@ -190,17 +191,17 @@ class GVGExplore:
         for e in edge_list:
             p1 = e[0]
             p2 = e[1]
-            if D(robot_pose,p1) > D(robot_pose,p2):
-                p1=e[1]
-                p2=e[0]
+            if D(robot_pose, p1) > D(robot_pose, p2):
+                p1 = e[1]
+                p2 = e[0]
             if not self.is_visited(p1, all_visited) and not self.is_visited(p2, all_visited):
-                d = max([D(robot_pose, e[0]), D(robot_pose, e[1])])
+                d = min([D(robot_pose, e[0]), D(robot_pose, e[1])])
                 closest_ridge[e] = d
             else:
                 all_visited[p1] = None
                 all_visited[p2] = None
         if closest_ridge:
-            close_edge = max(closest_ridge, key=closest_ridge.get)
+            close_edge = min(closest_ridge, key=closest_ridge.get)
         return close_edge
 
     def get_closest_leaf(self, pose, visited_nodes):
@@ -303,13 +304,14 @@ class GVGExplore:
                 local_visited.append(u)
         dists = {}
         for l in local_leaves:
-            if self.is_near_unexplored_aread(l[1]):
+            if self.is_near_unexplored_aread(first_node, l[1]):
                 dists[D(first_node, l[1])] = l
         if dists:
             next_leaf = dists[min(dists.keys())]
         return next_leaf
 
-    def is_near_unexplored_aread(self, point):
+    def is_near_unexplored_aread(self, pose, point):
+        # distance = D(scale_down(pose), scale_down(point))
         unknwon_neighborhood = 0
         x = point[INDEX_FOR_X]
         y = point[INDEX_FOR_Y]
@@ -322,6 +324,7 @@ class GVGExplore:
                 if new_p in self.pixel_desc and self.pixel_desc[new_p] == UNKNOWN:
                     unknwon_neighborhood += 1
         return unknwon_neighborhood >= self.lidar_scan_radius
+        # return distance >= self.lidar_scan_radius
 
     def explore_point(self, goal_pose):
         explored_pose = scale_down(goal_pose)
@@ -474,7 +477,17 @@ class GVGExplore:
 
     def plot_intersections(self, robot_pose, next_leaf, parent_leaf):
         fig, ax = plt.subplots(figsize=(16, 10))
-        x_pairs, y_pairs = process_edges(self.edges)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.get_xaxis().tick_bottom()
+        ax.get_yaxis().tick_left()
+        plt.xticks(fontsize=FONT_SIZE)
+        plt.yticks(fontsize=FONT_SIZE)
+        ax.set_xlabel("X (m)", fontsize=FONT_SIZE)
+        ax.set_ylabel("Y(m)", fontsize=FONT_SIZE)
+        ax.tick_params(labelsize=FONT_SIZE)
+
+        x_pairs, y_pairs =process_edges(self.edges)
         for i in range(len(x_pairs)):
             x = x_pairs[i]
             y = y_pairs[i]
@@ -482,10 +495,12 @@ class GVGExplore:
 
         leaves = [v[1] for v in list(self.leaves)]
         lx, ly = zip(*leaves)
+        lx = [x / SCALE for x in lx]
+        ly = [y / SCALE for y in ly]
         ax.scatter(lx, ly, marker='*', color='purple')
-        ax.scatter(robot_pose[INDEX_FOR_X], robot_pose[INDEX_FOR_Y], marker='*', color='blue')
-        ax.scatter(next_leaf[INDEX_FOR_X], next_leaf[INDEX_FOR_Y], marker='*', color='green')
-        ax.plot([next_leaf[INDEX_FOR_X], parent_leaf[INDEX_FOR_X]], [next_leaf[INDEX_FOR_Y], parent_leaf[INDEX_FOR_Y]],
+        ax.scatter(robot_pose[INDEX_FOR_X]/SCALE, robot_pose[INDEX_FOR_Y]/SCALE, marker='*', color='blue')
+        ax.scatter(next_leaf[INDEX_FOR_X]/SCALE, next_leaf[INDEX_FOR_Y]/SCALE, marker='*', color='green')
+        ax.plot([next_leaf[INDEX_FOR_X]/SCALE, parent_leaf[INDEX_FOR_X]/SCALE], [next_leaf[INDEX_FOR_Y]/SCALE, parent_leaf[INDEX_FOR_Y]/SCALE],
                 'r-.')
         plt.grid()
         plt.savefig("gvg/current_leaves_{}_{}_{}.png".format(self.robot_id, time.time(), self.run))
@@ -498,7 +513,9 @@ class GVGExplore:
             pass
 
     def save_all_data(self):
-        save_data(self.traveled_distance,'gvg/traveled_distance_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run, self.termination_metric,self.robot_id))
+        save_data(self.traveled_distance,
+                  'gvg/traveled_distance_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+                                                                       self.termination_metric, self.robot_id))
 
 
 if __name__ == "__main__":

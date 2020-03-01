@@ -80,10 +80,10 @@ class roscbt:
         self.map_pose = rospy.get_param("/roscbt/map_pose", [])
         self.world_center = rospy.get_param("/roscbt/world_center", [])
 
-        self.termination_metric = rospy.get_param("/robot_0/0/node0/termination_metric")
-        self.robot_count = rospy.get_param("/robot_0/0/node0/robot_count")
-        self.environment = rospy.get_param("/robot_0/0/node0/environment")
-        self.run = rospy.get_param("/robot_0/0/node0/run")
+        self.termination_metric = rospy.get_param("~termination_metric")
+        self.robot_count = rospy.get_param("~robot_count")
+        self.environment = rospy.get_param("~environment")
+        self.run = rospy.get_param("~run")
 
         # difference in center of map image and actual simulation
         self.dx = self.world_center[0] - self.map_pose[0]
@@ -117,7 +117,7 @@ class roscbt:
                             "rospy.Subscriber('/robot_{1}/{2}', {3}, self.{2}_callback{0}_{1}, queue_size = 100)".format(
                                 id, i, k, v))
                         # populating publisher datastructure
-                        exec('pub=rospy.Publisher("/roscbt/robot_{}/{}", {}, queue_size=10)'.format(i, k, v))
+                        exec('pub=rospy.Publisher("/roscbt/robot_{}/{}", {}, queue_size=100)'.format(i, k, v))
                         if i not in self.publisher_map[k]:
                             exec('self.publisher_map["{}"]["{}"]=pub'.format(k, i))
 
@@ -139,7 +139,7 @@ class roscbt:
         rospy.loginfo("ROSCBT Initialized Successfully!")
 
     def spin(self):
-        r = rospy.Rate(10)
+        r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             try:
                 self.share_signal_strength()
@@ -190,7 +190,7 @@ class roscbt:
             else:
                 self.distances[combn] = {current_time: distance}
             if in_range:
-                # rospy.logerr("Data sent from {} to {} on topic: {}".format(receiver_id, sender_id, topic))
+                rospy.logerr("Robot {1}: Data sent from {1} to {0} on topic: {2}".format(receiver_id, sender_id, topic))
                 self.publisher_map[topic][receiver_id].publish(data)
 
                 data_size = sys.getsizeof(data)
