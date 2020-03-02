@@ -104,6 +104,7 @@ class roscbt:
         self.explored_area = {}
         self.coverage = {}
         self.connected_robots = {}
+        subscibed_topics = {}
         for receiver_id in self.robot_ids:
             sig_pub = rospy.Publisher("/robot_{0}/signal_strength".format(receiver_id), SignalStrength, queue_size=10)
             self.signal_pub[receiver_id] = sig_pub
@@ -112,8 +113,10 @@ class roscbt:
                 for sender_id, topic_dict in topic_map.items():
                     if sender_id != receiver_id:
                         for topic_name, topic_type in topic_dict.items():
-                            exec("sub=rospy.Subscriber('/roscbt/robot_{0}/{2}', {3}, self.main_callback, "
-                                 "queue_size=100)".format(sender_id, receiver_id, topic_name, topic_type))
+                            if (topic_name, receiver_id) not in subscibed_topics:
+                                exec("sub=rospy.Subscriber('/roscbt/robot_{0}/{2}', {3}, self.main_callback, "
+                                     "queue_size=100)".format(sender_id, receiver_id, topic_name, topic_type))
+                                subscibed_topics[(topic_name, receiver_id)] = None
                             if receiver_id not in self.publisher_map[topic_name]:
                                 pub = None
                                 exec('pub=rospy.Publisher("/robot_{}/{}", {}, queue_size=10)'.format(receiver_id,
@@ -145,7 +148,7 @@ class roscbt:
             self.get_coverage()
             self.compute_performance()
             r.sleep()
-                # time.sleep(10)
+            # time.sleep(10)
             # except Exception as e:
             #     rospy.logerr('interrupted!: {}'.format(e))
             #     break

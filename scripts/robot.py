@@ -146,6 +146,7 @@ class Robot:
         self.exploration.wait_for_server()
         rospy.loginfo("Robot {} Initialized successfully!!".format(self.robot_id))
         rospy.on_shutdown(self.save_all_data)
+        self.first_message_sent=False
 
     def spin(self):
         r = rospy.Rate(0.1)
@@ -410,23 +411,26 @@ class Robot:
                 self.push_messages_to_receiver(self.candidate_robots, None)
 
     def push_messages_to_receiver(self, receiver_ids, session_id, is_alert=0):
-        for receiver_id in receiver_ids:
-            message_data = self.load_data_for_id(receiver_id)
-            buffered_data = BufferedData()
-            if session_id:
-                buffered_data.session_id.data = session_id
-            else:
-                buffered_data.session_id.data = ''
-            buffered_data.msg_header.header.frame_id = '{}'.format(self.robot_id)
-            buffered_data.msg_header.sender_id = str(self.robot_id)
-            buffered_data.msg_header.receiver_id = str(receiver_id)
-            buffered_data.msg_header.topic = 'received_data'
-            buffered_data.msg_header.header.stamp.secs = rospy.Time.now().secs
-            buffered_data.secs = []
-            buffered_data.data = message_data
-            buffered_data.alert_flag = is_alert
-            self.publisher_map[str(receiver_id)].publish(buffered_data)
-            self.delete_data_for_id(receiver_id)
+        if not self.first_message_sent:
+            self.first_message_sent=True
+            rospy.logerr('Robot {}: sending message message'.format(self.robot_id))
+            for receiver_id in receiver_ids:
+                message_data = self.load_data_for_id(receiver_id)
+                buffered_data = BufferedData()
+                if session_id:
+                    buffered_data.session_id.data = session_id
+                else:
+                    buffered_data.session_id.data = ''
+                buffered_data.msg_header.header.frame_id = '{}'.format(self.robot_id)
+                buffered_data.msg_header.sender_id = str(self.robot_id)
+                buffered_data.msg_header.receiver_id = str(receiver_id)
+                buffered_data.msg_header.topic = 'received_data'
+                buffered_data.msg_header.header.stamp.secs = rospy.Time.now().secs
+                buffered_data.secs = []
+                buffered_data.data = message_data
+                buffered_data.alert_flag = is_alert
+                self.publisher_map[str(receiver_id)].publish(buffered_data)
+                self.delete_data_for_id(receiver_id)
 
     def signal_strength_callback(self, data):
         signals = data.signals
@@ -451,6 +455,7 @@ class Robot:
 
     def buffered_data_callback(self, buff_data):
         sender_id = buff_data.msg_header.header.frame_id
+        rospy.logerr('Robot {}: received message from {}'.format(self.robot_id,sender_id))
         self.process_data(sender_id, buff_data)
         # ============ used during initialization ============
         if self.initial_receipt:

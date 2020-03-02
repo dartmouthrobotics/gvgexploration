@@ -84,6 +84,8 @@ class GVGExplore:
         self.slope_bias = rospy.get_param("~slope_bias") * SCALE
         self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id)) * SCALE
         self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias") * SCALE
+        self.target_distance = rospy.get_param('~target_distance')
+        self.target_angle = rospy.get_param('~target_angle')
         self.robot_count = rospy.get_param("~robot_count")
         self.environment = rospy.get_param("~environment")
         self.max_coverage_ratio = rospy.get_param("~max_coverage")
@@ -190,9 +192,9 @@ class GVGExplore:
         for e in edge_list:
             p1 = e[0]
             p2 = e[1]
-            if D(robot_pose,p1) > D(robot_pose,p2):
-                p1=e[1]
-                p2=e[0]
+            if D(robot_pose, p1) > D(robot_pose, p2):
+                p1 = e[1]
+                p2 = e[0]
             if not self.is_visited(p1, all_visited) and not self.is_visited(p2, all_visited):
                 d = max([D(robot_pose, e[0]), D(robot_pose, e[1])])
                 closest_ridge[e] = d
@@ -367,8 +369,8 @@ class GVGExplore:
         move.goal.target_pose.x = goal[INDEX_FOR_X]
         move.goal.target_pose.y = goal[INDEX_FOR_Y]
         move.goal.header.frame_id = frame_id
-        move.goal.target_distance = 0.5  # TODO parameter.
-        move.goal.target_angle = 0.2  # TODO parameter.
+        move.goal.target_distance = self.target_distance
+        move.goal.target_angle = self.target_angle
         self.moveTo_pub.publish(move)
         self.prev_pose = self.get_robot_pose()
         self.start_time = rospy.Time.now().secs
@@ -498,7 +500,9 @@ class GVGExplore:
             pass
 
     def save_all_data(self):
-        save_data(self.traveled_distance,'gvg/traveled_distance_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run, self.termination_metric,self.robot_id))
+        save_data(self.traveled_distance,
+                  'gvg/traveled_distance_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+                                                                       self.termination_metric, self.robot_id))
 
 
 if __name__ == "__main__":
