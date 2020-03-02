@@ -61,6 +61,7 @@ class roscbt:
         self.constant_distance_model = self.compute_constant_distance_ss()
         # performance datastructures end here
         self.publisher_map = {}
+        self.subsciber_map = {}
         self.signal_pub = {}
         rospy.init_node('roscbt', anonymous=True)
         self.lasttime_before_performance_calc = rospy.Time.now().to_sec()
@@ -99,30 +100,31 @@ class roscbt:
             # rospy.logerr("from {}.msg import {}\n".format(msg_pkg, msg_type))
             # creating publishers data structure
             self.publisher_map[topic_name] = {}
+            self.subsciber_map[topic_name] = {}
 
         self.pose_desc = {}
         self.explored_area = {}
         self.coverage = {}
         self.connected_robots = {}
-        subscibed_topics = {}
+
         for receiver_id in self.robot_ids:
             sig_pub = rospy.Publisher("/robot_{0}/signal_strength".format(receiver_id), SignalStrength, queue_size=10)
             self.signal_pub[receiver_id] = sig_pub
             if str(receiver_id) in self.shared_topics:
                 topic_map = self.shared_topics[str(receiver_id)]
                 for sender_id, topic_dict in topic_map.items():
-                    if sender_id != receiver_id:
-                        for topic_name, topic_type in topic_dict.items():
-                            if (topic_name, receiver_id) not in subscibed_topics:
-                                exec("sub=rospy.Subscriber('/roscbt/robot_{0}/{2}', {3}, self.main_callback, "
-                                     "queue_size=100)".format(sender_id, receiver_id, topic_name, topic_type))
-                                subscibed_topics[(topic_name, receiver_id)] = None
-                            if receiver_id not in self.publisher_map[topic_name]:
-                                pub = None
-                                exec('pub=rospy.Publisher("/robot_{}/{}", {}, queue_size=10)'.format(receiver_id,
-                                                                                                     topic_name,
-                                                                                                     topic_type))
-                                self.publisher_map[topic_name][receiver_id] = pub
+                    for topic_name, topic_type in topic_dict.items():
+                        if sender_id not in self.subsciber_map[topic_name]:
+                            sub = None
+                            exec("sub=rospy.Subscriber('/roscbt/robot_{0}/{2}', {3}, self.main_callback, "
+                                 "queue_size=100)".format(sender_id, receiver_id, topic_name, topic_type))
+                            self.subsciber_map[topic_name][sender_id] = sub
+                        if receiver_id not in self.publisher_map[topic_name]:
+                            pub = None
+                            exec('pub=rospy.Publisher("/robot_{}/{}", {}, queue_size=10)'.format(receiver_id,
+                                                                                                 topic_name,
+                                                                                                 topic_type))
+                            self.publisher_map[topic_name][receiver_id] = pub
 
         # ======= pose transformations====================
         self.robot_pose = {}
@@ -195,9 +197,9 @@ class roscbt:
                 self.sent_data[combn][current_time] = data_size
             else:
                 self.sent_data[combn] = {current_time: data_size}
-        else:
-            rospy.logerr(
-                "Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
+        # else:
+        #     rospy.logerr(
+        #         "Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
 
     # method to check the constraints for robot communication
     def can_communicate(self, robot_id1, robot_id2):
