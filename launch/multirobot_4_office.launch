@@ -37,6 +37,8 @@
             <arg name="robot_name" value="0" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="1,2,3" />
+            <arg name="robot_count" value="4"/>
+            <arg name="environment" value="office"/>
         </include>
 
     </group>
@@ -67,6 +69,8 @@
             <arg name="robot_name" value="1" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="0,2,3" />
+            <arg name="robot_count" value="4"/>
+            <arg name="environment" value="office"/>
         </include>
     </group>
 
@@ -95,6 +99,8 @@
             <arg name="robot_name" value="2" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="0,1,3" />
+            <arg name="robot_count" value="4"/>
+            <arg name="environment" value="office"/>
         </include>
     </group>
 
@@ -123,6 +129,8 @@
             <arg name="robot_name" value="3" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="0,1,2" />
+            <arg name="robot_count" value="4"/>
+            <arg name="environment" value="office"/>
         </include>
     </group>
     <node pkg="gvgexploration" type="map_analyzer.py" name="map_analyzer">

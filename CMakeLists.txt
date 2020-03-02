@@ -64,6 +64,7 @@ add_message_files(
    Pixel.msg
    Coverage.msg
    Ridge.msg
+   MessageHeader.msg
  )
 
 ## Generate services in the 'action' folder

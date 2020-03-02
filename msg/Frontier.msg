@@ -1,3 +1,3 @@
-std_msgs/Header header
+gvgexploration/MessageHeader msg_header
 geometry_msgs/Pose pose
 std_msgs/String session_id
