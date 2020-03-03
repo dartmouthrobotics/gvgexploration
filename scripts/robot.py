@@ -103,9 +103,9 @@ class Robot:
         self.max_wait_time = rospy.get_param("~max_wait_time")
         for rid in self.candidate_robots:
             pub = rospy.Publisher("/roscbt/robot_{}/received_data".format(rid), BufferedData, queue_size=100)
-            pub1 = rospy.Publisher("/robot_{}/auction_points".format(rid), Auction, queue_size=10)
-            pub2 = rospy.Publisher("/robot_{}/allocated_point".format(rid), Frontier, queue_size=10)
-            pub3 = rospy.Publisher("/robot_{}/auction_feedback".format(rid), Auction, queue_size=10)
+            pub1 = rospy.Publisher("/roscbt/robot_{}/auction_points".format(rid), Auction, queue_size=10)
+            pub2 = rospy.Publisher("/roscbt/robot_{}/allocated_point".format(rid), Frontier, queue_size=10)
+            pub3 = rospy.Publisher("/roscbt/robot_{}/auction_feedback".format(rid), Auction, queue_size=10)
             self.allocation_pub[rid] = pub2
             self.publisher_map[rid] = pub
             self.auction_publishers[rid] = pub1
@@ -114,7 +114,7 @@ class Robot:
         self.karto_pub = rospy.Publisher("/robot_{}/karto_in".format(self.robot_id), LocalizedScan, queue_size=100)
         rospy.Subscriber('/robot_{}/received_data'.format(self.robot_id), BufferedData, self.buffered_data_callback,
                          queue_size=100)
-        rospy.Subscriber("/roscbt/robot_{}/signal_strength".format(self.robot_id), SignalStrength,
+        rospy.Subscriber("/robot_{}/signal_strength".format(self.robot_id), SignalStrength,
                          self.signal_strength_callback)
         rospy.Subscriber('/karto_out'.format(self.robot_id), LocalizedScan, self.robots_karto_out_callback,
                          queue_size=100)
@@ -146,7 +146,7 @@ class Robot:
         self.exploration.wait_for_server()
         rospy.loginfo("Robot {} Initialized successfully!!".format(self.robot_id))
         rospy.on_shutdown(self.save_all_data)
-        self.first_message_sent=False
+        self.first_message_sent = False
 
     def spin(self):
         r = rospy.Rate(0.1)
@@ -266,7 +266,7 @@ class Robot:
 
     def auction_feedback_callback(self, data):
         if self.is_sender and data.session_id.data == self.session_id:
-            self.all_feedbacks[data.header.frame_id] = data
+            self.all_feedbacks[data.msg_header.header.frame_id] = data
             rid = data.msg_header.header.frame_id
             m = len(data.distances)
             min_dist = max(data.distances)
@@ -291,7 +291,7 @@ class Robot:
                     frontier = Frontier()
                     frontier.msg_header.header.frame_id = '{}'.format(self.robot_id)
                     frontier.msg_header.sender_id = str(self.robot_id)
-                    frontier.msg_header.receiver_id = str(rid)
+                    frontier.msg_header.receiver_id = str(i)
                     frontier.msg_header.topic = 'allocated_point'
                     frontier.pose = rpose
                     frontier.session_id = data.session_id
@@ -378,26 +378,24 @@ class Robot:
                 self.auction_waiting_time = rospy.Time.now().to_sec()
 
     def publish_auction_points(self, rendezvous_poses, receivers, direction=1, total_exploration_time=0):
-        x = [float(v[0]) for v in rendezvous_poses]
-        y = [float(v[1]) for v in rendezvous_poses]
         auction = Auction()
         auction.msg_header.header.frame_id = '{}'.format(self.robot_id)
         auction.msg_header.sender_id = str(self.robot_id)
-        auction.msg_header.receiver_id = str(sender_id)
         auction.msg_header.topic = 'auction_points'
         auction.msg_header.header.stamp = rospy.Time.now()
         auction.session_id.data = self.session_id
         auction.poses = []
         self.auction_feedback.clear()
         self.all_feedbacks.clear()
-        for i in range(len(x)):
+        for v in rendezvous_poses:
             pose = Pose()
-            pose.position.x = x[i]
-            pose.position.y = y[i]
+            pose.position.x = v[pu.INDEX_FOR_X]
+            pose.position.y = v[pu.INDEX_FOR_Y]
             auction.poses.append(pose)
         for id in receivers:
+            auction.msg_header.receiver_id = str(id)
             self.auction_publishers[id].publish(auction)
-
+        rospy.logerr('Robot {} published auction..{}'.format(self.robot_id,rendezvous_poses))
         # wait for bids from recipients
         self.auction_session_time = rospy.Time.now().to_sec()
         self.waiting_for_auction_feedback = True
@@ -411,26 +409,23 @@ class Robot:
                 self.push_messages_to_receiver(self.candidate_robots, None)
 
     def push_messages_to_receiver(self, receiver_ids, session_id, is_alert=0):
-        if not self.first_message_sent:
-            self.first_message_sent=True
-            rospy.logerr('Robot {}: sending message message'.format(self.robot_id))
-            for receiver_id in receiver_ids:
-                message_data = self.load_data_for_id(receiver_id)
-                buffered_data = BufferedData()
-                if session_id:
-                    buffered_data.session_id.data = session_id
-                else:
-                    buffered_data.session_id.data = ''
-                buffered_data.msg_header.header.frame_id = '{}'.format(self.robot_id)
-                buffered_data.msg_header.sender_id = str(self.robot_id)
-                buffered_data.msg_header.receiver_id = str(receiver_id)
-                buffered_data.msg_header.topic = 'received_data'
-                buffered_data.msg_header.header.stamp.secs = rospy.Time.now().secs
-                buffered_data.secs = []
-                buffered_data.data = message_data
-                buffered_data.alert_flag = is_alert
-                self.publisher_map[str(receiver_id)].publish(buffered_data)
-                self.delete_data_for_id(receiver_id)
+        for receiver_id in receiver_ids:
+            message_data = self.load_data_for_id(receiver_id)
+            buffered_data = BufferedData()
+            if session_id:
+                buffered_data.session_id.data = session_id
+            else:
+                buffered_data.session_id.data = ''
+            buffered_data.msg_header.header.frame_id = '{}'.format(self.robot_id)
+            buffered_data.msg_header.sender_id = str(self.robot_id)
+            buffered_data.msg_header.receiver_id = str(receiver_id)
+            buffered_data.msg_header.topic = 'received_data'
+            buffered_data.msg_header.header.stamp.secs = rospy.Time.now().secs
+            buffered_data.secs = []
+            buffered_data.data = message_data
+            buffered_data.alert_flag = is_alert
+            self.publisher_map[str(receiver_id)].publish(buffered_data)
+            self.delete_data_for_id(receiver_id)
 
     def signal_strength_callback(self, data):
         signals = data.signals
@@ -455,10 +450,9 @@ class Robot:
 
     def buffered_data_callback(self, buff_data):
         sender_id = buff_data.msg_header.header.frame_id
-        rospy.logerr('Robot {}: received message from {}'.format(self.robot_id,sender_id))
         self.process_data(sender_id, buff_data)
         # ============ used during initialization ============
-        if self.initial_receipt:
+        if self.initial_receipt and not buff_data.session_id.data:
             # self.wait_for_updates()
             self.initial_data_count += 1
             if self.initial_data_count == len(self.candidate_robots):
@@ -469,6 +463,8 @@ class Robot:
                     self.comm_session_time = rospy.Time.now().to_sec()
                     self.waiting_for_response = True
                     self.push_messages_to_receiver(self.candidate_robots, self.session_id)
+                    rospy.logerr('Robot {} initiating communication..'.format(self.robot_id))
+
                 else:
                     rospy.logerr("Robot {}: Waiting for frontier points...".format(self.robot_id))
 
@@ -496,7 +492,6 @@ class Robot:
         frontier_points = self.parse_frontier_response(frontier_point_response)
         if frontier_points:
             self.frontier_points = frontier_points
-            rospy.logerr(self.close_devices)
             self.publish_auction_points(frontier_points, self.close_devices, direction=TO_FRONTIER)
 
             # set auction waiting flags

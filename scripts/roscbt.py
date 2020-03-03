@@ -15,6 +15,7 @@ from nav_msgs.msg import OccupancyGrid
 import sys
 from project_utils import save_data
 from std_msgs.msg import String
+from threading import Thread
 
 '''
 ROS communication benchmarking tool (ROSCBT) is a simulator of a communication link between communication devices. 
@@ -178,6 +179,12 @@ class roscbt:
         return sender_id
 
     def main_callback(self, data):
+        thread = Thread(target=self.handle_request, args=(data,))
+        thread.daemon = True
+        thread.start()
+
+
+    def handle_request(self,data):
         sender_id = data.msg_header.sender_id
         receiver_id = data.msg_header.receiver_id
         topic = data.msg_header.topic
@@ -197,9 +204,9 @@ class roscbt:
                 self.sent_data[combn][current_time] = data_size
             else:
                 self.sent_data[combn] = {current_time: data_size}
-        # else:
-        #     rospy.logerr(
-        #         "Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
+        else:
+            rospy.logerr( "Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
+
 
     # method to check the constraints for robot communication
     def can_communicate(self, robot_id1, robot_id2):
