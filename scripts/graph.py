@@ -136,9 +136,12 @@ class Graph:
         robot_pose[INDEX_FOR_X] = pose_data.position.x
         robot_pose[INDEX_FOR_Y] = pose_data.position.y
         result = 0
+        # [(((306.0, -83.0), (261.0, -82.0)), ((447.0, -81.0), (498.0, -80.0)))]
         close_edge, intersecs = self.compute_intersections(robot_pose)
         if intersecs:
-            result = pu.D(pu.scale_down(intersecs[0]),pu.scale_down( intersecs[1]))
+            intersec=intersecs[0]
+            rospy.logerr("Intersection: {}".format(intersecs))
+            result = pu.D(pu.scale_down(intersec[0][1]), pu.scale_down(intersec[1][0]))
         return IntersectionsResponse(result=result)
 
     def fetch_graph_handler(self, data):
@@ -146,7 +149,6 @@ class Graph:
         if not map_msg:
             map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
         self.compute_graph(map_msg)
-        pose_data = (data.pose.position.x, data.pose.position.y)
         alledges = list(self.edges)
         edgelist = EdgeList()
         edgelist.header.stamp = rospy.Time.now()

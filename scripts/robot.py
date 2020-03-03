@@ -16,6 +16,7 @@ import numpy as np
 from time import sleep
 from threading import Lock
 import tf
+import copy
 import project_utils as pu
 from actionlib import SimpleActionClient
 from std_msgs.msg import String
@@ -65,6 +66,7 @@ class Robot:
         self.signal_strength = {}
         self.close_devices = []
         self.received_devices = []
+        self.current_devices = []
         self.is_initial_sharing = True
         self.is_sender = False
         self.previous_pose = None
@@ -153,8 +155,9 @@ class Robot:
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
-            # rospy.logerr('Robot {}: Is exploring: {}, Session ID: {}'.format(self.robot_id, self.is_exploring,self.session_id))
+
             if self.is_exploring and not self.session_id:
+                rospy.logerr('Robot {}: Is exploring: {}, Session ID: {}'.format(self.robot_id, self.is_exploring, self.session_id))
                 self.check_data_sharing_status()
                 time_to_shutdown = self.evaluate_exploration()
                 if time_to_shutdown:
@@ -227,6 +230,7 @@ class Robot:
         time_stamp = rospy.Time.now().to_sec()
         if response.result:
             if self.close_devices:  # devices available and you're not in session
+                self.current_devices = copy.deepcopy(self.close_devices)
                 session_id = '{}_{}'.format(self.robot_id, rospy.Time.now().to_sec())
                 self.session_id = session_id
                 self.is_sender = True
@@ -234,13 +238,13 @@ class Robot:
                 self.waiting_for_response = True
 
                 # # ===== ends here ====================
-                self.push_messages_to_receiver(self.close_devices, session_id)
+                self.push_messages_to_receiver(self.current_devices, session_id)
                 self.interconnection_data.append(
                     {'time': time_stamp, 'pose': robot_pose, 'intersection_range': response.result})
 
     def explore_feedback_callback(self, data):
         self.is_exploring = True
-        self.session_id=None
+        self.session_id = None
 
     def map_update_callback(self, data):
         self.last_map_update_time = rospy.Time.now().to_sec()
@@ -465,6 +469,7 @@ class Robot:
                     self.session_id = '{}_{}'.format(self.robot_id, rospy.Time.now().to_sec())
                     self.comm_session_time = rospy.Time.now().to_sec()
                     self.waiting_for_response = True
+                    self.current_devices = copy.deepcopy(self.close_devices)
                     self.push_messages_to_receiver(self.candidate_robots, self.session_id)
                     rospy.logerr('Robot {} initiating communication..'.format(self.robot_id))
 
@@ -473,8 +478,6 @@ class Robot:
 
         # ===============the block below is used during exploration =====================
         else:
-            if self.initial_receipt:
-                self.initial_receipt = False
             if buff_data.session_id.data:  # only respond to data with session id
                 if not self.session_id:  # send back data and stop to wait for further communication
                     self.session_id = buff_data.session_id.data
@@ -489,7 +492,7 @@ class Robot:
                     if buff_data.session_id.data == self.session_id:
                         if self.is_sender:  # do this if you're a sender
                             self.received_devices.append(sender_id)
-                            if len(self.received_devices) == len(self.close_devices):
+                            if len(self.received_devices) == len(self.current_devices):
                                 self.request_and_share_frontiers()
 
     def request_and_share_frontiers(self):
