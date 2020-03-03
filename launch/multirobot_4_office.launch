@@ -21,6 +21,7 @@
             <rosparam file="$(find gvgexploration)/param/costmap1.yaml" ns="local_map" />
             <param name="robot_frame" value="base_link"/>
             <param name="odometry_frame" value="odom"/>
+
         </node>
         <node pkg="nav2d_navigator" type="navigator" name="navigator">
             <rosparam file="$(find gvgexploration)/param/navigator.yaml"/>

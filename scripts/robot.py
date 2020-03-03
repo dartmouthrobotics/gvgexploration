@@ -101,6 +101,8 @@ class Robot:
         self.max_coverage = rospy.get_param("~max_coverage")
         self.max_common_coverage = rospy.get_param("~max_common_coverage")
         self.max_wait_time = rospy.get_param("~max_wait_time")
+        self.environment = rospy.get_param("~environment")
+        self.robot_count = rospy.get_param("~robot_count")
         for rid in self.candidate_robots:
             pub = rospy.Publisher("/roscbt/robot_{}/received_data".format(rid), BufferedData, queue_size=100)
             pub1 = rospy.Publisher("/roscbt/robot_{}/auction_points".format(rid), Auction, queue_size=10)
@@ -151,6 +153,7 @@ class Robot:
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
+            # rospy.logerr('Robot {}: Is exploring: {}, Session ID: {}'.format(self.robot_id, self.is_exploring,self.session_id))
             if self.is_exploring and not self.session_id:
                 self.check_data_sharing_status()
                 time_to_shutdown = self.evaluate_exploration()
@@ -216,7 +219,6 @@ class Robot:
         return its_time
 
     def check_data_sharing_status(self):
-        rospy.logerr('Executing this......damn it!!')
         robot_pose = self.get_robot_pose()
         p = Pose()
         p.position.x = robot_pose[pu.INDEX_FOR_X]
@@ -238,6 +240,7 @@ class Robot:
 
     def explore_feedback_callback(self, data):
         self.is_exploring = True
+        self.session_id=None
 
     def map_update_callback(self, data):
         self.last_map_update_time = rospy.Time.now().to_sec()
@@ -395,7 +398,7 @@ class Robot:
         for id in receivers:
             auction.msg_header.receiver_id = str(id)
             self.auction_publishers[id].publish(auction)
-        rospy.logerr('Robot {} published auction..{}'.format(self.robot_id,rendezvous_poses))
+        rospy.logerr('Robot {} published auction..{}'.format(self.robot_id, rendezvous_poses))
         # wait for bids from recipients
         self.auction_session_time = rospy.Time.now().to_sec()
         self.waiting_for_auction_feedback = True
@@ -470,6 +473,8 @@ class Robot:
 
         # ===============the block below is used during exploration =====================
         else:
+            if self.initial_receipt:
+                self.initial_receipt = False
             if buff_data.session_id.data:  # only respond to data with session id
                 if not self.session_id:  # send back data and stop to wait for further communication
                     self.session_id = buff_data.session_id.data
@@ -510,7 +515,6 @@ class Robot:
         goal = GvgExploreGoal(pose=pose)
         self.exploration.wait_for_server()
         self.goal_handle = self.exploration.send_goal(goal)
-        self.is_exploring = True
         self.exploration_time = rospy.Time.now().to_sec()
         self.exploration.wait_for_result()
         self.exploration.get_result()

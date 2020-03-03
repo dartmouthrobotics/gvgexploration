@@ -57,6 +57,7 @@ class Graph:
         self.known_points = {}
         self.unknown_points = {}
         self.performance_data = []
+        self.latest_map = None
         rospy.init_node("graph_node")
         self.robot_id = rospy.get_param("~robot_id")
         self.robot_count = rospy.get_param("~robot_count")
@@ -78,6 +79,7 @@ class Graph:
         rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
         rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_graph_handler)
         self.move_to_stop = rospy.ServiceProxy('/robot_{}/Stop'.format(self.robot_id), Trigger)
+        rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_callback)
         rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         self.already_shutdown = False
         self.robot_pose = None
@@ -91,10 +93,14 @@ class Graph:
             except Exception as e:
                 rospy.logerr('Robot {}: Graph node interrupted!: {}'.format(self.robot_id, e))
 
+    def map_callback(self, data):
+        self.latest_map = data
+
     def frontier_point_handler(self, request):
         count = request.count
-        rospy.logerr("Robot Count received: {}".format(count))
-        map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
+        map_msg = self.latest_map
+        if not map_msg:
+            map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
         self.compute_graph(map_msg)
         start_time = time.time()
         self.compute_new_information()
@@ -122,7 +128,9 @@ class Graph:
 
     def intersection_handler(self, data):
         pose_data = data.pose
-        map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
+        map_msg = self.latest_map
+        if not map_msg:
+            map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
         self.compute_graph(map_msg)
         robot_pose = [0.0] * 2
         robot_pose[INDEX_FOR_X] = pose_data.position.x
@@ -130,14 +138,15 @@ class Graph:
         result = 0
         close_edge, intersecs = self.compute_intersections(robot_pose)
         if intersecs:
-            result = D(pu.scale_down(intersecs[0]), intersecs[1](intersecs[1]))
+            result = pu.D(pu.scale_down(intersecs[0]),pu.scale_down( intersecs[1]))
         return IntersectionsResponse(result=result)
 
     def fetch_graph_handler(self, data):
-        map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
+        map_msg = self.latest_map
+        if not map_msg:
+            map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
         self.compute_graph(map_msg)
         pose_data = (data.pose.position.x, data.pose.position.y)
-        point = pu.scale_up(pose_data)
         alledges = list(self.edges)
         edgelist = EdgeList()
         edgelist.header.stamp = rospy.Time.now()
@@ -170,7 +179,7 @@ class Graph:
             self.performance_data.append(
                 {'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
         except Exception as e:
-            rospy.logerr('Robot {}: Error in graph computation: {}'.format(self.robot_id, e.message))
+            rospy.logerr('Robot {}: Error in graph computation'.format(self.robot_id))
 
     def get_image_desc(self, occ_grid):
         resolution = occ_grid.info.resolution
