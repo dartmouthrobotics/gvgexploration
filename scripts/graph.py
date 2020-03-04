@@ -157,12 +157,13 @@ class Graph:
         edgelist.pixels = []
         for r in alledges:
             ridge = Ridge()
-            obs = self.edges[r]
-            ridge.px = []
-            ridge.py = []
-            ridge.px = [r[0][INDEX_FOR_X], r[1][INDEX_FOR_X], obs[0][INDEX_FOR_X], obs[1][INDEX_FOR_X]]
-            ridge.py = [r[0][INDEX_FOR_Y], r[1][INDEX_FOR_Y], obs[0][INDEX_FOR_Y], obs[1][INDEX_FOR_Y]]
-            edgelist.edges.append(ridge)
+            if r in self.edges:
+                obs = self.edges[r]
+                ridge.px = []
+                ridge.py = []
+                ridge.px = [r[0][INDEX_FOR_X], r[1][INDEX_FOR_X], obs[0][INDEX_FOR_X], obs[1][INDEX_FOR_X]]
+                ridge.py = [r[0][INDEX_FOR_Y], r[1][INDEX_FOR_Y], obs[0][INDEX_FOR_Y], obs[1][INDEX_FOR_Y]]
+                edgelist.edges.append(ridge)
         for k, v in self.pixel_desc.items():
             pix = Pixel()
             pix.x = k[INDEX_FOR_X]
@@ -218,16 +219,17 @@ class Graph:
         for e in edge_list:
             p1 = e[0]
             p2 = e[1]
-            o = self.edges[e]
-            width = pu.D(o[0], o[1])
-            if pu.D(p1, p2) > self.min_edge_length:
-                u_check = pu.W(p1, robot_pose) < width or pu.W(p2, robot_pose) < width
-                if u_check:
-                    v1 = pu.get_vector(p1, p2)
-                    desc = (v1, width)
-                    vertex_dict[e] = desc
-                    d = min([pu.D(robot_pose, e[0]), pu.D(robot_pose, e[1])])
-                    closest_ridge[e] = d
+            if e in self.edges:
+                o = self.edges[e]
+                width = pu.D(o[0], o[1])
+                if pu.D(p1, p2) > self.min_edge_length:
+                    u_check = pu.W(p1, robot_pose) < width or pu.W(p2, robot_pose) < width
+                    if u_check:
+                        v1 = pu.get_vector(p1, p2)
+                        desc = (v1, width)
+                        vertex_dict[e] = desc
+                        d = min([pu.D(robot_pose, e[0]), pu.D(robot_pose, e[1])])
+                        closest_ridge[e] = d
         if closest_ridge:
             cr = min(closest_ridge, key=closest_ridge.get)
             if closest_ridge[cr] < vertex_dict[cr][1]:

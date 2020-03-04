@@ -91,6 +91,8 @@ class roscbt:
         self.dx = self.world_center[0] - self.map_pose[0]
         self.dy = self.world_center[1] - self.map_pose[1]
         self.exploration_data = []
+        self.sent_messages = []
+        self.received_messages = []
 
         # import message types
         for topic in self.topics:
@@ -149,7 +151,7 @@ class roscbt:
             # try:
             self.share_signal_strength()
             self.get_coverage()
-            self.compute_performance()
+            # self.compute_performance()
             r.sleep()
             # time.sleep(10)
             # except Exception as e:
@@ -183,12 +185,14 @@ class roscbt:
         thread.daemon = True
         thread.start()
 
-
-    def handle_request(self,data):
+    def handle_request(self, data):
         sender_id = data.msg_header.sender_id
         receiver_id = data.msg_header.receiver_id
         topic = data.msg_header.topic
-        rospy.logerr("Data sent from {} to {} on topic: {}".format(sender_id, receiver_id, topic))
+        start_time = rospy.Time.now().to_sec()
+        self.received_messages.append(
+            {'time': start_time, 'message_time': data.msg_header.header.stamp.to_sec(), 'sender_id': sender_id,
+             'receiver_id': receiver_id, 'session_id': data.session_id.data, 'topic': topic})
         current_time = rospy.Time.now().secs
         combn = (sender_id, receiver_id)
         # handle all message types
@@ -199,14 +203,20 @@ class roscbt:
             self.distances[combn] = {current_time: distance}
         if in_range:
             self.publisher_map[topic][receiver_id].publish(data)
+            now = rospy.Time.now().secs
+            time_diff = now - start_time
+            self.sent_messages.append(
+                {'time': now, 'message_time': data.msg_header.header.stamp.to_sec(), 'sender_id': sender_id,
+                 'receiver_id': receiver_id, 'session_id': data.session_id.data, 'time_diff': time_diff,'topic':topic})
             data_size = sys.getsizeof(data)
             if combn in self.sent_data:
                 self.sent_data[combn][current_time] = data_size
             else:
                 self.sent_data[combn] = {current_time: data_size}
+            rospy.logerr("Data sent from {} to {} on topic: {}".format(sender_id, receiver_id, topic))
         else:
-            rospy.logerr( "Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
-
+            rospy.logerr(
+                "Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
 
     # method to check the constraints for robot communication
     def can_communicate(self, robot_id1, robot_id2):
@@ -411,6 +421,12 @@ class roscbt:
         save_data(self.exploration_data,
                   'gvg/exploration_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
                                                               self.termination_metric))
+        save_data(self.received_messages,
+                  'gvg/roscbt_data_received_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+                                                                       self.termination_metric))
+        save_data(self.sent_messages,
+                  'gvg/roscbt_data_sent_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+                                                                   self.termination_metric))
 
 
 if __name__ == '__main__':

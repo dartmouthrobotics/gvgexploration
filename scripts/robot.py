@@ -20,6 +20,7 @@ import copy
 import project_utils as pu
 from actionlib import SimpleActionClient
 from std_msgs.msg import String
+from Queue import Queue
 
 MAX_COVERAGE_RATIO = 0.8
 
@@ -151,23 +152,26 @@ class Robot:
         rospy.loginfo("Robot {} Initialized successfully!!".format(self.robot_id))
         rospy.on_shutdown(self.save_all_data)
         self.first_message_sent = False
+        self.sent_messages = []
+        self.received_messages = []
 
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
 
             if self.is_exploring and not self.session_id:
-                rospy.logerr('Robot {}: Is exploring: {}, Session ID: {}'.format(self.robot_id, self.is_exploring, self.session_id))
+                rospy.logerr('Robot {}: Is exploring: {}, Session ID: {}'.format(self.robot_id, self.is_exploring,
+                                                                                 self.session_id))
                 self.check_data_sharing_status()
                 time_to_shutdown = self.evaluate_exploration()
                 if time_to_shutdown:
                     self.cancel_exploration()
-                    rospy.signal_shutdown('Exploration complete!')
-            else:
-                time_to_go = self.evaluate_waiting()
-                if time_to_go:
-                    self.session_id = None  # you've  dropped the former commitment
-                    self.resume_exploration()  # continue with your exploration
+            #         rospy.signal_shutdown('Exploration complete!')
+            # else:
+            #     time_to_go = self.evaluate_waiting()
+            #     if time_to_go:
+            #         self.session_id = None  # you've  dropped the former commitment
+            #         self.resume_exploration()  # continue with your exploration
             r.sleep()
 
     def evaluate_waiting(self):
@@ -236,9 +240,9 @@ class Robot:
                 self.is_sender = True
                 self.comm_session_time = rospy.Time.now().to_sec()
                 self.waiting_for_response = True
-
+                rospy.logerr("Robot {}: Sending data to available devices...".format(self.robot_id))
                 # # ===== ends here ====================
-                self.push_messages_to_receiver(self.current_devices, session_id)
+                self.push_messages_to_receiver(self.current_devices, session_id, initiator=1)
                 self.interconnection_data.append(
                     {'time': time_stamp, 'pose': robot_pose, 'intersection_range': response.result})
 
@@ -259,6 +263,7 @@ class Robot:
         self.coverage = data
 
     def allocated_point_callback(self, data):
+        rospy.logerr("Robot {}: received allocated points".format(self.robot_id))
         if not self.is_sender and data.session_id.data == self.session_id:
             # reset waiting for frontier point flags
             self.waiting_for_frontier_point = False
@@ -272,6 +277,7 @@ class Robot:
             self.start_exploration_action(self.frontier_point)
 
     def auction_feedback_callback(self, data):
+        rospy.logerr("Robot {}: received auction feedback".format(self.robot_id))
         if self.is_sender and data.session_id.data == self.session_id:
             self.all_feedbacks[data.msg_header.header.frame_id] = data
             rid = data.msg_header.header.frame_id
@@ -297,6 +303,7 @@ class Robot:
                     rpose = self.auction_feedback[i][1]
                     frontier = Frontier()
                     frontier.msg_header.header.frame_id = '{}'.format(self.robot_id)
+                    frontier.msg_header.header.stamp = rospy.Time.now()
                     frontier.msg_header.sender_id = str(self.robot_id)
                     frontier.msg_header.receiver_id = str(i)
                     frontier.msg_header.topic = 'allocated_point'
@@ -353,6 +360,7 @@ class Robot:
                 self.received_devices = []
 
     def auction_points_callback(self, data):
+        rospy.logerr("Robot {}: received auction points".format(self.robot_id))
         if not self.is_sender:  # only participate if you're not a sender
             if self.session_id and data.session_id.data == self.session_id:
                 sender_id = data.msg_header.header.frame_id
@@ -368,6 +376,7 @@ class Robot:
                     distances.append(distance)
                 auction = Auction()
                 auction.msg_header.header.frame_id = '{}'.format(self.robot_id)
+                auction.msg_header.header.stamp = rospy.Time.now()
                 auction.msg_header.sender_id = str(self.robot_id)
                 auction.msg_header.receiver_id = str(sender_id)
                 auction.msg_header.topic = 'auction_feedback'
@@ -413,9 +422,9 @@ class Robot:
                 self.add_to_file(rid, [data])
             if self.is_initial_data_sharing:
                 self.is_initial_data_sharing = False
-                self.push_messages_to_receiver(self.candidate_robots, None)
+                self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
 
-    def push_messages_to_receiver(self, receiver_ids, session_id, is_alert=0):
+    def push_messages_to_receiver(self, receiver_ids, session_id, is_alert=0, initiator=0):
         for receiver_id in receiver_ids:
             message_data = self.load_data_for_id(receiver_id)
             buffered_data = BufferedData()
@@ -427,11 +436,14 @@ class Robot:
             buffered_data.msg_header.sender_id = str(self.robot_id)
             buffered_data.msg_header.receiver_id = str(receiver_id)
             buffered_data.msg_header.topic = 'received_data'
-            buffered_data.msg_header.header.stamp.secs = rospy.Time.now().secs
+            buffered_data.msg_header.header.stamp = rospy.Time.now()
             buffered_data.secs = []
             buffered_data.data = message_data
             buffered_data.alert_flag = is_alert
             self.publisher_map[str(receiver_id)].publish(buffered_data)
+            self.sent_messages.append(
+                {'time': rospy.Time.now().to_sec(), 'robot_id': self.robot_id, 'is_initiator': initiator,
+                 'session_id': self.session_id})
             self.delete_data_for_id(receiver_id)
 
     def signal_strength_callback(self, data):
@@ -457,6 +469,12 @@ class Robot:
 
     def buffered_data_callback(self, buff_data):
         sender_id = buff_data.msg_header.header.frame_id
+        now = rospy.Time.now().to_sec()
+        sent_time = buff_data.msg_header.header.stamp.to_sec()
+        time_diff = now - sent_time
+        self.received_messages.append(
+            {'time': now, 'robot_id': self.robot_id, 'session_id': buff_data.session_id.data, 'time_diff': time_diff,
+             'topic': buff_data.msg_header.topic})
         self.process_data(sender_id, buff_data)
         # ============ used during initialization ============
         if self.initial_receipt and not buff_data.session_id.data:
@@ -470,8 +488,8 @@ class Robot:
                     self.comm_session_time = rospy.Time.now().to_sec()
                     self.waiting_for_response = True
                     self.current_devices = copy.deepcopy(self.close_devices)
-                    self.push_messages_to_receiver(self.candidate_robots, self.session_id)
-                    rospy.logerr('Robot {} initiating communication..'.format(self.robot_id))
+                    self.push_messages_to_receiver(self.candidate_robots, self.session_id, initiator=1)
+                    rospy.logerr('Robot {} initiating coordination..'.format(self.robot_id))
 
                 else:
                     rospy.logerr("Robot {}: Waiting for frontier points...".format(self.robot_id))
@@ -479,9 +497,13 @@ class Robot:
         # ===============the block below is used during exploration =====================
         else:
             if buff_data.session_id.data:  # only respond to data with session id
+                rospy.logerr('Robot {}: Received session data from {}'.format(self.robot_id, sender_id))
+                if not self.initial_receipt:
+                    self.initial_receipt = False
                 if not self.session_id:  # send back data and stop to wait for further communication
                     self.session_id = buff_data.session_id.data
-                    self.push_messages_to_receiver([sender_id], self.session_id)
+                    rospy.logerr('Robot {}: Received new session id {}'.format(self.robot_id, self.session_id))
+                    self.push_messages_to_receiver([sender_id], self.session_id, initiator=0)
                     self.cancel_exploration()
 
                     # set auction waiting flags
@@ -493,6 +515,9 @@ class Robot:
                         if self.is_sender:  # do this if you're a sender
                             self.received_devices.append(sender_id)
                             if len(self.received_devices) == len(self.current_devices):
+                                rospy.logerr(
+                                    'Robot {}:Received all expected responses...computing new locations now'.format(
+                                        self.robot_id))
                                 self.request_and_share_frontiers()
 
     def request_and_share_frontiers(self):
@@ -632,6 +657,13 @@ class Robot:
         pu.save_data(self.frontier_data,
                      'gvg/frontiers_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
                                                                   self.termination_metric, self.robot_id))
+
+        pu.save_data(self.sent_messages,
+                     'gvg/sent_messages_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+                                                                      self.termination_metric, self.robot_id))
+        pu.save_data(self.received_messages,
+                     'gvg/received_messages_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+                                                                          self.termination_metric, self.robot_id))
         msg = String()
         msg.data = '{}'.format(self.robot_id)
         self.is_shutdown_caller = True

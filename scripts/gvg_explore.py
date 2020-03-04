@@ -137,11 +137,20 @@ class GVGExplore:
         visited_nodes = {}
         robot_pose = (goal.pose.position.x, goal.pose.position.y, goal.pose.position.z)
         self.move_to_frontier(robot_pose, visited_nodes)
-        while self.coverage_ratio < 0.8:
-            self.run_dfs(visited_nodes)
-        if success:
-            self.create_result(visited_nodes)
-            self.action_server.set_succeeded(self.exploration_result)
+        while not self.action_server.is_preempt_requested():
+            try:
+                self.run_dfs(visited_nodes)
+            except Exception as e:
+                rospy.logerr("Robot {}: Error in exploration".format(self.robot_id))
+        self.action_server.set_preempted()
+        success = False
+        self.move_to_stop()
+        #
+        # while self.coverage_ratio < self.max_coverage_ratio:
+        #     self.run_dfs(visited_nodes)
+        # if success:
+        #     self.create_result(visited_nodes)
+        #     self.action_server.set_succeeded(self.exploration_result)
 
     def move_to_frontier(self, goal, visited):
         self.moving_to_frontier = True
@@ -410,6 +419,7 @@ class GVGExplore:
                 else:
                     # rospy.logerr("Robot {} can't reach goal: {}".format(self.robot_id, self.current_point))
                     self.navigation_failed = True
+                    self.move_to_stop()
                     if self.moving_to_frontier:
                         self.moving_to_frontier = False
             elif data.status.status == SUCCEEDED:
