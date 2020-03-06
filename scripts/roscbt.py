@@ -60,7 +60,6 @@ class roscbt:
         self.lock = Lock()
         self.communication_model = 1
         self.constant_distance_model = self.compute_constant_distance_ss()
-        # performance datastructures end here
         self.publisher_map = {}
         self.subsciber_map = {}
         self.signal_pub = {}
@@ -106,7 +105,6 @@ class roscbt:
             self.subsciber_map[topic_name] = {}
 
         self.pose_desc = {}
-        self.explored_area = {}
         self.coverage = {}
         self.connected_robots = {}
 
@@ -120,7 +118,7 @@ class roscbt:
                         if sender_id not in self.subsciber_map[topic_name]:
                             sub = None
                             exec("sub=rospy.Subscriber('/roscbt/robot_{0}/{2}', {3}, self.main_callback, "
-                                 "queue_size=100)".format(sender_id, receiver_id, topic_name, topic_type))
+                                 "queue_size=10)".format(sender_id, receiver_id, topic_name, topic_type))
                             self.subsciber_map[topic_name][sender_id] = sub
                         if receiver_id not in self.publisher_map[topic_name]:
                             pub = None
@@ -157,35 +155,13 @@ class roscbt:
             # except Exception as e:
             #     rospy.logerr('interrupted!: {}'.format(e))
             #     break
-
-    def read_map_image(self, image_path):
-        im = Image.open(image_path, 'r')
-        pix_val = list(im.getdata())
-        size = im.size
-        pixel_values = {}
-        for index in range(len(pix_val)):
-            i = int(np.floor(index / size[0]))
-            j = index % size[0]
-            pixel_values[(i, j)] = pix_val[index][0]
-
-        return size, pixel_values
-
-    ''' Resolving robot ids should be customized by the developer  '''
-
-    def resolve_sender(self, robot_id1, topic, data):
-        sender_id = robot_id1
-        if topic == 'received_data':
-            sender_id = data.header.frame_id
-        elif topic == 'auction_points':
-            sender_id = data.header.frame_id
-        return sender_id
+    #
+    # def main_callback(self, data):
+    #     thread = Thread(target=self.handle_request, args=(data,))
+    #     thread.daemon = True
+    #     thread.start()
 
     def main_callback(self, data):
-        thread = Thread(target=self.handle_request, args=(data,))
-        thread.daemon = True
-        thread.start()
-
-    def handle_request(self, data):
         sender_id = data.msg_header.sender_id
         receiver_id = data.msg_header.receiver_id
         topic = data.msg_header.topic
@@ -207,13 +183,14 @@ class roscbt:
             time_diff = now - start_time
             self.sent_messages.append(
                 {'time': now, 'message_time': data.msg_header.header.stamp.to_sec(), 'sender_id': sender_id,
-                 'receiver_id': receiver_id, 'session_id': data.session_id.data, 'time_diff': time_diff,'topic':topic})
+                 'receiver_id': receiver_id, 'session_id': data.session_id.data, 'time_diff': time_diff,
+                 'topic': topic})
             data_size = sys.getsizeof(data)
             if combn in self.sent_data:
                 self.sent_data[combn][current_time] = data_size
             else:
                 self.sent_data[combn] = {current_time: data_size}
-            rospy.logerr("Data sent from {} to {} on topic: {}".format(sender_id, receiver_id, topic))
+           # rospy.logerr("Data sent from {} to {} on topic: {}".format(sender_id, receiver_id, topic))
         else:
             rospy.logerr(
                 "Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
@@ -319,11 +296,16 @@ class roscbt:
             data['distance'] = np.nansum(distances)
             self.prev_poses = robot_poses
             self.exploration_data.append(data)
+            self.sent_data.clear()
+            self.distances.clear()
+            self.coverage.clear()
+            self.connected_robots.clear()
             self.lasttime_before_performance_calc = rospy.Time.now().to_sec()
         except Exception as e:
             rospy.logerr("getting error: {}".format(e))
         finally:
-            self.lock.release()
+            pass
+        self.lock.release()
 
     '''
       computes euclidean distance between two cartesian coordinates
@@ -339,44 +321,6 @@ class roscbt:
             robot_pose = self.robot_pose[int(robot_id)]
 
         return robot_pose
-
-    def pixel2pose(self, point, origin_x, origin_y, resolution):
-        new_p = [0.0] * 2
-        new_p[INDEX_FOR_Y] = round(origin_x + point[INDEX_FOR_X] * resolution, 2)
-        new_p[INDEX_FOR_X] = round(origin_y + point[INDEX_FOR_Y] * resolution, 2)
-        return tuple(new_p)
-
-    def map_update_callback(self, occ_grid):
-        current_time = rospy.Time.now().secs
-        resolution = occ_grid.info.resolution
-        origin_pos = occ_grid.info.origin.position
-        origin_x = origin_pos.x
-        origin_y = origin_pos.y
-        height = occ_grid.info.height
-        width = occ_grid.info.width
-        grid_values = np.array(occ_grid.data).reshape((height, width)).astype(
-            np.float32)
-
-        for row in range(height):
-            for col in range(width):
-                index = [0] * 2
-                index[INDEX_FOR_X] = col
-                index[INDEX_FOR_Y] = row
-                index = tuple(index)
-                pose = self.pixel2pose(index, origin_x, origin_y, resolution)
-                p = grid_values[row, col]
-                self.pose_desc[pose] = p
-        explored = self.get_explored_area()
-        self.explored_area[current_time] = explored
-
-    def get_explored_area(self):
-        total_area = len(self.pose_desc)
-        all_poses = list(self.pose_desc)
-        explored_area = 0
-        for p in all_poses:
-            if p != -1:
-                explored_area += 1
-        return total_area - explored_area
 
     def D(self, p, q):
         dx = q[0] - p[0]

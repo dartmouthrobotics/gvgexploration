@@ -93,6 +93,7 @@ class Graph:
             except Exception as e:
                 rospy.logerr('Robot {}: Graph node interrupted!: {}'.format(self.robot_id, e))
 
+
     def map_callback(self, data):
         self.latest_map = data
 
