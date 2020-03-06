@@ -118,11 +118,11 @@ class Robot:
 
         self.karto_pub = rospy.Publisher("/robot_{}/karto_in".format(self.robot_id), LocalizedScan, queue_size=100)
         rospy.Subscriber('/robot_{}/received_data'.format(self.robot_id), BufferedData, self.buffered_data_callback,
-                         queue_size=100)
+                         queue_size=10)
         rospy.Subscriber("/robot_{}/signal_strength".format(self.robot_id), SignalStrength,
                          self.signal_strength_callback)
         rospy.Subscriber('/karto_out'.format(self.robot_id), LocalizedScan, self.robots_karto_out_callback,
-                         queue_size=100)
+                         queue_size=10)
         rospy.Subscriber("/robot_{}/auction_points".format(self.robot_id), Auction, self.auction_points_callback)
         self.fetch_frontier_points = rospy.ServiceProxy('/robot_{}/frontier_points'.format(self.robot_id),
                                                         FrontierPoint)
@@ -155,20 +155,22 @@ class Robot:
         self.sent_messages = []
         self.received_messages = []
 
+
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
 
             if self.is_exploring and not self.session_id:
-                rospy.logerr('Robot {}: Is exploring: {}, Session ID: {}'.format(self.robot_id, self.is_exploring,
-                                                                                 self.session_id))
+                rospy.logerr('Robot {}: Is exploring: {}, Session ID: {}'.format(self.robot_id, self.is_exploring,self.session_id))
                 self.check_data_sharing_status()
                 time_to_shutdown = self.evaluate_exploration()
                 if time_to_shutdown:
                     self.cancel_exploration()
-            #         rospy.signal_shutdown('Exploration complete!')
+                    rospy.signal_shutdown('Exploration complete!')
             # else:
             #     time_to_go = self.evaluate_waiting()
+            #     rospy.logerr('Robot {}: Is exploring: {}, Session ID: {}'.format(self.robot_id, self.is_exploring,
+            #                                                                      self.session_id))
             #     if time_to_go:
             #         self.session_id = None  # you've  dropped the former commitment
             #         self.resume_exploration()  # continue with your exploration
@@ -233,18 +235,18 @@ class Robot:
         response = self.check_intersections(IntersectionsRequest(pose=p))
         time_stamp = rospy.Time.now().to_sec()
         if response.result:
-            if self.close_devices:  # devices available and you're not in session
+            if self.close_devices and not self.session_id:  # devices available and you're not in session
                 self.current_devices = copy.deepcopy(self.close_devices)
                 session_id = '{}_{}'.format(self.robot_id, rospy.Time.now().to_sec())
                 self.session_id = session_id
                 self.is_sender = True
+                self.is_exploring = False
                 self.comm_session_time = rospy.Time.now().to_sec()
                 self.waiting_for_response = True
-                rospy.logerr("Robot {}: Sending data to available devices...".format(self.robot_id))
+                rospy.logerr("Robot {}: Sending data to available devices...{}".format(self.robot_id,self.current_devices))
                 # # ===== ends here ====================
                 self.push_messages_to_receiver(self.current_devices, session_id, initiator=1)
-                self.interconnection_data.append(
-                    {'time': time_stamp, 'pose': robot_pose, 'intersection_range': response.result})
+                self.interconnection_data.append( {'time': time_stamp, 'pose': robot_pose, 'intersection_range': response.result})
 
     def explore_feedback_callback(self, data):
         self.is_exploring = True
@@ -463,9 +465,9 @@ class Robot:
             self.karto_pub.publish(scan)
             counter += 1
             r.sleep()
-        for rid in self.candidate_robots:
-            if rid != sender_id:
-                self.add_to_file(rid, data_vals)
+        # for rid in self.candidate_robots:
+        #     if rid != sender_id and rid not in self.close_devices:# if a given robot is close, the we assume it received
+        #         self.add_to_file(rid, data_vals)
 
     def buffered_data_callback(self, buff_data):
         sender_id = buff_data.msg_header.header.frame_id
@@ -504,6 +506,7 @@ class Robot:
                     self.session_id = buff_data.session_id.data
                     rospy.logerr('Robot {}: Received new session id {}'.format(self.robot_id, self.session_id))
                     self.push_messages_to_receiver([sender_id], self.session_id, initiator=0)
+                    self.is_exploring = False
                     self.cancel_exploration()
 
                     # set auction waiting flags
@@ -514,11 +517,16 @@ class Robot:
                     if buff_data.session_id.data == self.session_id:
                         if self.is_sender:  # do this if you're a sender
                             self.received_devices.append(sender_id)
+                            rospy.logerr("Robot {}: Received devices {}, Available devices: {}".format(self.robot_id,
+                                                                                                       self.received_devices,
+                                                                                                       self.current_devices))
                             if len(self.received_devices) == len(self.current_devices):
                                 rospy.logerr(
                                     'Robot {}:Received all expected responses...computing new locations now'.format(
                                         self.robot_id))
                                 self.request_and_share_frontiers()
+                        else:
+                            rospy.logerr('Robot {}: I am not the sender..ignoring session data'.format(self.robot_id))
 
     def request_and_share_frontiers(self):
         frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(self.received_devices) + 1))

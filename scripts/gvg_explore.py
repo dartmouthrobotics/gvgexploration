@@ -142,6 +142,7 @@ class GVGExplore:
                 self.run_dfs(visited_nodes)
             except Exception as e:
                 rospy.logerr("Robot {}: Error in exploration".format(self.robot_id))
+
         self.action_server.set_preempted()
         success = False
         self.move_to_stop()
