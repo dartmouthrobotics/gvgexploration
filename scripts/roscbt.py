@@ -151,7 +151,7 @@ class roscbt:
             # try:
             self.share_signal_strength()
             self.get_coverage()
-            # self.compute_performance()
+            self.compute_performance()
             r.sleep()
             # time.sleep(10)
             # except Exception as e:

@@ -8,6 +8,7 @@
 
     <node name="R0_MapAlign" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /robot_0/map 100"/>
     <node name="R1_MapAlign" pkg="tf" type="static_transform_publisher" args="50 0 0 0 0 0 /map /robot_1/map 100"/>
+    <node name="R3_MapAlign" pkg="tf" type="static_transform_publisher" args="100 0 0 0 0 0 /map /robot_0/corrected_map 100"/>
 
     <group ns="robot_0">
         <param name="robot_id" value="1" />
