@@ -14,7 +14,7 @@
 
     <node name="roscbt" pkg="gvgexploration" type="roscbt.py" respawn="true">
         <rosparam file="$(find gvgexploration)/param/roscbt_config2.yaml"/>
-        <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
+        <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
     </node>
 
 </launch>

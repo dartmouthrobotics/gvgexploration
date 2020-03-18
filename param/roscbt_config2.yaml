@@ -7,7 +7,7 @@ topic_remaps: [{'name': 'allocated_point', 'pkg': 'geometry_msgs', 'message_type
 shared_topics: {'0':{'1': {'received_data':'BufferedData','auction_points':'Auction','auction_feedback':'Auction','allocated_point':'Frontier','chosen_point':'ChosenPoint'}},'1':{'0': {'received_data':'BufferedData','auction_points':'Auction','auction_feedback':'Auction','allocated_point':'Frontier','chosen_point':'ChosenPoint'}}}
 
 # for a different project
-map_image_path: '/home/masaba/stage_ws/src/gvgexploration/world/offices.png'
+map_image_path: '$(find gvgexploration)/world/office.png'
 world_center: [40.0,15.0]
 world_scale: 10
 map_pose: [39.85,14.55]
