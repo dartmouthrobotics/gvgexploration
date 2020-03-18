@@ -26,7 +26,6 @@ class ScanFilter:
 
         # Initialization of variables.
         self.all_poses = {} # Poses of other robots in the world reference frame.
-        self.robot_poses = {} # x,y of other robots in the robot reference frame.
 
         # Get pose from other robots.        
         for i in xrange(self.robot_count):
@@ -72,10 +71,10 @@ class ScanFilter:
             scan_time = scan_msg.scan_time  # time (sec) between scans
 
             # Get other robot poses in the robot reference frame.
-            self.find_other_robots(robot_pose, scan_msg_stamp, scan_time)
+            robot_poses = self.find_other_robots(robot_pose, scan_msg_stamp, scan_time)
 
             # Filter the scan message.
-            self.process_scan_message(scan_msg)
+            self.process_scan_message(scan_msg, robot_poses)
 
 
     def find_other_robots(self, robot_pose, scan_msg_stamp, scan_time):
@@ -86,6 +85,8 @@ class ScanFilter:
             scan_msg_stamp (float): timestamp of the scan message.
             scan_time (float): time between scans.
         """
+
+        robot_poses = {} # x,y of other robots in the robot reference frame.
 
         # Transformation matrices from world to robot, and from robot to world.
         rTm = self.generate_transformation_matrices(robot_pose, inverse=True)
@@ -100,17 +101,22 @@ class ScanFilter:
                 mTo = self.generate_transformation_matrices(self.all_poses[rid], inverse=False)
                 # Transformation matrix between robot and other robot.
                 rTo = rTm.dot(mTo)
-                #distance = np.linalg.norm(rTo[0:3,3])
+                distance = np.linalg.norm(rTo[0:3,3])
                 #angle = tf.transformations.euler_from_matrix(rTo[0:3,0:3])[2]
-                self.robot_poses[rid] = [rTo[0,3], rTo[1,3]]
+                if distance < self.scan.range_max:
+                    # Add only if within sensor range.
+                    robot_poses[rid] = [rTo[0,3], rTo[1,3]]
             else:
                 rospy.logerr("difference {} {}".format(t - scan_msg_stamp, scan_time))
 
-    def process_scan_message(self, scan_msg):
+        return robot_poses
+
+    def process_scan_message(self, scan_msg, robot_poses):
         """Filter the scan message.
 
         Args:
             scan_msg (LaserScan)
+            robot_poses (dict): key-robot_id, value-[x,y]
         """
         angle_min = scan_msg.angle_min
         angle_increment = scan_msg.angle_increment
@@ -118,7 +124,6 @@ class ScanFilter:
         range_max = scan_msg.range_max
         ranges = scan_msg.ranges
         new_ranges = self.scan.ranges
-        robot_poses = self.robot_poses
 
         # Check each range, whether is hitting a robot or not.
         for i in xrange(self.scan_ranges_size):
@@ -129,12 +134,11 @@ class ScanFilter:
                 is_robot = False # Hit is another robot.
                 angle = angle_min + i * angle_increment
                 r_x, r_y = r * np.cos(angle), r * np.sin(angle)
-                for j in xrange(self.robot_count):
-                    if j != self.robot_id:
-                        if abs(r_x - robot_poses[j][0]) < self.map_inflation_radius \
-                                and abs(r_y - robot_poses[j][1]) < self.map_inflation_radius:
-                            is_robot = True
-                            break
+                for robot_id in robot_poses.keys():
+                    if abs(r_x - robot_poses[robot_id][0]) < self.map_inflation_radius \
+                            and abs(r_y - robot_poses[robot_id][1]) < self.map_inflation_radius:
+                        is_robot = True
+                        break
                 if is_robot:
                     # Value arbitrarily set for nav2d_karto.
                     new_ranges[i] = -2.0
