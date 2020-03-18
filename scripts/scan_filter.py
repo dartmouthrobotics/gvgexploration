@@ -3,7 +3,7 @@ import numpy as np
 
 import rospy
 import tf
-from message_filters import ApproximateTimeSynchronizer
+from message_filters import TimeSynchronizer
 import message_filters
 
 from nav_msgs.msg import Odometry
@@ -48,7 +48,7 @@ class ScanFilter:
         # Subscriber of the own robot.
         self.base_pose_subscriber = message_filters.Subscriber('base_pose_ground_truth', Odometry)
         self.scan_subscriber = message_filters.Subscriber('base_scan', LaserScan)
-        ats = ApproximateTimeSynchronizer([self.base_pose_subscriber, self.scan_subscriber], 10, 0.01)
+        ats = TimeSynchronizer([self.base_pose_subscriber, self.scan_subscriber], 1)#, 0.01)
         ats.registerCallback(self.pose_scan_callback)
 
         # Publisher of the filtered scan.
@@ -106,7 +106,6 @@ class ScanFilter:
             else:
                 rospy.logerr("difference {} {}".format(t - scan_msg_stamp, scan_time))
 
-
     def process_scan_message(self, scan_msg):
         """Filter the scan message.
 
@@ -161,12 +160,21 @@ class ScanFilter:
         """
     
         mTr = tf.transformations.quaternion_matrix(pose[2])
+
         mTr[0,3] = pose[0]
         mTr[1,3] = pose[1]
+
+
         if inverse:
-            return np.linalg.inv(mTr)
+            # Manual calculation of the inverse because of optimization.
+            rRm = np.transpose(mTr[0:3, 0:3])
+            rtm = -rRm.dot(mTr[0:3,3])
+            mTr[0:3, 0:3] = rRm
+            mTr[0:3, 3] = rtm
+            return mTr #np.linalg.inv(mTr)
         else:
             return mTr
+
 
 if __name__ == '__main__':
     scan_filter = ScanFilter()
