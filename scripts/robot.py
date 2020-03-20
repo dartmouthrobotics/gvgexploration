@@ -107,7 +107,7 @@ class Robot:
         self.environment = rospy.get_param("~environment")
         self.robot_count = rospy.get_param("~robot_count")
         for rid in self.candidate_robots:
-            pub = rospy.Publisher("/roscbt/robot_{}/received_data".format(rid), BufferedData, queue_size=100)
+            pub = rospy.z("/roscbt/robot_{}/received_data".format(rid), BufferedData, queue_size=100)
             pub1 = rospy.Publisher("/roscbt/robot_{}/auction_points".format(rid), Auction, queue_size=10)
             pub2 = rospy.Publisher("/roscbt/robot_{}/allocated_point".format(rid), Frontier, queue_size=10)
             pub3 = rospy.Publisher("/roscbt/robot_{}/auction_feedback".format(rid), Auction, queue_size=10)

@@ -117,14 +117,11 @@ class roscbt:
                     for topic_name, topic_type in topic_dict.items():
                         if sender_id not in self.subsciber_map[topic_name]:
                             sub = None
-                            exec("sub=rospy.Subscriber('/roscbt/robot_{0}/{2}', {3}, self.main_callback, "
-                                 "queue_size=10)".format(sender_id, receiver_id, topic_name, topic_type))
+                            exec("sub=rospy.Subscriber('/roscbt/robot_{0}/{2}', {3}, self.main_callback,queue_size=10)".format(sender_id, receiver_id, topic_name, topic_type))
                             self.subsciber_map[topic_name][sender_id] = sub
                         if receiver_id not in self.publisher_map[topic_name]:
                             pub = None
-                            exec('pub=rospy.Publisher("/robot_{}/{}", {}, queue_size=10)'.format(receiver_id,
-                                                                                                 topic_name,
-                                                                                                 topic_type))
+                            exec('pub=rospy.Publisher("/robot_{}/{}", {}, queue_size=10)'.format(receiver_id,topic_name,topic_type))
                             self.publisher_map[topic_name][receiver_id] = pub
 
         # ======= pose transformations====================
@@ -192,8 +189,7 @@ class roscbt:
                 self.sent_data[combn] = {current_time: data_size}
            # rospy.logerr("Data sent from {} to {} on topic: {}".format(sender_id, receiver_id, topic))
         else:
-            rospy.logerr(
-                "Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
+            rospy.logerr("Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
 
     # method to check the constraints for robot communication
     def can_communicate(self, robot_id1, robot_id2):
