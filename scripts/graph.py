@@ -128,6 +128,7 @@ class Graph:
         return FrontierPointResponse(poses=selected_poses)
 
     def intersection_handler(self, data):
+        # rospy.logerr("Robot {}: Received intersec request".format(self.robot_id))
         pose_data = data.pose
         map_msg = self.latest_map
         if not map_msg:
@@ -143,6 +144,7 @@ class Graph:
             intersec=intersecs[0]
             rospy.logerr("Intersection: {}".format(intersecs))
             result = pu.D(pu.scale_down(intersec[0][1]), pu.scale_down(intersec[1][0]))
+        # rospy.logerr("Robot {}: Received response: {}".format(self.robot_id,result))
         return IntersectionsResponse(result=result)
 
     def fetch_graph_handler(self, data):

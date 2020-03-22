@@ -1,0 +1,4 @@
+gvgexploration/Auction req_data
+---
+int32 auction_accepted
+gvgexploration/Auction res_data

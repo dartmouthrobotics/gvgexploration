@@ -52,16 +52,16 @@ pioneer3at
   pose [2.0 8.0 0.0 0.0]
 )
 # Put two robots into the world
-pioneer3at
-(
-  name "robot3"
-  color "blue"
-  pose [4.0 8.0 0.0 0.0]
-)
+#pioneer3at
+#(
+ # name "robot3"
+#  color "blue"
+#  pose [4.0 8.0 0.0 0.0]
+#)
 # Put two robots into the world
-pioneer3at
-(
-  name "robot4"
-  color "blue"
-  pose [4.0 10.0 0.0 0.0]
-)
+#pioneer3at
+#(
+#  name "robot4"
+#  color "blue"
+#  pose [4.0 10.0 0.0 0.0]
+#)

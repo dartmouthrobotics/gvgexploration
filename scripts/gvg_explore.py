@@ -144,6 +144,7 @@ class GVGExplore:
                 rospy.logerr("Robot {}: Error in exploration".format(self.robot_id))
 
         self.action_server.set_preempted()
+        rospy.logerr("Robot {}: GVGExplore action preempted".format(self.robot_id))
         success = False
         self.move_to_stop()
         #

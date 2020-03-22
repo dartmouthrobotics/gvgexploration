@@ -73,6 +73,10 @@ add_service_files(
   FrontierPoint.srv
   Intersections.srv
   FetchGraph.srv
+  HotSpot.srv
+  SharedData.srv
+  SharedPoint.srv
+  HotSpot.srv
 #  Service2.srv
 )
 

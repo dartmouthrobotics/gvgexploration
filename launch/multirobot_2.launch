@@ -7,8 +7,8 @@
     </node>
 
     <node name="R0_MapAlign" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /robot_0/map 100"/>
-    <node name="R1_MapAlign" pkg="tf" type="static_transform_publisher" args="50 0 0 0 0 0 /map /robot_1/map 100"/>
-    <node name="R3_MapAlign" pkg="tf" type="static_transform_publisher" args="100 0 0 0 0 0 /map /robot_0/corrected_map 100"/>
+    <node name="R1_MapAlign" pkg="tf" type="static_transform_publisher" args="100 0 0 0 0 0 /map /robot_1/map 100"/>
+<!--    <node name="R3_MapAlign" pkg="tf" type="static_transform_publisher" args="100 0 0 0 0 0 /map /robot_0/corrected_map 100"/>-->
 
     <group ns="robot_0">
         <param name="robot_id" value="1" />
@@ -29,7 +29,7 @@
         <node name="SetGoal" pkg="nav2d_navigator" type="set_goal_client" />
         <node name="scan_filter" pkg="gvgexploration" type="scan_filter.py">
             <param name="robot_id" value="0" />
-            <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
+            <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
         </node>
         <include file="$(find gvgexploration)/launch/robot.launch">
             <arg name="robot_name" value="0" />
@@ -47,7 +47,7 @@
         <rosparam file="$(find gvgexploration)/param/ros.yaml"/>
         <node name="scan_filter" pkg="gvgexploration" type="scan_filter.py">
             <param name="robot_id" value="1" />
-            <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
+            <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
         </node>
         <node pkg="nav2d_operator" type="operator" name="operator" output="screen">
             <rosparam file="$(find gvgexploration)/param/operator.yaml"/>
@@ -72,7 +72,7 @@
     </group>
 
     <node pkg="gvgexploration" type="map_analyzer.py" name="map_analyzer">
-        <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
+        <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
     </node>
     <node name="RVIZ" pkg="rviz" type="rviz" args=" -d $(find gvgexploration)/param/maze.rviz" output="screen" />
 </launch>

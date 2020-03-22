@@ -10,6 +10,7 @@ import numpy as np
 from threading import Lock
 import json
 from gvgexploration.msg import SignalStrength, RobotSignal
+from gvgexploration.srv import *
 from time import sleep
 from nav_msgs.msg import OccupancyGrid
 import sys
@@ -107,10 +108,8 @@ class roscbt:
         self.pose_desc = {}
         self.coverage = {}
         self.connected_robots = {}
-
+        rospy.Service("/signal_strength", HotSpot,self.signal_strength_handler)
         for receiver_id in self.robot_ids:
-            sig_pub = rospy.Publisher("/robot_{0}/signal_strength".format(receiver_id), SignalStrength, queue_size=10)
-            self.signal_pub[receiver_id] = sig_pub
             if str(receiver_id) in self.shared_topics:
                 topic_map = self.shared_topics[str(receiver_id)]
                 for sender_id, topic_dict in topic_map.items():
@@ -144,7 +143,7 @@ class roscbt:
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             # try:
-            self.share_signal_strength()
+            # self.share_signal_strength()
             self.get_coverage()
             self.compute_performance()
             r.sleep()
@@ -152,11 +151,27 @@ class roscbt:
             # except Exception as e:
             #     rospy.logerr('interrupted!: {}'.format(e))
             #     break
-    #
-    # def main_callback(self, data):
-    #     thread = Thread(target=self.handle_request, args=(data,))
-    #     thread.daemon = True
-    #     thread.start()
+
+    def signal_strength_handler(self, data):
+        r1 = data.robot_id
+        signal_strength = SignalStrength()
+        rsignals = []
+        robot1_pose = self.get_robot_pose(r1)
+        for r2 in self.robot_ids:
+            if r1 != r2:
+                robot2_pose = self.get_robot_pose(r2)
+                if robot1_pose and robot2_pose:
+                    d = math.floor(math.sqrt(((robot1_pose[0] - robot2_pose[0]) ** 2) + ((robot1_pose[1] - robot2_pose[1]) ** 2)))
+                    ss = self.compute_signal_strength(d)
+                    if ss >= MIN_SIGNAL_STRENGTH:
+                        robot_signal = RobotSignal()
+                        robot_signal.robot_id = int(r2)
+                        robot_signal.rssi = ss
+                        rsignals.append(robot_signal)
+                    signal_strength.header.stamp = rospy.Time.now()
+                    signal_strength.header.frame_id = 'roscbt'
+                    signal_strength.signals = rsignals
+        return HotSpotResponse(hot_spots=signal_strength)
 
     def main_callback(self, data):
         sender_id = data.msg_header.sender_id
@@ -165,7 +180,7 @@ class roscbt:
         start_time = rospy.Time.now().to_sec()
         self.received_messages.append(
             {'time': start_time, 'message_time': data.msg_header.header.stamp.to_sec(), 'sender_id': sender_id,
-             'receiver_id': receiver_id, 'session_id': data.session_id.data, 'topic': topic})
+             'receiver_id': receiver_id, 'session_id': data.session_id, 'topic': topic})
         current_time = rospy.Time.now().secs
         combn = (sender_id, receiver_id)
         # handle all message types
@@ -180,14 +195,14 @@ class roscbt:
             time_diff = now - start_time
             self.sent_messages.append(
                 {'time': now, 'message_time': data.msg_header.header.stamp.to_sec(), 'sender_id': sender_id,
-                 'receiver_id': receiver_id, 'session_id': data.session_id.data, 'time_diff': time_diff,
+                 'receiver_id': receiver_id, 'session_id': data.session_id, 'time_diff': time_diff,
                  'topic': topic})
             data_size = sys.getsizeof(data)
             if combn in self.sent_data:
                 self.sent_data[combn][current_time] = data_size
             else:
                 self.sent_data[combn] = {current_time: data_size}
-           # rospy.logerr("Data sent from {} to {} on topic: {}".format(sender_id, receiver_id, topic))
+            rospy.logerr("Data sent from {} to {} on topic: {}".format(sender_id, receiver_id, topic))
         else:
             rospy.logerr("Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
 
@@ -198,28 +213,6 @@ class roscbt:
         if not robot1_pose or not robot2_pose:
             return -1, False
         return self.robots_inrange(robot1_pose, robot2_pose)
-
-    def share_signal_strength(self):
-        for r1 in self.robot_ids:
-            signal_strength = SignalStrength()
-            rsignals = []
-            for r2 in self.robot_ids:
-                if r1 != r2:
-                    robot1_pose = self.get_robot_pose(r1)
-                    robot2_pose = self.get_robot_pose(r2)
-                    if robot1_pose and robot2_pose:
-                        d = math.floor(math.sqrt(
-                            ((robot1_pose[0] - robot2_pose[0]) ** 2) + ((robot1_pose[1] - robot2_pose[1]) ** 2)))
-                        ss = self.compute_signal_strength(d)
-                        if ss >= MIN_SIGNAL_STRENGTH:
-                            robot_signal = RobotSignal()
-                            robot_signal.robot_id = int(r2)
-                            robot_signal.rssi = ss
-                            rsignals.append(robot_signal)
-                        signal_strength.header.stamp = rospy.Time.now()
-                        signal_strength.header.frame_id = 'roscbt'
-                        signal_strength.signals = rsignals
-                        self.signal_pub[r1].publish(signal_strength)
 
     def compute_constant_distance_ss(self):
         wifi_freq = 2.4 * math.pow(10, 9)
