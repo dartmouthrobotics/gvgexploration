@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   actionlib_msgs
   message_generation
+  visualization_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -94,6 +95,7 @@ generate_messages(
    nav2d_msgs
    sensor_msgs
    actionlib_msgs
+   visualization_msgs
  )
 
 ################################################

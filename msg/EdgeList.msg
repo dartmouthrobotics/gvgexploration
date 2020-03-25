@@ -1,3 +1,4 @@
 std_msgs/Header header
-gvgexploration/Ridge[] edges
+gvgexploration/Ridge[] ridges
+gvgexploration/Ridge close_ridge
 gvgexploration/Pixel[] pixels

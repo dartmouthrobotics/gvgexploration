@@ -1,4 +1,4 @@
-debug_mode: 0
+debug_mode: 1
 robot_count: 2    # number of robots on the team
 min_hallway_width: 1.0   # allowed minimum separation between two pixels on the graph
 comm_range: 20  # communication range

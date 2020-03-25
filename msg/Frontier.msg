@@ -1,3 +1,3 @@
 gvgexploration/MessageHeader msg_header
-geometry_msgs/Pose pose
+gvgexploration/Ridge ridge
 string session_id

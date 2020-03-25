@@ -124,7 +124,6 @@ class ScanFilter:
         range_max = scan_msg.range_max
         ranges = scan_msg.ranges
         new_ranges = self.scan.ranges
-
         # Check each range, whether is hitting a robot or not.
         for i in xrange(self.scan_ranges_size):
             r = ranges[i]

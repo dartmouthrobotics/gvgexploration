@@ -1,5 +1,5 @@
 #goal definition
-geometry_msgs/Pose pose
+gvgexploration/Ridge ridge
 ---
 #result definition
 string result

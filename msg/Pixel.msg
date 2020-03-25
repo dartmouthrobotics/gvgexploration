@@ -1,3 +1,2 @@
-float64 x
-float64 y
+geometry_msgs/Pose pose
 int32 desc
