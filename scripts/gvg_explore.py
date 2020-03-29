@@ -15,8 +15,7 @@ from project_utils import D, get_ridge_desc, line_points, pixel2pose, pose2pixel
 import actionlib
 import rospy
 import math
-from gvgexploration.msg import GvgExploreFeedback, GvgExploreGoal, GvgExploreResult, EdgeList, Coverage, \
-    GvgExploreAction
+from gvgexploration.msg import EdgeList, Coverage, Ridge
 from nav2d_navigator.msg import MoveToPosition2DActionGoal, MoveToPosition2DActionResult
 from actionlib_msgs.msg import GoalStatusArray, GoalID
 from std_srvs.srv import Trigger
@@ -71,6 +70,7 @@ class GVGExplore:
         self.is_exploring = False
         self.moving_to_frontier = False
         self.is_processing_graph = False
+        self.cancel_request = False
         self.start_time = 0
         self.prev_pose = 0
         rospy.init_node("gvgexplore", anonymous=True)
@@ -106,14 +106,13 @@ class GVGExplore:
         self.fetch_graph = rospy.ServiceProxy('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph)
         self.pose_publisher = rospy.Publisher("/robot_{}/cmd_vel".format(self.robot_id), Twist, queue_size=1)
         rospy.Subscriber("/robot_{}/odom".format(self.robot_id), Odometry, callback=self.pose_callback)
-        self.exploration_feedback = GvgExploreFeedback()
-        self.exploration_result = GvgExploreResult()
-        self.action_server = actionlib.SimpleActionServer('/robot_{}/gvgexplore'.format(self.robot_id),
-                                                          GvgExploreAction, auto_start=False)
-        self.action_server.register_goal_callback(self.start_gvg_exploration)
-        self.action_server.register_preempt_callback(self.received_prempt_callback)
 
-        self.action_server.start()
+        rospy.Subscriber('/robot_{}/gvgexplore/goal'.format(self.robot_id), Ridge, self.initial_action_handler)
+        rospy.Service('/robot_{}/gvgexplore/cancel'.format(self.robot_id), CancelExploration,
+                      self.received_prempt_handler)
+        self.goal_feedback_pub = rospy.Publisher("/robot_{}/gvgexplore/feedback".format(self.robot_id), Pose,
+                                                 queue_size=1)
+
         self.listener = tf.TransformListener()
         rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         self.already_shutdown = False
@@ -129,7 +128,6 @@ class GVGExplore:
         ridges = data.edgelist.ridges
         self.edges.clear()
         self.pixel_desc.clear()
-        rospy.logerr("Robot pixels: {}".format(self.pixel_desc))
         for r in ridges:
             edge = self.get_edge(r)
             self.edges.update(edge)
@@ -144,30 +142,48 @@ class GVGExplore:
         edge = close_ridge.keys()[0]
         return edge
 
-    def received_prempt_callback(self):
+    def received_prempt_handler(self, data):
         rospy.logerr("Robot {}: GVGExplore action preempted".format(self.robot_id))
-        self.move_to_stop()
-        self.action_server.set_preempted()
+        self.cancel_request = True
+        if self.moving_to_frontier:
+            self.move_to_stop()
+            self.moving_to_frontier = False
+            while self.cancel_request:
+                sleep(1)
+        return CancelExplorationResponse(result=1)
 
-
-    def start_gvg_exploration(self):
-        rospy.logerr("Received goal...")
-        goal = self.action_server.accept_new_goal()
-        ridge_dict = self.get_edge(goal.ridge)
+    def initial_action_handler(self, ridge):
+        rospy.logerr("Robot {}: GVGExplore received new goal".format(self.robot_id))
+        ridge_dict = self.get_edge(ridge)
         edge = ridge_dict.keys()[0]
         leaf = edge[1]
-        self.move_to_frontier(leaf, theta(edge[0], leaf))
-        while not self.action_server.is_preempt_requested():
-            edge = self.run_other_dfs(edge)
+        scaled_pose = scale_down(leaf)
+        self.moving_to_frontier = True
+        self.move_robot_to_goal(scaled_pose, 0)
+        while self.moving_to_frontier:
             sleep(1)
+        p = self.get_robot_pose()
+        pose = Pose()
+        pose.position.x = p[INDEX_FOR_X]
+        pose.position.y = p[INDEX_FOR_Y]
+        self.goal_feedback_pub.publish(pose)  # publish to feedback
+        self.start_gvg_exploration(edge)
+
+    def start_gvg_exploration(self, edge):
+        while not rospy.is_shutdown():
+            edge = self.run_other_dfs(edge)
+            if self.cancel_request:
+                break
+            sleep(1)
+        self.cancel_request = False
 
     def move_to_frontier(self, pose, theta=0):
         scaled_pose = scale_down(pose)
         self.moving_to_frontier = True
         self.move_robot_to_goal(scaled_pose, theta)
         while self.moving_to_frontier:
+            sleep(1)
             continue
-        self.create_feedback(self.get_robot_pose())
 
     def run_other_dfs(self, edge):
         visited_nodes = {}
@@ -180,6 +196,8 @@ class GVGExplore:
         last_edge = edge
         while len(S) > 0:
             u = S.pop()
+            if self.cancel_request:
+                break
             last_edge = (u, parent_nodes[u])
             leave_node = stack_nodes[u]
             ancestor_id = parent[u]
@@ -232,10 +250,11 @@ class GVGExplore:
         p.position.y = scaled_pose[INDEX_FOR_Y]
         edge_data = self.fetch_graph(FetchGraphRequest(pose=p))
         edge = self.process_edges(edge_data)
-        marker_pose = (0, 0)
-        if self.robot_id == 1:
-            marker_pose = (100, 0)
-        self.create_markers(marker_pose)
+        if self.debug_mode:
+            marker_pose = (0, 0)
+            if self.robot_id == 1:
+                marker_pose = (100, 0)
+            self.create_markers(marker_pose)
         return edge
 
     def already_explored(self, v, parent_nodes):
@@ -342,27 +361,6 @@ class GVGExplore:
         r.obstacles = [q1, q2]
         return r
 
-    def create_feedback(self, point):
-        next_point = scale_down(point)
-        self.exploration_feedback.progress = "Starting exploration"
-        pose = Pose()
-        pose.position.x = next_point[INDEX_FOR_X]
-        pose.position.y = next_point[INDEX_FOR_Y]
-        self.exploration_feedback.current_point = pose
-        self.action_server.publish_feedback(self.exploration_feedback)
-
-    def create_result(self, visited_nodes):
-        all_nodes = list(visited_nodes)
-        allposes = []
-        for n in all_nodes:
-            point = scale_down(n)
-            pose = Pose()
-            pose.position.x = point[INDEX_FOR_X]
-            pose.position.y = point[INDEX_FOR_Y]
-            allposes.append(pose)
-        self.exploration_result.result = "gvg exploration complete"
-        self.exploration_result.explored_points = allposes
-
     def is_visited(self, v, visited):
         already_visited = False
         if v in visited:
@@ -418,20 +416,13 @@ class GVGExplore:
         unknown_neighborhood = 0
         x = round(p[INDEX_FOR_X], 2)
         y = round(p[INDEX_FOR_Y], 2)
-
-        # polygon = sg.Polygon([(x - self.lidar_scan_radius, y - self.lidar_scan_radius),
-        #                    (x - self.lidar_scan_radius, y + self.lidar_scan_radius),
-        #                    (x + self.lidar_scan_radius, y + self.lidar_scan_radius),
-        #                    (x + self.lidar_scan_radius, y - self.lidar_scan_radius)])
         point = sg.Point(x, y)
         circle = point.buffer(self.lidar_scan_radius)
-        # ellipse = sa.scale(circle, self.lidar_scan_radius, self.lidar_scan_radius)  # type(ellipse)=polygon
         for k, v in self.pixel_desc.items():
             geo_p = sg.Point(k[INDEX_FOR_X], k[INDEX_FOR_Y])
             if circle.contains(geo_p):
                 unknown_neighborhood += 1
                 break
-        rospy.logerr("Unknown pixels: {}".format(unknown_neighborhood))
         return unknown_neighborhood >= 1
 
     def create_adjlist(self):
@@ -484,30 +475,29 @@ class GVGExplore:
         id_0 = "robot_{}_{}_explore".format(self.robot_id, self.goal_count - 1)
         if data.status_list:
             goal_status = data.status_list[0]
-            if goal_status.goal_id.id:
-                if goal_status.goal_id.id == id_0:
-                    if goal_status.status == ACTIVE:
-                        now = rospy.Time.now().secs
-                        if (now - self.start_time) > 30:  # you can only spend upto 10 sec in same position
-                            pose = self.get_robot_pose()
-                            if D(self.prev_pose, pose) < 0.5:
-                                rospy.logerr("Paused for too long")
-                                self.has_arrived = True
-                                self.moving_to_frontier = False
-                            self.prev_pose = pose
-                            self.start_time = now
-
-                    else:
-                        if not self.has_arrived:
-                            self.has_arrived = True
-                        self.moving_to_frontier = False
+            # if goal_status.goal_id.id:
+            #     if goal_status.goal_id.id == id_0:
+            #         if goal_status.status == ACTIVE:
+            #             now = rospy.Time.now().secs
+            #             if (now - self.start_time) > 30:  # you can only spend upto 10 sec in same position
+            #                 pose = self.get_robot_pose()
+            #                 if D(self.prev_pose, pose) < 0.5:
+            #                     rospy.logerr("Paused for too long")
+            #                     self.has_arrived = True
+            #                     self.moving_to_frontier = False
+            #                 self.prev_pose = pose
+            #                 self.start_time = now
+            #
+            #         else:
+            #             if not self.has_arrived:
+            #                 self.has_arrived = True
+            #             self.moving_to_frontier = False
 
     def move_result_callback(self, data):
         id_0 = "robot_{}_{}_explore".format(self.robot_id, self.goal_count - 1)
         if data.status:
             if data.status.status == ABORTED:
                 if data.status.goal_id.id == id_0:
-                    self.has_arrived = True
                     if self.moving_to_frontier:
                         self.moving_to_frontier = False
                         self.has_arrived = True
@@ -518,8 +508,7 @@ class GVGExplore:
                         self.moving_to_frontier = False
                     if not self.prev_explored:
                         self.prev_explored = self.current_point
-                    self.traveled_distance.append({'time': rospy.Time.now().to_sec(),
-                                                   'traved_distance': D(self.prev_explored, self.current_point)})
+                    self.traveled_distance.append({'time': rospy.Time.now().to_sec(),'traved_distance': D(self.prev_explored, self.current_point)})
                     self.prev_explored = self.current_point
 
     # def chosen_point_callback(self, data):

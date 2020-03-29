@@ -2,6 +2,8 @@ import math
 import numpy as np
 import pickle
 from os import path
+import rospy
+import shapely.geometry as sg
 
 TOTAL_COVERAGE = 1
 MAXIMUM_EXPLORATION_TIME = 2
@@ -243,6 +245,11 @@ def reject_outliers(data):
     return raw_x, raw_y
 
 
+def log_msg(robot_id, msg, debug):
+    if debug:
+        rospy.logerr("Robot {}: {}".format(robot_id, msg))
+
+
 def in_range(point, polygon):
     x = point[INDEX_FOR_X]
     y = point[INDEX_FOR_Y]
@@ -286,21 +293,16 @@ def create_polygon(pose, for_frontiers, origin_x, origin_y, width, height, comm_
     ranges = [first, second, third, fourth]
     return ranges
 
-
 def there_is_unknown_region(p1, p2, pixel_desc, min_ratio=4.0):
     x_min = int(round(min([p1[INDEX_FOR_X], p2[INDEX_FOR_X]])))
     y_min = int(round(min([p1[INDEX_FOR_Y], p2[INDEX_FOR_Y]])))
     x_max = int(round(max([p1[INDEX_FOR_X], p2[INDEX_FOR_X]])))
     y_max = int(round(max([p1[INDEX_FOR_Y], p2[INDEX_FOR_Y]])))
+    bbox = sg.box(x_min, y_min, x_max, y_max)
     points = []
     point_count = 0
-    for x in range(x_min, x_max + 1):
-        for y in range(y_min, y_max + 1):
-            point_count += 1
-            region_point = [0.0] * 2
-            region_point[INDEX_FOR_X] = float(x)
-            region_point[INDEX_FOR_Y] = float(y)
-            region_point = tuple(region_point)
-            if region_point in pixel_desc and pixel_desc[region_point] == UNKNOWN:
-                points.append(region_point)
+    for p, v in pixel_desc.items():
+        p = sg.Point(p[INDEX_FOR_X], p[INDEX_FOR_Y])
+        if bbox.contains(p):
+            points.append(p)
     return len(points) >= point_count / min_ratio

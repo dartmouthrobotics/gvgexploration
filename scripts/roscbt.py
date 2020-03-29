@@ -142,15 +142,9 @@ class roscbt:
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
-            # try:
-            # self.share_signal_strength()
             self.get_coverage()
             self.compute_performance()
             r.sleep()
-            # time.sleep(10)
-            # except Exception as e:
-            #     rospy.logerr('interrupted!: {}'.format(e))
-            #     break
 
     def signal_strength_handler(self, data):
         r1 = data.robot_id
@@ -354,12 +348,12 @@ class roscbt:
         save_data(self.exploration_data,
                   'gvg/exploration_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
                                                               self.termination_metric))
-        save_data(self.received_messages,
-                  'gvg/roscbt_data_received_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
-                                                                       self.termination_metric))
-        save_data(self.sent_messages,
-                  'gvg/roscbt_data_sent_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
-                                                                   self.termination_metric))
+        # save_data(self.received_messages,
+        #           'gvg/roscbt_data_received_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+        #                                                                self.termination_metric))
+        # save_data(self.sent_messages,
+        #           'gvg/roscbt_data_sent_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+        #                                                            self.termination_metric))
 
 
 if __name__ == '__main__':

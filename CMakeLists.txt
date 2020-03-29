@@ -78,13 +78,15 @@ add_service_files(
   SharedData.srv
   SharedPoint.srv
   HotSpot.srv
+  SharedFrontier.srv
+  CancelExploration.srv
 #  Service2.srv
 )
 
 ## Generate actions in the 'action' folder
 add_action_files(
   FILES
-  GvgExplore.action
+ # GvgExplore.action
 #   Action2.action
 )
 

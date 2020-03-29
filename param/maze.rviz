@@ -14,6 +14,7 @@ Panels:
         - /NP1:Marker1
         - /EDGE1:Marker1
         - /Leaves1:Marker1
+        - /R3:Map1
       Splitter Ratio: 0.5
     Tree Height: 1804
   - Class: rviz/Selection
@@ -75,15 +76,7 @@ Visualization Manager:
           Value: true
         robot_0/base_link:
           Value: true
-        robot_0/explore/edges:
-          Value: true
-        robot_0/explore/vertices:
-          Value: true
         robot_0/map:
-          Value: true
-        robot_0/navigator/markers:
-          Value: true
-        robot_0/navigator/vertices:
           Value: true
         robot_0/odom:
           Value: true
@@ -95,19 +88,21 @@ Visualization Manager:
           Value: true
         robot_1/base_link:
           Value: true
-        robot_1/explore/edges:
-          Value: true
-        robot_1/explore/vertices:
-          Value: true
         robot_1/map:
-          Value: true
-        robot_1/navigator/markers:
-          Value: true
-        robot_1/navigator/vertices:
           Value: true
         robot_1/odom:
           Value: true
         robot_1/offset:
+          Value: true
+        robot_2/base_footprint:
+          Value: true
+        robot_2/base_laser_link:
+          Value: true
+        robot_2/base_link:
+          Value: true
+        robot_2/map:
+          Value: true
+        robot_2/odom:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -116,10 +111,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          robot_0/explore/edges:
-            {}
-          robot_0/explore/vertices:
-            {}
           robot_0/map:
             robot_0/offset:
               robot_0/odom:
@@ -127,14 +118,6 @@ Visualization Manager:
                   robot_0/base_link:
                     robot_0/base_laser_link:
                       {}
-          robot_0/navigator/markers:
-            {}
-          robot_0/navigator/vertices:
-            {}
-          robot_1/explore/edges:
-            {}
-          robot_1/explore/vertices:
-            {}
           robot_1/map:
             robot_1/offset:
               robot_1/odom:
@@ -142,9 +125,7 @@ Visualization Manager:
                   robot_1/base_link:
                     robot_1/base_laser_link:
                       {}
-          robot_1/navigator/markers:
-            {}
-          robot_1/navigator/vertices:
+          robot_2/map:
             {}
       Update Interval: 0
       Value: true
@@ -153,7 +134,7 @@ Visualization Manager:
       Marker Topic: /robot_0/navigator/markers
       Name: NP:Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -161,7 +142,7 @@ Visualization Manager:
       Marker Topic: /robot_0/explore/edges
       Name: EDGE:Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -169,7 +150,7 @@ Visualization Manager:
       Marker Topic: /robot_0/explore/vertices
       Name: Leaves:Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -177,7 +158,7 @@ Visualization Manager:
       Marker Topic: /robot_1/navigator/markers
       Name: NP1:Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -185,7 +166,7 @@ Visualization Manager:
       Marker Topic: /robot_1/explore/edges
       Name: EDGE1:Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -193,8 +174,18 @@ Visualization Manager:
       Marker Topic: /robot_1/explore/vertices
       Name: Leaves1:Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
+      Value: true
+    - Alpha: 0.699999988079071
+      Class: rviz/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: R3:Map
+      Topic: /robot_2/map
+      Unreliable: false
+      Use Timestamp: false
       Value: true
   Enabled: true
   Global Options:
