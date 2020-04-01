@@ -440,7 +440,6 @@ class GVGExplore:
                 cos_theta, separation = pu.compute_similarity(v1, v2, (parent_node, node), (node, ob))
                 if 1 - self.opposite_vector_bias <= cos_theta <= 1:
                     unknown_area_close = False
-                    distance[distance]
                     break
         else:
             unknown_area_close = False
