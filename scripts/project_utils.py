@@ -86,6 +86,7 @@ def theta(p, q):
 
 
 def D(p, q):
+    # rospy.logerr("Params: {}, {}".format(p, q))
     dx = q[INDEX_FOR_X] - p[INDEX_FOR_X]
     dy = q[INDEX_FOR_Y] - p[INDEX_FOR_Y]
     return math.sqrt(dx ** 2 + dy ** 2)
@@ -293,16 +294,18 @@ def create_polygon(pose, for_frontiers, origin_x, origin_y, width, height, comm_
     ranges = [first, second, third, fourth]
     return ranges
 
+
 def there_is_unknown_region(p1, p2, pixel_desc, min_ratio=4.0):
-    x_min = int(round(min([p1[INDEX_FOR_X], p2[INDEX_FOR_X]])))
-    y_min = int(round(min([p1[INDEX_FOR_Y], p2[INDEX_FOR_Y]])))
-    x_max = int(round(max([p1[INDEX_FOR_X], p2[INDEX_FOR_X]])))
-    y_max = int(round(max([p1[INDEX_FOR_Y], p2[INDEX_FOR_Y]])))
+    x_min = min([p1[INDEX_FOR_X], p2[INDEX_FOR_X]])
+    y_min = min([p1[INDEX_FOR_Y], p2[INDEX_FOR_Y]])
+    x_max = max([p1[INDEX_FOR_X], p2[INDEX_FOR_X]])
+    y_max = max([p1[INDEX_FOR_Y], p2[INDEX_FOR_Y]])
+    min_points = max([abs(x_max - x_min), abs(y_max - y_min)])
     bbox = sg.box(x_min, y_min, x_max, y_max)
-    points = []
     point_count = 0
     for p, v in pixel_desc.items():
-        p = sg.Point(p[INDEX_FOR_X], p[INDEX_FOR_Y])
-        if bbox.contains(p):
-            points.append(p)
-    return len(points) >= point_count / min_ratio
+        if v == UNKNOWN:
+            p = sg.Point(p[INDEX_FOR_X], p[INDEX_FOR_Y])
+            if bbox.contains(p):
+                point_count += 1
+    return point_count >= min_points

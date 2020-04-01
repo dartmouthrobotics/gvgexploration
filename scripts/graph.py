@@ -17,6 +17,7 @@ from gvgexploration.srv import *
 import project_utils as pu
 import tf
 from time import sleep
+import shapely.geometry as sg
 from nav_msgs.msg import *
 from nav2d_navigator.msg import *
 from std_srvs.srv import *
@@ -44,7 +45,6 @@ class Graph:
         self.plot_intersection_active = False
         self.plot_data_active = False
         self.lock = Lock()
-
 
         self.obstacles = {}
         self.adj_list = {}
@@ -76,8 +76,8 @@ class Graph:
         self.min_edge_length = rospy.get_param("~min_edge_length".format(self.robot_id)) * pu.SCALE
         self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius".format(self.robot_id)) * pu.SCALE
         self.lidar_fov = rospy.get_param("~lidar_fov".format(self.robot_id))
-        self.slope_bias = rospy.get_param("~slope_bias".format(self.robot_id)) * SCALE
-        self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id)) * pu.SCALE
+        self.slope_bias = rospy.get_param("~slope_bias".format(self.robot_id)) #* SCALE
+        self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id)) #* pu.SCALE
         self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias".format(self.robot_id))
 
         self.edge_pub = rospy.Publisher("/robot_{}/edge_list".format(self.robot_id), EdgeList, queue_size=10)
@@ -204,7 +204,7 @@ class Graph:
         edgelist.close_ridge = new_closest_ridge
         self.prev_ridge = new_close_ridge
         for k, v in self.pixel_desc.items():
-            if v == UNKNOWN:
+            if v != FREE:
                 pix = Pixel()
                 pix.pose.position.x = k[INDEX_FOR_X]
                 pix.pose.position.y = k[INDEX_FOR_Y]
@@ -283,7 +283,7 @@ class Graph:
             cr = min(closest_ridge, key=closest_ridge.get)
             if closest_ridge[cr] < vertex_dict[cr][1]:
                 close_edge = cr
-                intersecs = self.process_decision(vertex_dict,close_edge, robot_pose)
+                intersecs = self.process_decision(vertex_dict, close_edge, robot_pose)
                 if self.debug_mode:
                     if not self.plot_intersection_active and intersecs:
                         self.plot_intersections(None, close_edge, intersecs, robot_pose)
@@ -300,30 +300,63 @@ class Graph:
         w1 = r_desc[1]
         p1 = ridge[0]
         p2 = ridge[1]
-        intersections = []
         intesec_pose = {}
         for j, desc in vertex_descriptions.items():
             if j != ridge and (ridge[0] not in j or ridge[1] not in j):
                 p3 = j[1]
                 v2 = desc[0]
-                if self.lidar_scan_radius < pu.D(robot_pose, p3) < self.comm_range:
-                    if pu.there_is_unknown_region(p2, p3, self.pixel_desc):
-                        if pu.collinear(p1, p2, p3, w1, self.slope_bias):
-                            cos_theta, separation = pu.compute_similarity(v1, v2, ridge, j)
-                            if -1 <= cos_theta <= -1 + self.opposite_vector_bias and abs(separation - w1) < self.separation_bias:
-                                # intersections.append((ridge, j))
-                                intesec_pose[pu.D(robot_pose, p3)] = (ridge, j)
-                            else:
-                                pass
+                w2 = desc[1]
+                if self.lidar_scan_radius < pu.D(p2, p3) < self.comm_range:
+                    if pu.collinear(p1, p2, p3, w1, self.slope_bias):
+                        cos_theta, separation = pu.compute_similarity(v1, v2, ridge, j)
+                        if -1 <= cos_theta <= -1 + self.opposite_vector_bias and abs(separation) < abs(w1 - w2):
+                            intesec_pose[pu.D(p2, p3)] = (ridge, j)
                         else:
                             pass
                     else:
                         pass
                 else:
                     pass
-        if intesec_pose:
-            min_dist = min(intesec_pose.keys())
-            intersections.append(intesec_pose[min_dist])
+
+        intersections = self.get_pairs_with_unknown_area(intesec_pose)
+        # if intesec_pose:
+        #     min_dist = min(intesec_pose.keys())
+        #     intersections.append(intesec_pose[min_dist])
+        return intersections
+
+    def get_pairs_with_unknown_area(self, edge_pairs):
+        edge_boxes = {}
+        pair_dist = {}
+        intersections = []
+        for dist, pair in edge_pairs.items():
+            p1 = pair[0][1]
+            p2 = pair[1][1]
+            x_min = min([p1[INDEX_FOR_X], p2[INDEX_FOR_X]])
+            y_min = min([p1[INDEX_FOR_Y], p2[INDEX_FOR_Y]])
+            x_max = max([p1[INDEX_FOR_X], p2[INDEX_FOR_X]])
+            y_max = max([p1[INDEX_FOR_Y], p2[INDEX_FOR_Y]])
+            min_points = max([abs(x_max - x_min), abs(y_max - y_min)])
+            bbox = sg.box(x_min, y_min, x_max, y_max)
+            edge_boxes[pair] = (bbox, min_points)
+            pair_dist[pair] = dist
+        if edge_boxes:
+            actual_pairs = {}
+            actual_intersecs = {}
+            for p, v in self.pixel_desc.items():
+                if v == UNKNOWN:
+                    point = sg.Point(p[INDEX_FOR_X], p[INDEX_FOR_Y])
+                    for pair, values in edge_boxes.items():
+                        if values[0].contains(point):
+                            if pair not in actual_intersecs:
+                                actual_intersecs[pair] = 1
+                            else:
+                                actual_intersecs[pair] += 1
+            for pair, count in actual_intersecs.items():
+                if count >= edge_boxes[pair][1]:
+                    actual_pairs[pair_dist[pair]] = pair
+            if actual_pairs:
+                min_dist = min(actual_pairs.keys())
+                intersections.append(actual_pairs[min_dist])
         return intersections
 
     # def process_decision(self, ridge, robot_pose):
@@ -402,7 +435,8 @@ class Graph:
                 p1 = tuple(p1)
                 p2 = tuple(p2)
                 e = (p1, p2)
-                if self.is_free(p1) and self.is_free(p2):  # and not self.already_exists(p1) and not self.already_exists(p2):  # self.points_within_range(p1, p2) and
+                if self.is_free(p1) and self.is_free(
+                        p2):  # and not self.already_exists(p1) and not self.already_exists(p2):  # self.points_within_range(p1, p2) and
                     q1 = obstacles[ridge_point[0]]
                     q2 = obstacles[ridge_point[1]]
                     o = (tuple(q1), tuple(q2))
@@ -557,12 +591,17 @@ class Graph:
         if N == len(self.adj_dict[self.longest]):  # or count == 10:
             self.get_adjacency_list(self.edges)
             return
-        allnodes = []
+        allnodes = []  # all leaves for every search
         for k, v in self.leave_dict.items():
             allnodes += v
-        allnodes = list(set(allnodes))
+        allnodes = list(set(allnodes))  # deal with only unique leaves
         for leaf, adj in self.adj_dict.items():
             adj_leaves = self.leave_dict[leaf]
+            all_nodes = []
+            # for lf, lf_adj in self.adj_dict.items():
+            #     if lf != leaf:
+            #         all_nodes += lf_adj.keys()
+            # allnodes = list(set(all_nodes))  # deal with only unique leaves
             leaf_dist = {}
             for l in adj_leaves:
                 dist_dict = {}
@@ -989,7 +1028,7 @@ class Graph:
         plt.grid()
         plt.savefig(
             "gvg/intersections_{}_{}_{}.png".format(self.robot_id, time.time(),
-                                                           self.run))  # TODO consistent time.
+                                                    self.run))  # TODO consistent time.
         plt.close(fig)
         self.plot_intersection_active = False
 
@@ -1017,7 +1056,7 @@ class Graph:
     def save_all_data(self):
         save_data(self.performance_data,
                   "gvg/performance_{}_{}_{}_{}_{}.pickle".format(self.environment, self.robot_count, self.run,
-                                                                        self.termination_metric, self.robot_id))
+                                                                 self.termination_metric, self.robot_id))
 
 
 if __name__ == "__main__":
