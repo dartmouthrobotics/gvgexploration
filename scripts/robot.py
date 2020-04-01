@@ -93,9 +93,11 @@ class Robot:
         self.session_id = None
         self.feedback_count = 0
         self.goal_count = 0
+        self.map_updating = True
         # communinication session variables end here
         self.intersections_requested = False
         self.exploration_time = rospy.Time.now().to_sec()
+        self.last_evaluation_time = rospy.Time.now().to_sec()
         self.candidate_robots = self.frontier_robots + self.base_stations
         self.frontier_data = []
         self.interconnection_data = []
@@ -155,7 +157,6 @@ class Robot:
         self.goal_cancel_srv = rospy.ServiceProxy('/robot_{}/gvgexplore/cancel'.format(self.robot_id),
                                                   CancelExploration)
         rospy.Subscriber("/robot_{}/gvgexplore/feedback".format(self.robot_id), Pose, self.explore_feedback_callback)
-
         rospy.loginfo("Robot {} Initialized successfully!!".format(self.robot_id))
         rospy.on_shutdown(self.save_all_data)
         self.first_message_sent = False
@@ -163,7 +164,7 @@ class Robot:
         self.received_messages = []
 
     def spin(self):
-        r = rospy.Rate(1)
+        r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             # pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),self.debug_mode)
             time_to_shutdown = self.evaluate_exploration()
@@ -184,7 +185,9 @@ class Robot:
         self.start_exploration_action(p)
 
     def evaluate_exploration(self):
+        # lapsed_time = rospy.Time.now().to_sec() - self.last_evaluation_time
         its_time = False
+        # if lapsed_time > 10:  # secs
         if self.coverage:
             if self.termination_metric == pu.MAXIMUM_EXPLORATION_TIME:
                 time = rospy.Time.now().to_sec() - self.exploration_time
@@ -199,34 +202,34 @@ class Robot:
                 its_time = self.coverage.common_coverage >= self.max_common_coverage
                 if not self.robot_id:
                     pu.log_msg(self.robot_id, "Common Coverage: {}".format(self.coverage.common_coverage), 1)
+            # self.last_evaluation_time = rospy.Time.now().to_sec()
 
         return its_time
 
     def check_data_sharing_status(self):
-        elapsed_time = rospy.Time.now().to_sec() - self.last_map_update_time
-        if elapsed_time > 10:  # secs
-            if not self.intersections_requested:
-                self.intersections_requested = True
-                robot_pose = self.get_robot_pose()
-                p = Pose()
-                p.position.x = robot_pose[pu.INDEX_FOR_X]
-                p.position.y = robot_pose[pu.INDEX_FOR_Y]
-                response = self.check_intersections(IntersectionsRequest(pose=p))
-                pu.log_msg(self.robot_id, "Intersec response..{}".format(response), self.debug_mode)
-                time_stamp = rospy.Time.now().to_sec()
-                if response.result:
-                    close_devices = self.get_close_devices()
-                    if close_devices and not self.session_id:  # devices available and you're not in session
-                        self.interconnection_data.append(
-                            {'time': time_stamp, 'pose': robot_pose, 'intersection_range': response.result})
-                        pu.log_msg(self.robot_id, "Before calling intersection: {}".format(self.session_id),
-                                   self.debug_mode)
-                        self.handle_intersection(close_devices)
-                self.intersections_requested = False
-            else:
-                pu.log_msg(self.robot_id, "Last intersection request still running", self.debug_mode)
-            self.last_map_update_time = rospy.Time.now().to_sec()
-
+        # elapsed_time = rospy.Time.now().to_sec() - self.last_map_update_time
+        # if elapsed_time > 10:  # secs
+        if not self.intersections_requested:
+            self.intersections_requested = True
+            robot_pose = self.get_robot_pose()
+            p = Pose()
+            p.position.x = robot_pose[pu.INDEX_FOR_X]
+            p.position.y = robot_pose[pu.INDEX_FOR_Y]
+            response = self.check_intersections(IntersectionsRequest(pose=p))
+            pu.log_msg(self.robot_id, "Intersec response..{}".format(response), self.debug_mode)
+            time_stamp = rospy.Time.now().to_sec()
+            if response.result:
+                close_devices = self.get_close_devices()
+                if close_devices and not self.session_id:  # devices available and you're not in session
+                    self.interconnection_data.append(
+                        {'time': time_stamp, 'pose': robot_pose, 'intersection_range': response.result})
+                    pu.log_msg(self.robot_id, "Before calling intersection: {}".format(self.session_id),
+                               self.debug_mode)
+                    self.handle_intersection(close_devices)
+            self.intersections_requested = False
+        else:
+            pu.log_msg(self.robot_id, "Last intersection request still running", self.debug_mode)
+            # self.last_map_update_time = rospy.Time.now().to_sec()
 
     def handle_intersection(self, current_devices):
         self.cancel_exploration()
@@ -242,6 +245,7 @@ class Robot:
             if not response.in_session:
                 session_devices.append(rid)
                 buff_data[rid] = response.res_data
+                self.delete_data_for_id(rid)
             else:
                 pu.log_msg(self.robot_id, "Robot {} is in another session".format(rid), self.debug_mode)
         self.process_data(buff_data)
@@ -450,12 +454,14 @@ class Robot:
 
     def process_data(self, buff_data):
         counter = 0
+        self.map_updating = True
         for rid, rdata in buff_data.items():
             data_vals = rdata.data
             for scan in data_vals:
                 self.karto_pub.publish(scan)
                 counter += 1
                 sleep(0.5)
+        self.map_updating = False
         pu.log_msg(self.robot_id, "Waiting for {}".format(counter), self.debug_mode)
         # sleep(counter / 2.0)
 
@@ -464,14 +470,14 @@ class Robot:
             return SharedDataResponse(in_session=1)
         buff_data = data.req_data
         received_data = {buff_data.msg_header.sender_id: buff_data}
-        # thread = Thread(target=self.process_data, args=(received_data,))
-        # thread.start()
         sender_id = buff_data.msg_header.sender_id
         session_id = buff_data.session_id
         message_data = self.load_data_for_id(sender_id)
         self.cancel_exploration()
         self.session_id = session_id
-        self.process_data(received_data)
+        thread = Thread(target=self.process_data, args=(received_data,))
+        thread.start()
+        # self.process_data(received_data)
         buff_data = self.create_buffered_data_msg(message_data, session_id, sender_id)
         return SharedDataResponse(in_session=0, res_data=buff_data)
 
@@ -536,6 +542,8 @@ class Robot:
                     pu.log_msg(self.robot_id, "Waiting for frontier points...", self.debug_mode)
 
     def start_exploration_action(self, frontier_ridge):
+        while self.map_updating:  # wait for map to update
+            sleep(1)
         self.feedback_count = 0
         self.gvgexplore_goal_pub.publish(frontier_ridge)
 
@@ -632,6 +640,7 @@ class Robot:
         return math.atan2(dy, dx)
 
     def D(self, p, q):
+        pu.log_msg(self.robot_id, "Params: {}, {}".format(p, q), self.debug_mode)
         dx = q[0] - p[0]
         dy = q[1] - p[1]
         return math.sqrt(dx ** 2 + dy ** 2)
@@ -648,13 +657,6 @@ class Robot:
         pu.save_data(self.frontier_data,
                      'gvg/frontiers_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
                                                                   self.termination_metric, self.robot_id))
-
-        # pu.save_data(self.sent_messages,
-        #              'gvg/sent_messages_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
-        #                                                               self.termination_metric, self.robot_id))
-        # pu.save_data(self.received_messages,
-        #              'gvg/received_messages_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
-        #                                                                   self.termination_metric, self.robot_id))
         msg = String()
         msg.data = '{}'.format(self.robot_id)
         self.is_shutdown_caller = True
