@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import time
-
+import sys
 import rospy
 from std_msgs.msg import *
 from std_srvs.srv import *
@@ -130,7 +130,7 @@ class Robot:
         rospy.Subscriber('/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
         rospy.Subscriber('/robot_{}/gvgexplore/feedback'.format(self.robot_id), Pose, self.explore_feedback_callback)
-
+        self.data_size_pub = rospy.Publisher('/shared_data_size', DataSize, queue_size=10)
         for rid in self.candidate_robots:
             received_data_clt = rospy.ServiceProxy("/robot_{}/shared_data".format(rid), SharedData)
             action_points_clt = rospy.ServiceProxy("/robot_{}/auction_points".format(rid), SharedPoint)
@@ -237,8 +237,10 @@ class Robot:
         self.session_id = '{}_{}'.format(self.robot_id, rospy.Time.now().to_sec())
         session_devices = []
         buff_data = {}
+        local_data_size = 0
         for rid in current_devices:
             message_data = self.load_data_for_id(rid)
+            local_data_size += self.get_message_size(message_data)
             buffered_data = self.create_buffered_data_msg(message_data, self.session_id, rid)
             response = self.shared_data_srv_map[rid](SharedDataRequest(req_data=buffered_data))
             pu.log_msg(self.robot_id, "received feedback from robot: {}".format(response.in_session), self.debug_mode)
@@ -248,7 +250,7 @@ class Robot:
                 self.delete_data_for_id(rid)
             else:
                 pu.log_msg(self.robot_id, "Robot {} is in another session".format(rid), self.debug_mode)
-        self.process_data(buff_data)
+        self.process_data(buff_data, session_id=self.session_id, sent_data=local_data_size)
         frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(current_devices) + 1))
         frontier_points = self.parse_frontier_response(frontier_point_response)
         taken_poses = []
@@ -452,18 +454,33 @@ class Robot:
             devices.append(str(rs.robot_id))
         return set(devices)
 
-    def process_data(self, buff_data):
+    def process_data(self, buff_data, session_id=None, sent_data=0):
         counter = 0
         self.map_updating = True
         for rid, rdata in buff_data.items():
             data_vals = rdata.data
             for scan in data_vals:
                 self.karto_pub.publish(scan)
+                sent_data += sys.getsizeof(scan)
                 counter += 1
                 sleep(0.5)
         self.map_updating = False
         pu.log_msg(self.robot_id, "Waiting for {}".format(counter), self.debug_mode)
+        if session_id:
+            data_size = DataSize()
+            data_size.header.frame_id = '{}'.format(self.robot_id)
+            data_size.header.stamp = rospy.Time.now()
+            data_size.size = sent_data
+            data_size.session_id = session_id
+            self.data_size_pub.publish(data_size)
+
         # sleep(counter / 2.0)
+
+    def get_message_size(self, msgs):
+        size = 0
+        for m in msgs:
+            size += sys.getsizeof(m)
+        return size
 
     def shared_data_handler(self, data):
         if self.session_id:

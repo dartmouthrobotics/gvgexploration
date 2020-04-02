@@ -11,6 +11,7 @@ from threading import Lock
 import json
 from gvgexploration.msg import SignalStrength, RobotSignal
 from gvgexploration.srv import *
+from gvgexploration.msg import DataSize
 from time import sleep
 from nav_msgs.msg import OccupancyGrid
 import sys
@@ -108,7 +109,7 @@ class roscbt:
         self.pose_desc = {}
         self.coverage = {}
         self.connected_robots = {}
-        rospy.Service("/signal_strength", HotSpot,self.signal_strength_handler)
+        rospy.Service("/signal_strength", HotSpot, self.signal_strength_handler)
         for receiver_id in self.robot_ids:
             if str(receiver_id) in self.shared_topics:
                 topic_map = self.shared_topics[str(receiver_id)]
@@ -116,11 +117,15 @@ class roscbt:
                     for topic_name, topic_type in topic_dict.items():
                         if sender_id not in self.subsciber_map[topic_name]:
                             sub = None
-                            exec("sub=rospy.Subscriber('/roscbt/robot_{0}/{2}', {3}, self.main_callback,queue_size=10)".format(sender_id, receiver_id, topic_name, topic_type))
+                            exec(
+                                "sub=rospy.Subscriber('/roscbt/robot_{0}/{2}', {3}, self.main_callback,queue_size=10)".format(
+                                    sender_id, receiver_id, topic_name, topic_type))
                             self.subsciber_map[topic_name][sender_id] = sub
                         if receiver_id not in self.publisher_map[topic_name]:
                             pub = None
-                            exec('pub=rospy.Publisher("/robot_{}/{}", {}, queue_size=10)'.format(receiver_id,topic_name,topic_type))
+                            exec(
+                                'pub=rospy.Publisher("/robot_{}/{}", {}, queue_size=10)'.format(receiver_id, topic_name,
+                                                                                                topic_type))
                             self.publisher_map[topic_name][receiver_id] = pub
 
         # ======= pose transformations====================
@@ -135,6 +140,8 @@ class roscbt:
                  "queue_size = 100)".format(i))
 
             # self.listener = tf.TransformListener()
+        self.shared_data_size = {}
+        rospy.Subscriber('/shared_data_size', DataSize, self.shared_data_callback)
         rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         self.already_shutdown = False
         rospy.loginfo("ROSCBT Initialized Successfully!")
@@ -155,7 +162,8 @@ class roscbt:
             if r1 != r2:
                 robot2_pose = self.get_robot_pose(r2)
                 if robot1_pose and robot2_pose:
-                    d = math.floor(math.sqrt(((robot1_pose[0] - robot2_pose[0]) ** 2) + ((robot1_pose[1] - robot2_pose[1]) ** 2)))
+                    d = math.floor(
+                        math.sqrt(((robot1_pose[0] - robot2_pose[0]) ** 2) + ((robot1_pose[1] - robot2_pose[1]) ** 2)))
                     ss = self.compute_signal_strength(d)
                     if ss >= MIN_SIGNAL_STRENGTH:
                         robot_signal = RobotSignal()
@@ -166,6 +174,9 @@ class roscbt:
                     signal_strength.header.frame_id = 'roscbt'
                     signal_strength.signals = rsignals
         return HotSpotResponse(hot_spots=signal_strength)
+
+    def shared_data_callback(self, data):
+        self.shared_data_size[data.header.stamp.to_sec()] = data.size
 
     def main_callback(self, data):
         sender_id = data.msg_header.sender_id
@@ -192,13 +203,15 @@ class roscbt:
                  'receiver_id': receiver_id, 'session_id': data.session_id, 'time_diff': time_diff,
                  'topic': topic})
             data_size = sys.getsizeof(data)
+            self.shared_data_size[current_time] = data_size
             if combn in self.sent_data:
                 self.sent_data[combn][current_time] = data_size
             else:
                 self.sent_data[combn] = {current_time: data_size}
             rospy.logerr("Data sent from {} to {} on topic: {}".format(sender_id, receiver_id, topic))
         else:
-            rospy.logerr("Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
+            rospy.logerr(
+                "Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
 
     # method to check the constraints for robot communication
     def can_communicate(self, robot_id1, robot_id2):
@@ -348,9 +361,9 @@ class roscbt:
         save_data(self.exploration_data,
                   'gvg/exploration_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
                                                               self.termination_metric))
-        # save_data(self.received_messages,
-        #           'gvg/roscbt_data_received_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
-        #                                                                self.termination_metric))
+        save_data(self.shared_data_size,
+                  'gvg/roscbt_data_shared_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+                                                                     self.termination_metric))
         # save_data(self.sent_messages,
         #           'gvg/roscbt_data_sent_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
         #                                                            self.termination_metric))
