@@ -124,7 +124,7 @@ class Graph:
         if not map_msg:
             map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
         self.compute_graph(map_msg)
-        start_time = time.time()
+        start_time = rospy.Time.now().to_sec()
         self.compute_new_information()
         ppoints = []
         selected_leaves = []
@@ -136,7 +136,7 @@ class Graph:
             del self.new_information[best_edge]
             if len(selected_leaves) == count:
                 break
-        now = time.time()
+        now = rospy.Time.now().to_sec()
         t = (now - start_time)
         self.performance_data.append(
             {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
@@ -224,11 +224,11 @@ class Graph:
         return chosen_edge
 
     def compute_graph(self, occ_grid):
-        start_time = time.time()
+        start_time = rospy.Time.now().to_sec()
         self.get_image_desc(occ_grid)
         try:
             self.compute_hallway_points()
-            now = time.time()
+            now = rospy.Time.now().to_sec()
             t = now - start_time
             self.performance_data.append(
                 {'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
@@ -260,7 +260,7 @@ class Graph:
                     self.obstacles[scaled_pose] = OCCUPIED
 
     def compute_intersections(self, pose):
-        start = time.time()
+        start = rospy.Time.now().to_sec()
         intersecs = []
         close_edge = []
         robot_pose = pu.scale_up(pose)
@@ -288,10 +288,9 @@ class Graph:
                     if not self.plot_intersection_active and intersecs:
                         self.plot_intersections(None, close_edge, intersecs, robot_pose)
 
-                now = time.time()
-                t = (now - start)
-                self.performance_data.append(
-                    {'time': rospy.Time.now().to_sec(), 'type': 1, 'robot_id': self.robot_id, 'computational_time': t})
+        now = rospy.Time.now().to_sec()
+        t = (now - start)
+        self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 1, 'robot_id': self.robot_id, 'computational_time': t})
         return close_edge, intersecs
 
     def process_decision(self, vertex_descriptions, ridge, robot_pose):

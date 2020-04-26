@@ -33,11 +33,11 @@ def save_data(data, file_name):
     if not path.exists(file_name):
         f = open(file_name, "wb+")
         f.close()
-    else:
-        saved_data = load_data_from_file(file_name)
-    saved_data += data
+    # else:
+    #     saved_data = load_data_from_file(file_name)
+    # saved_data += data
     with open(file_name, 'wb') as fp:
-        pickle.dump(saved_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(data, fp, protocol=pickle.HIGHEST_PROTOCOL)
         fp.close()
 
 

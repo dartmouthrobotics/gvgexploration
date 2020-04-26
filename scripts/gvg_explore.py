@@ -67,6 +67,7 @@ class GVGExplore:
         self.robot_ranges = []
         self.publisher_map = {}
         self.close_devices = []
+        self.explore_computation = []
         self.is_exploring = False
         self.moving_to_frontier = False
         self.is_processing_graph = False
@@ -86,7 +87,7 @@ class GVGExplore:
         self.lidar_fov = rospy.get_param("~lidar_fov")
         self.slope_bias = rospy.get_param("~slope_bias") * SCALE
         self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id)) * SCALE
-        self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias") #* SCALE
+        self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias")  # * SCALE
         self.target_distance = rospy.get_param('~target_distance')
         self.target_angle = rospy.get_param('~target_angle')
         self.robot_count = rospy.get_param("~robot_count")
@@ -155,6 +156,7 @@ class GVGExplore:
             self.moving_to_frontier = False
             while self.cancel_request:
                 sleep(1)
+
     def initial_action_handler(self, ridge):
         rospy.logerr("Robot {}: GVGExplore received new goal".format(self.robot_id))
         ridge_dict = self.get_edge(ridge)
@@ -173,11 +175,13 @@ class GVGExplore:
         self.start_gvg_exploration(edge)
 
     def start_gvg_exploration(self, edge):
-        current_edge=edge
+        current_edge = edge
         while not rospy.is_shutdown():
             current_edge = self.run_other_dfs(current_edge)
+            self.fetch_new_graph()
             if self.cancel_request:
                 break
+            current_edge = (current_edge[1], current_edge[0])
             sleep(1)
         self.cancel_request = False
 
@@ -189,6 +193,7 @@ class GVGExplore:
             sleep(1)
 
     def run_other_dfs(self, edge):
+        actual_visited_nodes = {}
         visited_nodes = {}
         node_id = self.get_id()
         parent_nodes = {node_id: edge[0]}
@@ -208,19 +213,23 @@ class GVGExplore:
             if parent[u]:
                 angle = pu.theta(parent_nodes[ancestor_id], leave_node)
             self.move_to_frontier(leave_node, theta=angle)
-            pose= self.get_robot_pose()
-            scaled_pose = pu.scale_up(pose)
+            start_time = rospy.Time.now().to_sec()
+            pose = self.get_robot_pose()
             visited_nodes[leave_node] = None
             self.fetch_new_graph()
-            self.localize_parent_nodes(parent_nodes)
+            self.localize_parent_nodes(parent_nodes, actual_visited_nodes)
             ancestor_node = None
             if parent[u]:
                 ancestor_node = parent_nodes[parent[u]]
             leave_node = self.localize_leaf_node(ancestor_node, parent_nodes[u], stack_nodes[u])
+            end_time = rospy.Time.now().to_sec()
+            gvg_time = end_time - start_time
+            self.explore_computation.append({'time': start_time, 'gvg_compute': gvg_time})
             if leave_node:
                 next_leaves = self.get_leaves(leave_node, parent_nodes[u])
                 for leaf, lp in next_leaves.items():
-                    if leaf not in visited_nodes and self.is_near_unexplored_area(leaf, lp):
+                    if leaf not in visited_nodes and leaf not in actual_visited_nodes and self.is_near_unexplored_area(
+                            leaf, lp):
                         v_id = self.get_id()
                         S.append(v_id)
                         parent[v_id] = u
@@ -272,7 +281,7 @@ class GVGExplore:
             is_visited = True
         return is_visited
 
-    def localize_parent_nodes(self, parent_nodes):
+    def localize_parent_nodes(self, parent_nodes, actual_visited_nodes):
         all_nodes = list(self.adj_list)
         node_keys = list(parent_nodes)
         node_dist = {}
@@ -287,10 +296,11 @@ class GVGExplore:
             n_dists = node_dist[k].keys()
             new_n = node_dist[k][min(n_dists)]
             parent_nodes[k] = new_n
+            actual_visited_nodes[new_n] = None
 
     def localize_leaf_node(self, ancestor_node, parent_node, leaf_node):
         node_dists = {}
-        visited = []
+        visited = [parent_node]
         if ancestor_node:
             visited = [ancestor_node]
             parent = {ancestor_node: None}
@@ -418,6 +428,7 @@ class GVGExplore:
         return count
 
     def is_near_unexplored_area(self, node, parent_node):
+        start = time.time()
         unknown_neighborhood = 0
         point = sg.Point(node[INDEX_FOR_X], node[INDEX_FOR_Y])
         circle = point.buffer(self.lidar_scan_radius)
@@ -431,7 +442,7 @@ class GVGExplore:
                     unknown_neighborhood += 1
         # return unknown_neighborhood > self.lidar_scan_radius
         unknown_area_close = True
-        obs_dist={}
+        obs_dist = {}
         if unknown_neighborhood:
             v1 = pu.get_vector(parent_node, node)
             for ob in region_obstacles:
@@ -443,6 +454,8 @@ class GVGExplore:
                     break
         else:
             unknown_area_close = False
+        diff = time.time() - start
+        # rospy.logerr("Time consumed: {}".format(diff))
         return unknown_area_close
 
     def create_adjlist(self):
@@ -497,12 +510,12 @@ class GVGExplore:
             goal_status = data.status_list[0]
             # if goal_status.goal_id.id:
             #     if goal_status.goal_id.id == id_0:
-            #         if goal_status.status == ACTIVE:
+            #         if goal_status.status == pu.ACTIVE:
             #             now = rospy.Time.now().secs
             #             if (now - self.start_time) > 30:  # you can only spend upto 10 sec in same position
             #                 pose = self.get_robot_pose()
-            #                 if D(self.prev_pose, pose) < 0.5:
-            #                     rospy.logerr("Paused for too long")
+            #                 if pu.D(self.prev_pose, pose) < 0.5:
+            #                     pu.log_msg(self.robot_id, "Paused for too long", self.debug_mode)
             #                     self.has_arrived = True
             #                     self.moving_to_frontier = False
             #                 self.prev_pose = pose
@@ -517,20 +530,23 @@ class GVGExplore:
         id_0 = "robot_{}_{}_explore".format(self.robot_id, self.goal_count - 1)
         if data.status:
             if data.status.status == pu.ABORTED:
+                pu.log_msg(self.robot_id, "Motion failed", self.debug_mode)
                 # if data.status.goal_id.id == id_0:
+                self.has_arrived = True
                 if self.moving_to_frontier:
                     self.moving_to_frontier = False
-                    self.has_arrived = True
+                self.current_point = self.get_robot_pose()
+
             elif data.status.status == pu.SUCCEEDED:
                 # if data.status.goal_id.id == id_0:
                 self.has_arrived = True
                 if self.moving_to_frontier:
                     self.moving_to_frontier = False
-                if not self.prev_explored:
-                    self.prev_explored = self.current_point
-                self.traveled_distance.append({'time': rospy.Time.now().to_sec(),
-                                               'traved_distance': pu.D(self.prev_explored, self.current_point)})
+            if not self.prev_explored:
                 self.prev_explored = self.current_point
+            self.traveled_distance.append({'time': rospy.Time.now().to_sec(),
+                                           'traved_distance': pu.D(self.prev_explored, self.current_point)})
+            self.prev_explored = self.current_point
 
     # def chosen_point_callback(self, data):
     #     self.received_choices[(data.x, data.y)] = data
@@ -669,15 +685,21 @@ class GVGExplore:
 
     def shutdown_callback(self, msg):
         if not self.already_shutdown:
+            self.save_all_data()
             rospy.signal_shutdown('GVG Explore: Shutdown command received!')
             pass
 
     def save_all_data(self):
         pu.save_data(self.traveled_distance,
-                     'gvgexplore/traveled_distance_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count,
-                                                                                 self.run,
-                                                                                 self.termination_metric,
-                                                                                 self.robot_id))
+                     'gvg/traveled_distance_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count,
+                                                                          self.run,
+                                                                          self.termination_metric,
+                                                                          self.robot_id))
+        pu.save_data(self.explore_computation,
+                     'gvg/explore_computation_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count,
+                                                                            self.run,
+                                                                            self.termination_metric,
+                                                                            self.robot_id))
 
 
 if __name__ == "__main__":

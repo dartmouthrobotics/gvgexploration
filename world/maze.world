@@ -34,7 +34,7 @@ floorplan
   name "tutorial"
   bitmap "offices.png"
   size [ 79.7 29.1 2.0 ]
-  pose [  14.85  12.55 0.0 0.0 ]
+  pose [  8.85  12.55 0.0 0.0 ]
 )
 
 pioneer3at

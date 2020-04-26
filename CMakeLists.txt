@@ -66,6 +66,7 @@ add_message_files(
    Coverage.msg
    Ridge.msg
    MessageHeader.msg
+   DataSize.msg
  )
 
 ## Generate services in the 'action' folder
