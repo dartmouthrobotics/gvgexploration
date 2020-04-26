@@ -112,10 +112,8 @@ class Robot:
         self.robot_count = rospy.get_param("~robot_count")
         self.debug_mode = rospy.get_param("~debug_mode")
 
-        self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,
-                                           self.shared_data_handler)
-        self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,
-                                                self.shared_point_handler)
+        self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,self.shared_data_handler)
+        self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,self.shared_point_handler)
         self.alloc_point_srv = rospy.Service("/robot_{}/allocated_point".format(self.robot_id), SharedFrontier,
                                              self.shared_frontier_handler)
         # rospy.Subscriber('/robot_{}/allocated_point'.format(self.robot_id), Frontier, self.allocated_point_callback)
@@ -166,7 +164,7 @@ class Robot:
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
-            # pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),self.debug_mode)
+            pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),self.debug_mode)
             time_to_shutdown = self.evaluate_exploration()
             # if time_to_shutdown:
             #     self.cancel_exploration()
@@ -313,8 +311,9 @@ class Robot:
         return ridge
 
     def explore_feedback_callback(self, data):
-        self.feedback_count += 1
-        if self.feedback_count == 1:
+        # self.feedback_count += 1
+        # if self.feedback_count == 1:
+        if not self.is_exploring:
             self.is_exploring = True
             self.session_id = None
             self.intersections_requested = False
