@@ -58,7 +58,7 @@ class Robot:
         self.shared_data_srv_map = {}
         self.shared_point_srv_map = {}
         self.auction_feedback_pub = {}
-        self.initial_data_count = 0
+        self.initial_data=set()
         self.is_exploring = False
         self.exploration_started = False
         self.karto_messages = {}
@@ -201,7 +201,6 @@ class Robot:
                 if not self.robot_id:
                     pu.log_msg(self.robot_id, "Common Coverage: {}".format(self.coverage.common_coverage), 1)
             # self.last_evaluation_time = rospy.Time.now().to_sec()
-
         return its_time
 
     def check_data_sharing_status(self):
@@ -417,8 +416,8 @@ class Robot:
             for rid in self.candidate_robots:
                 self.add_to_file(rid, [data])
             if self.is_initial_data_sharing:
-                self.is_initial_data_sharing = False
                 self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
+                self.is_initial_data_sharing = False
 
     def push_messages_to_receiver(self, receiver_ids, session_id, is_alert=0, initiator=0):
         for receiver_id in receiver_ids:
@@ -541,10 +540,11 @@ class Robot:
         sender_id = buff_data.msg_header.header.frame_id
         self.process_data({sender_id: buff_data})
         # ============ used during initialization ============
-        if self.initial_receipt and not buff_data.session_id:
+        if self.initial_receipt:
             # self.wait_for_updates()
-            self.initial_data_count += 1
-            if self.initial_data_count == len(self.candidate_robots):
+            self.initial_data.add(sender_id)
+            rospy.logerr("Counts: {}".format(len(self.initial_data)))
+            if len(self.initial_data) == len(self.candidate_robots):
                 self.initial_receipt = False
                 if self.i_have_least_id():
                     self.is_sender = True
@@ -605,17 +605,12 @@ class Robot:
         robot_pose = None
         while not robot_pose:
             try:
-                self.listener.waitForTransform("robot_{}/map".format(self.robot_id),
-                                               "robot_{}/base_link".format(self.robot_id), rospy.Time(),
-                                               rospy.Duration(4.0))
-                (robot_loc_val, rot) = self.listener.lookupTransform("robot_{}/map".format(self.robot_id),
-                                                                     "robot_{}/base_link".format(self.robot_id),
-                                                                     rospy.Time(0))
+                self.listener.waitForTransform("robot_{}/map".format(self.robot_id),"robot_{}/base_link".format(self.robot_id), rospy.Time(),rospy.Duration(4.0))
+                (robot_loc_val, rot) = self.listener.lookupTransform("robot_{}/map".format(self.robot_id),"robot_{}/base_link".format(self.robot_id),rospy.Time(0))
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
                 sleep(1)
             except:
                 pass
-
         return robot_pose
 
     def cancel_exploration(self):
