@@ -232,33 +232,7 @@ class roscbt:
     def compute_performance(self):
         self.lock.acquire()
         try:
-            current_time = rospy.Time.now().to_sec()
             data = {'start_time': rospy.Time.now().to_sec()}
-
-            shared_data = []
-            comm_ranges = []
-            distances = []
-            for sid in self.robot_ids:
-                for rid in self.robot_ids:
-                    if sid != rid:
-                        combn = (sid, rid)
-                        if combn in self.sent_data:
-                            shared_data += [v for t, v in self.sent_data[combn].items() if
-                                            self.lasttime_before_performance_calc < t <= current_time]
-
-                        if combn in self.distances:
-                            comm_ranges += [v for t, v in self.distances[combn].items() if
-                                            self.lasttime_before_performance_calc < t <= current_time]
-
-            if not comm_ranges:
-                data['comm_ranges'] = [-1, -1]
-            else:
-                data['comm_ranges'] = [np.nanmean(comm_ranges), np.nanvar(comm_ranges)]
-            if not shared_data:
-                data['shared_data'] = [-1, -1]
-            else:
-                data['shared_data'] = [np.nanmean(shared_data), np.nanvar(shared_data)]
-
             if not self.coverage:
                 data['coverage'] = [-1, -1]
             else:
@@ -270,6 +244,7 @@ class roscbt:
                 data['connected'] = [np.nanmean(self.connected_robots), np.nanvar(self.connected_robots)]
 
             robot_poses = copy.deepcopy(self.robot_pose)
+            distances = []
             for rid, p in robot_poses.items():
                 d = 0
                 if rid in self.prev_poses:
@@ -278,8 +253,6 @@ class roscbt:
             data['distance'] = np.nansum(distances)
             self.prev_poses = robot_poses
             self.exploration_data.append(data)
-            self.sent_data.clear()
-            self.distances.clear()
             del self.coverage[:]
             del self.connected_robots[:]
             self.lasttime_before_performance_calc = rospy.Time.now().to_sec()

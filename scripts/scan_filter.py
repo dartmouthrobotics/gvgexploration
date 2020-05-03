@@ -62,7 +62,6 @@ class ScanFilter:
             pose_msg (Odometry)
             scan_msg (LaserScan)
         """
-
         # If got the pose of other robots, then the scan message can be processed.
         if len(self.all_poses) == self.robot_count - 1:
             robot_pose = (pose_msg.pose.pose.position.x, pose_msg.pose.pose.position.y, (pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y, pose_msg.pose.pose.orientation.z,pose_msg.pose.pose.orientation.w))
