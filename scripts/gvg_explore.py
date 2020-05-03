@@ -214,7 +214,6 @@ class GVGExplore:
                 angle = pu.theta(parent_nodes[ancestor_id], leave_node)
             self.move_to_frontier(leave_node, theta=angle)
             start_time = rospy.Time.now().to_sec()
-            pose = self.get_robot_pose()
             visited_nodes[leave_node] = None
             self.fetch_new_graph()
             self.localize_parent_nodes(parent_nodes, actual_visited_nodes)
