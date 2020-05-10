@@ -117,14 +117,9 @@ class Graph:
         return is_same
 
     def frontier_point_handler(self, request):
-        self.lock.acquire()
         count = request.count
-        if self.enough_delay():
-            map_msg = self.latest_map
-            if not map_msg:
-                map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
-            self.compute_graph(map_msg)
-            self.update_time()
+        if not self.edges or self.enough_delay():
+            self.generate_graph()
         start_time = rospy.Time.now().to_sec()
         self.compute_new_information()
         ppoints = []
@@ -139,23 +134,16 @@ class Graph:
                 break
         now = rospy.Time.now().to_sec()
         t = (now - start_time)
-        self.performance_data.append(
-            {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
+        self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
         if self.debug_mode:
             if not self.plot_data_active:
                 self.plot_data(ppoints, is_initial=True)
-        self.lock.release()
         return FrontierPointResponse(ridges=selected_leaves)
 
     def intersection_handler(self, data):
-        self.lock.acquire()
         pose_data = data.pose
-        if not self.edges:
-            map_msg = self.latest_map
-            if not map_msg:
-                map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
-            self.compute_graph(map_msg)
-            self.update_time()
+        if not self.edges or self.enough_delay():
+            self.generate_graph()
         robot_pose = [0.0] * 2
         robot_pose[INDEX_FOR_X] = pose_data.position.x
         robot_pose[INDEX_FOR_Y] = pose_data.position.y
@@ -166,21 +154,13 @@ class Graph:
             self.last_intersection = intersec
             pu.log_msg(self.robot_id, "Intersection: {}".format(intersecs), self.debug_mode)
             result = pu.D(pu.scale_down(intersec[0][1]), pu.scale_down(intersec[1][0]))
-        self.lock.release()
         return IntersectionsResponse(result=result)
 
     def fetch_graph_handler(self, data):
-        self.lock.acquire()
         robot_pose = (data.pose.position.x, data.pose.position.y)
-        if self.enough_delay():
-            map_msg = self.latest_map
-            if not map_msg:
-                map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
-            self.compute_graph(map_msg)
-            self.update_time()
+        if not self.edges or self.enough_delay():
+            self.generate_graph()
         edgelist = self.create_edge_list(robot_pose)
-        self.last_graph_update_time = rospy.Time.now().to_sec()
-        self.lock.release()
         return FetchGraphResponse(edgelist=edgelist)
 
     def update_time(self):
@@ -188,6 +168,15 @@ class Graph:
 
     def enough_delay(self):
         return rospy.Time.now().to_sec() - self.last_graph_update_time > 20  # updated last 20 secs
+
+    def generate_graph(self):
+        self.lock.acquire()
+        map_msg = self.latest_map
+        if not map_msg:
+            map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
+        self.compute_graph(map_msg)
+        self.update_time()
+        self.lock.release()
 
     def create_edge_list(self, robot_pose):
         alledges = list(self.edges)
@@ -422,15 +411,12 @@ class Graph:
         return intersec
 
     def compute_hallway_points(self):
-        # self.lock.acquire()
         obstacles = list(self.obstacles)
         if obstacles:
             vor = Voronoi(obstacles)
             vertices = vor.vertices
             ridge_vertices = vor.ridge_vertices
             ridge_points = vor.ridge_points
-            # self.old_edges = copy.deepcopy(self.edges)
-            # self.old_adj_list = copy.deepcopy(self.adj_list)
             self.edges.clear()
             for i in range(len(ridge_vertices)):
                 ridge_vertex = ridge_vertices[i]
@@ -444,8 +430,7 @@ class Graph:
                 p1 = tuple(p1)
                 p2 = tuple(p2)
                 e = (p1, p2)
-                if self.is_free(p1) and self.is_free(
-                        p2):  # and not self.already_exists(p1) and not self.already_exists(p2):  # self.points_within_range(p1, p2) and
+                if self.is_free(p1) and self.is_free(p2):
                     q1 = obstacles[ridge_point[0]]
                     q2 = obstacles[ridge_point[1]]
                     o = (tuple(q1), tuple(q2))
@@ -454,9 +439,6 @@ class Graph:
             self.get_adjacency_list(self.edges)
             self.connect_subtrees()
             self.merge_similar_edges()
-            # if self.old_adj_list and self.adj_list:
-            #     self.merge_graphs()
-        # self.lock.release()
 
     def merge_graphs(self):
         if self.old_edges and self.edges:
