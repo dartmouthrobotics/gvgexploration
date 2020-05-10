@@ -82,8 +82,9 @@ class Graph:
 
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
         rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
-        rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_graph_handler)
+        # rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_graph_handler)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_callback)
+        self.edge_pub = rospy.Publisher('/robot_{}/edge_list'.format(self.robot_id), EdgeList, queue_size=1)
         rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         self.already_shutdown = False
         self.robot_pose = None
@@ -134,7 +135,8 @@ class Graph:
                 break
         now = rospy.Time.now().to_sec()
         t = (now - start_time)
-        self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
+        self.performance_data.append(
+            {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
         if self.debug_mode:
             if not self.plot_data_active:
                 self.plot_data(ppoints, is_initial=True)
@@ -156,18 +158,16 @@ class Graph:
             result = pu.D(pu.scale_down(intersec[0][1]), pu.scale_down(intersec[1][0]))
         return IntersectionsResponse(result=result)
 
-    def fetch_graph_handler(self, data):
-        robot_pose = (data.pose.position.x, data.pose.position.y)
-        if not self.edges or self.enough_delay():
-            self.generate_graph()
-        edgelist = self.create_edge_list(robot_pose)
-        return FetchGraphResponse(edgelist=edgelist)
-
-    def update_time(self):
-        self.last_graph_update_time = rospy.Time.now().to_sec()
+    # def fetch_graph_handler(self, data):
+    #     robot_pose = (data.pose.position.x, data.pose.position.y)
+    #     if not self.edges or self.enough_delay():
+    #         self.generate_graph()
+    #     edgelist = self.create_edge_list(robot_pose)
+    #
+    #     return FetchGraphResponse(edgelist=edgelist)
 
     def enough_delay(self):
-        return rospy.Time.now().to_sec() - self.last_graph_update_time > 20  # updated last 20 secs
+        return rospy.Time.now().to_sec() - self.last_graph_update_time > 30  # updated last 20 secs
 
     def generate_graph(self):
         self.lock.acquire()
@@ -175,7 +175,11 @@ class Graph:
         if not map_msg:
             map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
         self.compute_graph(map_msg)
-        self.update_time()
+        pose = self.get_robot_pose()
+        robot_pose = pu.scale_up(pose)
+        edgelist = self.create_edge_list(robot_pose)
+        self.edge_pub.publish(edgelist)
+        self.last_graph_update_time = rospy.Time.now().to_sec()
         self.lock.release()
 
     def create_edge_list(self, robot_pose):
