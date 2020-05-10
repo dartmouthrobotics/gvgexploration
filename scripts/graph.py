@@ -76,15 +76,13 @@ class Graph:
         self.min_edge_length = rospy.get_param("~min_edge_length".format(self.robot_id)) * pu.SCALE
         self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius".format(self.robot_id)) * pu.SCALE
         self.lidar_fov = rospy.get_param("~lidar_fov".format(self.robot_id))
-        self.slope_bias = rospy.get_param("~slope_bias".format(self.robot_id)) #* SCALE
-        self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id)) #* pu.SCALE
+        self.slope_bias = rospy.get_param("~slope_bias".format(self.robot_id))
+        self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id))
         self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias".format(self.robot_id))
 
-        self.edge_pub = rospy.Publisher("/robot_{}/edge_list".format(self.robot_id), EdgeList, queue_size=10)
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
         rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
         rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_graph_handler)
-        self.move_to_stop = rospy.ServiceProxy('/robot_{}/Stop'.format(self.robot_id), Trigger)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_callback)
         rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         self.already_shutdown = False
@@ -138,8 +136,7 @@ class Graph:
                 break
         now = rospy.Time.now().to_sec()
         t = (now - start_time)
-        self.performance_data.append(
-            {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
+        self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
         if self.debug_mode:
             if not self.plot_data_active:
                 self.plot_data(ppoints, is_initial=True)
@@ -149,10 +146,11 @@ class Graph:
     def intersection_handler(self, data):
         self.lock.acquire()
         pose_data = data.pose
-        map_msg = self.latest_map
-        if not map_msg:
-            map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
-        self.compute_graph(map_msg)
+        if not self.edges:
+            map_msg = self.latest_map
+            if not map_msg:
+                map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
+            self.compute_graph(map_msg)
         robot_pose = [0.0] * 2
         robot_pose[INDEX_FOR_X] = pose_data.position.x
         robot_pose[INDEX_FOR_Y] = pose_data.position.y
@@ -160,7 +158,6 @@ class Graph:
         close_edge, intersecs = self.compute_intersections(robot_pose)
         if intersecs:
             intersec = intersecs[0]
-            # if not self.is_same_intersection(intersec, robot_pose):
             self.last_intersection = intersec
             pu.log_msg(self.robot_id, "Intersection: {}".format(intersecs), self.debug_mode)
             result = pu.D(pu.scale_down(intersec[0][1]), pu.scale_down(intersec[1][0]))
@@ -196,8 +193,6 @@ class Graph:
                     edge_dists[(e, obs)] = d
         if edge_dists:
             new_close_ridge = min(edge_dists, key=edge_dists.get)
-            # if self.prev_ridge and self.prev_ridge[0] == new_close_ridge[0]:
-            #     new_close_ridge = ((self.prev_ridge[0][1], self.prev_ridge[0][0]), self.prev_ridge[1])
         else:
             new_close_ridge = ((self.prev_ridge[0][1], self.prev_ridge[0][0]), self.prev_ridge[1])
         new_closest_ridge = self.create_ridge(new_close_ridge)

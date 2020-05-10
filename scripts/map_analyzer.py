@@ -66,8 +66,7 @@ class MapAnalyzer:
             explored_area = len(self.all_explored_points) * 0.25  # scale of the map in rviz
             cov_ratio = explored_area / self.total_free_area
             common_coverage = common_area_size / self.total_free_area
-            rospy.logerr("Total points: {}, explored area: {}, common area: {}".format(self.total_free_area, cov_ratio,
-                                                                                       common_coverage))
+            rospy.logerr("Total points: {}, explored area: {}, common area: {}".format(self.total_free_area, cov_ratio,common_coverage))
             cov_msg = Coverage()
             cov_msg.header.stamp = rospy.Time.now()
             cov_msg.coverage = cov_ratio
