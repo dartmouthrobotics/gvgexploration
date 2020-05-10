@@ -165,22 +165,10 @@ class Robot:
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),self.debug_mode)
-            time_to_shutdown = self.evaluate_exploration()
-            # if time_to_shutdown:
-            #     self.cancel_exploration()
-            #     rospy.signal_shutdown('Exploration complete!')
-            # else:
             if self.is_exploring:
                 self.check_data_sharing_status()
             r.sleep()
 
-    def resume_exploration(self):
-        pose = self.get_robot_pose()
-        p = Pose()
-        p.position.x = pose[pu.INDEX_FOR_X]
-        p.position.y = pose[pu.INDEX_FOR_Y]
-        self.frontier_ridge = p
-        self.start_exploration_action(p)
 
     def evaluate_exploration(self):
         # lapsed_time = rospy.Time.now().to_sec() - self.last_evaluation_time
@@ -204,8 +192,6 @@ class Robot:
         return its_time
 
     def check_data_sharing_status(self):
-        # elapsed_time = rospy.Time.now().to_sec() - self.last_map_update_time
-        # if elapsed_time > 10:  # secs
         if not self.intersections_requested:
             self.intersections_requested = True
             robot_pose = self.get_robot_pose()
