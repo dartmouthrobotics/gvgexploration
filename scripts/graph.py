@@ -91,6 +91,7 @@ class Graph:
         # edges
         self.deleted_nodes = {}
         self.deleted_obstacles = {}
+        self.last_graph_update_time = rospy.Time.now().to_sec()
         rospy.loginfo('Robot {}: Successfully created graph node'.format(self.robot_id))
 
     def spin(self):
@@ -118,10 +119,12 @@ class Graph:
     def frontier_point_handler(self, request):
         self.lock.acquire()
         count = request.count
-        map_msg = self.latest_map
-        if not map_msg:
-            map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
-        self.compute_graph(map_msg)
+        if self.enough_delay():
+            map_msg = self.latest_map
+            if not map_msg:
+                map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
+            self.compute_graph(map_msg)
+            self.update_time()
         start_time = rospy.Time.now().to_sec()
         self.compute_new_information()
         ppoints = []
@@ -136,7 +139,8 @@ class Graph:
                 break
         now = rospy.Time.now().to_sec()
         t = (now - start_time)
-        self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
+        self.performance_data.append(
+            {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
         if self.debug_mode:
             if not self.plot_data_active:
                 self.plot_data(ppoints, is_initial=True)
@@ -151,6 +155,7 @@ class Graph:
             if not map_msg:
                 map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
             self.compute_graph(map_msg)
+            self.update_time()
         robot_pose = [0.0] * 2
         robot_pose[INDEX_FOR_X] = pose_data.position.x
         robot_pose[INDEX_FOR_Y] = pose_data.position.y
@@ -167,13 +172,22 @@ class Graph:
     def fetch_graph_handler(self, data):
         self.lock.acquire()
         robot_pose = (data.pose.position.x, data.pose.position.y)
-        map_msg = self.latest_map
-        if not map_msg:
-            map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
-        self.compute_graph(map_msg)
+        if self.enough_delay():
+            map_msg = self.latest_map
+            if not map_msg:
+                map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
+            self.compute_graph(map_msg)
+            self.update_time()
         edgelist = self.create_edge_list(robot_pose)
+        self.last_graph_update_time = rospy.Time.now().to_sec()
         self.lock.release()
         return FetchGraphResponse(edgelist=edgelist)
+
+    def update_time(self):
+        self.last_graph_update_time = rospy.Time.now().to_sec()
+
+    def enough_delay(self):
+        return rospy.Time.now().to_sec() - self.last_graph_update_time > 20  # updated last 20 secs
 
     def create_edge_list(self, robot_pose):
         alledges = list(self.edges)
@@ -285,7 +299,8 @@ class Graph:
 
         now = rospy.Time.now().to_sec()
         t = (now - start)
-        self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 1, 'robot_id': self.robot_id, 'computational_time': t})
+        self.performance_data.append(
+            {'time': rospy.Time.now().to_sec(), 'type': 1, 'robot_id': self.robot_id, 'computational_time': t})
         return close_edge, intersecs
 
     def process_decision(self, vertex_descriptions, ridge, robot_pose):
