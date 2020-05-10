@@ -25,6 +25,14 @@ class MapAnalyzer:
         self.all_coverage_data = []
         self.all_explored_points = set()
         self.all_maps = {}
+        self.robot_maps = {}
+
+        for i in range(self.robot_count):
+            exec("def a_{0}(self, data): self.robot_maps[{0}] = data".format(i))
+            exec("setattr(MapAnalyzer, 'callback_map_teammate{0}', a_{0})".format(i))
+            exec("rospy.Subscriber('/robot_{0}/map', OccupancyGrid, self.callback_map_teammate{0}, "
+                 "queue_size = 10)".format(i))
+
         self.coverage_pub = rospy.Publisher("/coverage", Coverage, queue_size=10)
         rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         rospy.on_shutdown(self.save_all_data)
@@ -37,37 +45,38 @@ class MapAnalyzer:
 
     def publish_coverage(self):
         common_points = []
-        map0 = rospy.wait_for_message('/robot_0/map', OccupancyGrid)
-        origin_x0 = map0.info.origin.position.x
-        origin_y0 = map0.info.origin.position.y
-        for rid in range(self.robot_count):
-            map = rospy.wait_for_message('/robot_{}/map'.format(rid), OccupancyGrid)
-            origin_pos = map.info.origin.position
-            origin_x = origin_pos.x + (origin_pos.x - origin_x0)
-            origin_y = origin_pos.y + (origin_pos.y - origin_y0)
-            cov_set, unexplored_set = self.get_map_description(map, rid, origin_x, origin_y)
-            if rid not in self.all_maps:
-                self.all_maps[rid] = cov_set
-            else:
-                self.all_maps[rid] = self.all_maps[rid].union(cov_set)
-            common_points.append(self.all_maps[rid])
-            self.all_explored_points = self.all_explored_points.union(cov_set)
-        common_area = set.intersection(*common_points)
-        common_area_size = len(common_area) * 0.25
-        explored_area = len(self.all_explored_points) * 0.25  # scale of the map in rviz
-        cov_ratio = explored_area / self.total_free_area
-        common_coverage = common_area_size / self.total_free_area
-        rospy.logerr("Total points: {}, explored area: {}, common area: {}".format(self.total_free_area, cov_ratio,
-                                                                                   common_coverage))
-        cov_msg = Coverage()
-        cov_msg.header.stamp = rospy.Time.now()
-        cov_msg.coverage = cov_ratio
-        cov_msg.expected_coverage = self.free_area_ratio
-        cov_msg.common_coverage = common_coverage
-        self.coverage_pub.publish(cov_msg)
-        self.all_coverage_data.append(
-            {'time': rospy.Time.now().to_sec(), 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
-             'expected_coverage': self.free_area_ratio})
+        if len(self.robot_maps) == self.robot_count:
+            map0 = self.robot_maps[0]
+            origin_x0 = map0.info.origin.position.x
+            origin_y0 = map0.info.origin.position.y
+            for rid in range(self.robot_count):
+                map = self.robot_maps[rid]  # rospy.wait_for_message('/robot_{}/map'.format(rid), OccupancyGrid)
+                origin_pos = map.info.origin.position
+                origin_x = origin_pos.x - (origin_pos.x - origin_x0)
+                origin_y = origin_pos.y - (origin_pos.y - origin_y0)
+                cov_set, unexplored_set = self.get_map_description(map, rid, origin_x, origin_y)
+                if rid not in self.all_maps:
+                    self.all_maps[rid] = cov_set
+                else:
+                    self.all_maps[rid] = self.all_maps[rid].union(cov_set)
+                common_points.append(self.all_maps[rid])
+                self.all_explored_points = self.all_explored_points.union(cov_set)
+            common_area = set.intersection(*common_points)
+            common_area_size = len(common_area) * 0.25
+            explored_area = len(self.all_explored_points) * 0.25  # scale of the map in rviz
+            cov_ratio = explored_area / self.total_free_area
+            common_coverage = common_area_size / self.total_free_area
+            rospy.logerr("Total points: {}, explored area: {}, common area: {}".format(self.total_free_area, cov_ratio,
+                                                                                       common_coverage))
+            cov_msg = Coverage()
+            cov_msg.header.stamp = rospy.Time.now()
+            cov_msg.coverage = cov_ratio
+            cov_msg.expected_coverage = self.free_area_ratio
+            cov_msg.common_coverage = common_coverage
+            self.coverage_pub.publish(cov_msg)
+            self.all_coverage_data.append(
+                {'time': rospy.Time.now().to_sec(), 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
+                 'expected_coverage': self.free_area_ratio})
 
     def get_map_description(self, occ_grid, rid, origin_x, origin_y):
         resolution = occ_grid.info.resolution
@@ -91,7 +100,7 @@ class MapAnalyzer:
                 index[INDEX_FOR_X] = col
                 index = tuple(index)
                 pose = pixel2pose(index, origin_x, origin_y, self.map_resolution)
-                # pose = self.round_point(pose)
+                pose = self.round_point(pose)
                 p = grid_values[num_rows - row - 1, col]
                 if p == FREE:
                     explored_poses.add(pose)
@@ -125,7 +134,7 @@ class MapAnalyzer:
                     pixel = pixelMap[i, j][0]
                     if pixel > 0:
                         free_points += 1
-        self.total_free_area = free_points #float(allpixels)
+        self.total_free_area = free_points  # float(allpixels)
         self.free_area_ratio = free_points / self.total_free_area
         rospy.logerr(
             "Free pixel ratio: {}, All points: {}, {}".format(self.free_area_ratio, self.total_free_area, im.size))
@@ -136,7 +145,7 @@ class MapAnalyzer:
     def save_all_data(self):
         save_data(self.all_coverage_data,
                   'gvg/coverage_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
-                                                                  self.termination_metric))
+                                                           self.termination_metric))
 
 
 if __name__ == '__main__':
