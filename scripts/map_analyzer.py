@@ -38,7 +38,7 @@ class MapAnalyzer:
         rospy.on_shutdown(self.save_all_data)
 
     def spin(self):
-        r = rospy.Rate(0.1)
+        r = rospy.Rate(0.05)
         while not rospy.is_shutdown():
             self.publish_coverage()
             r.sleep()

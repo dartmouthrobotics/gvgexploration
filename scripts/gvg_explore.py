@@ -74,6 +74,7 @@ class GVGExplore:
         self.cancel_request = False
         self.start_time = 0
         self.prev_pose = 0
+        self.updated_graph = None
         rospy.init_node("gvgexplore", anonymous=True)
         self.robot_id = rospy.get_param('~robot_id')
         self.run = rospy.get_param("~run")
@@ -97,7 +98,7 @@ class GVGExplore:
         rospy.Subscriber("/robot_{}/MoveTo/result".format(self.robot_id), MoveToPosition2DActionResult,
                          self.move_result_callback)
         rospy.Subscriber("/robot_{}/navigator/plan".format(self.robot_id), GridCells, self.navigation_plan_callback)
-        rospy.Subscriber("/robot_{}/edge_list".format(self.robot_id), EdgeList, self.process_edges)
+        rospy.Subscriber("/robot_{}/edge_list".format(self.robot_id), EdgeList, self.edgelist_callback)
         self.move_to_stop = rospy.ServiceProxy('/robot_{}/Stop'.format(self.robot_id), Trigger)
         self.moveTo_pub = rospy.Publisher("/robot_{}/MoveTo/goal".format(self.robot_id), MoveToPosition2DActionGoal,
                                           queue_size=10)
@@ -107,7 +108,6 @@ class GVGExplore:
         self.fetch_graph = rospy.ServiceProxy('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph)
         self.pose_publisher = rospy.Publisher("/robot_{}/cmd_vel".format(self.robot_id), Twist, queue_size=1)
         rospy.Subscriber("/robot_{}/odom".format(self.robot_id), Odometry, callback=self.pose_callback)
-
         rospy.Subscriber('/robot_{}/gvgexplore/goal'.format(self.robot_id), Ridge, self.initial_action_handler)
         rospy.Service('/robot_{}/gvgexplore/cancel'.format(self.robot_id), CancelExploration,
                       self.received_prempt_handler)
@@ -117,6 +117,7 @@ class GVGExplore:
         self.listener = tf.TransformListener()
         rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         self.already_shutdown = False
+
         rospy.loginfo("Robot {}: Exploration server online...".format(self.robot_id))
 
     def spin(self):
@@ -124,9 +125,9 @@ class GVGExplore:
         while not rospy.is_shutdown():
             r.sleep()
 
-    def process_edges(self, data):
-        pixels = data.edgelist.pixels
-        ridges = data.edgelist.ridges
+    def process_graph(self):
+        pixels = self.updated_graph.pixels
+        ridges = self.updated_graph.ridges
         self.edges.clear()
         self.pixel_desc.clear()
         for r in ridges:
@@ -139,7 +140,7 @@ class GVGExplore:
             point = tuple(point)
             self.pixel_desc[point] = p.desc
         self.create_adjlist()
-        close_ridge = self.get_edge(data.edgelist.close_ridge)
+        close_ridge = self.get_edge(self.updated_graph.close_ridge)
         edge = close_ridge.keys()[0]
         return edge
 
@@ -255,14 +256,11 @@ class GVGExplore:
             visited.append(u)
         return leaves
 
+    def edgelist_callback(self, data):
+        self.updated_graph = data
+
     def fetch_new_graph(self):
-        rpose = self.get_robot_pose()
-        scaled_pose = pu.scale_up(rpose)
-        p = Pose()
-        p.position.x = scaled_pose[INDEX_FOR_X]
-        p.position.y = scaled_pose[INDEX_FOR_Y]
-        edge_data = self.fetch_graph(FetchGraphRequest(pose=p))
-        edge = self.process_edges(edge_data)
+        edge = self.process_graph()
         if self.debug_mode:
             marker_pose = (0, 0)
             if self.robot_id == 1:
