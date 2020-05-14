@@ -99,6 +99,8 @@ class Graph:
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             try:
+                if not self.edges:
+                    self.generate_graph()
                 r.sleep()
             except Exception as e:
                 rospy.logerr('Robot {}: Graph node interrupted!: {}'.format(self.robot_id, e))
@@ -119,8 +121,7 @@ class Graph:
 
     def frontier_point_handler(self, request):
         count = request.count
-        if not self.edges or self.enough_delay():
-            self.generate_graph()
+        self.generate_graph()
         start_time = rospy.Time.now().to_sec()
         self.compute_new_information()
         ppoints = []
@@ -135,8 +136,7 @@ class Graph:
                 break
         now = rospy.Time.now().to_sec()
         t = (now - start_time)
-        self.performance_data.append(
-            {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
+        self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
         if self.debug_mode:
             if not self.plot_data_active:
                 self.plot_data(ppoints, is_initial=True)

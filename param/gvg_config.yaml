@@ -1,5 +1,5 @@
 debug_mode: 0
-robot_count: 3    # number of robots on the team
+robot_count: 2    # number of robots on the team
 min_hallway_width: 1.0   # allowed minimum separation between two pixels on the graph
 comm_range: 20  # communication range
 point_precision: 2   # allowed precision of the poses
@@ -17,9 +17,9 @@ map_scale: 20     # scale of the map
 map_inflation_radius: 1   # inflation radius of the robot
 #map_file: $(find gvgexploration)/world/basic.png    # environment file
 #map_file: '/home/kmasaba/catkin_ws/src/gvgexploration/world/office.png'    # environment file
-map_file: '/home/masaba/stage_ws/src/gvgexploration/world/maze.png'    # environment file
+map_file: '/home/masaba/stage_ws/src/gvgexploration/world/basic.png'    # environment file
 target_distance: 2.0
 target_angle: 1.57
-environment: 'maze'
+environment: 'basic'
 max_wait_time: 120 # secs
 run: 0
