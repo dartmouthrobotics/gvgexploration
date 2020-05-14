@@ -126,6 +126,8 @@ class GVGExplore:
             r.sleep()
 
     def process_graph(self):
+        while not self.updated_graph:
+            sleep(1)
         pixels = self.updated_graph.pixels
         ridges = self.updated_graph.ridges
         self.edges.clear()

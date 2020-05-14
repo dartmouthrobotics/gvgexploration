@@ -116,11 +116,15 @@ class roscbt:
                     for topic_name, topic_type in topic_dict.items():
                         if sender_id not in self.subsciber_map[topic_name]:
                             sub = None
-                            exec("sub=rospy.Subscriber('/roscbt/robot_{0}/{2}', {3}, self.main_callback,queue_size=10)".format(sender_id, receiver_id, topic_name, topic_type))
+                            exec(
+                                "sub=rospy.Subscriber('/roscbt/robot_{0}/{2}', {3}, self.main_callback,queue_size=10)".format(
+                                    sender_id, receiver_id, topic_name, topic_type))
                             self.subsciber_map[topic_name][sender_id] = sub
                         if receiver_id not in self.publisher_map[topic_name]:
                             pub = None
-                            exec('pub=rospy.Publisher("/robot_{}/{}", {}, queue_size=10)'.format(receiver_id, topic_name,topic_type))
+                            exec(
+                                'pub=rospy.Publisher("/robot_{}/{}", {}, queue_size=10)'.format(receiver_id, topic_name,
+                                                                                                topic_type))
                             self.publisher_map[topic_name][receiver_id] = pub
 
         # ======= pose transformations====================
@@ -192,8 +196,7 @@ class roscbt:
         if in_range:
             self.publisher_map[topic][receiver_id].publish(data)
             now = rospy.Time.now().secs
-            time_diff = now - start_time
-            data_size = sys.getsizeof(data)
+            data_size = 1 #sys.getsizeof(data)
             self.shared_data_size.append({'time': now, 'data_size': data_size})
             if combn in self.sent_data:
                 self.sent_data[combn][current_time] = data_size
@@ -234,12 +237,12 @@ class roscbt:
         try:
             data = {'start_time': rospy.Time.now().to_sec()}
             if not self.coverage:
-                data['coverage'] = [-1, -1]
+                data['coverage'] = [0, 0]
             else:
                 data['coverage'] = [np.nanmean(self.coverage), np.nanvar(self.coverage)]
 
             if not self.connected_robots:
-                data['connected'] = [-1, -1]
+                data['connected'] = [0, 0]
             else:
                 data['connected'] = [np.nanmean(self.connected_robots), np.nanvar(self.connected_robots)]
 
@@ -301,7 +304,7 @@ class roscbt:
                                     else:
                                         connected[i] = 1
         if not distances:
-            result = [-1, -1]
+            result = [0, 0]
         else:
             result = [np.nanmean(distances), np.nanstd(distances)]
         if connected:

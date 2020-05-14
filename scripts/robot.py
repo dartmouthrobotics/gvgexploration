@@ -223,7 +223,7 @@ class Robot:
         local_data_size = 0
         for rid in current_devices:
             message_data = self.load_data_for_id(rid)
-            local_data_size += self.get_message_size(message_data)
+            local_data_size += len(message_data) #self.get_message_size(message_data)
             buffered_data = self.create_buffered_data_msg(message_data, self.session_id, rid)
             response = self.shared_data_srv_map[rid](SharedDataRequest(req_data=buffered_data))
             pu.log_msg(self.robot_id, "received feedback from robot: {}".format(response.in_session), self.debug_mode)
@@ -439,17 +439,13 @@ class Robot:
         return set(devices)
 
     def process_data(self, buff_data, session_id=None, sent_data=0):
-        counter = 0
         self.map_updating = True
         for rid, rdata in buff_data.items():
             data_vals = rdata.data
             for scan in data_vals:
                 self.karto_pub.publish(scan)
-                sent_data += sys.getsizeof(scan)
-                counter += 1
-                sleep(0.5)
+                sent_data += 1 #sys.getsizeof(scan)
         self.map_updating = False
-        pu.log_msg(self.robot_id, "Waiting for {}".format(counter), self.debug_mode)
         if session_id:
             data_size = DataSize()
             data_size.header.frame_id = '{}'.format(self.robot_id)
@@ -457,8 +453,6 @@ class Robot:
             data_size.size = sent_data
             data_size.session_id = session_id
             self.data_size_pub.publish(data_size)
-
-        # sleep(counter / 2.0)
 
     def get_message_size(self, msgs):
         size = 0

@@ -99,6 +99,8 @@ class Graph:
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             try:
+                # if not self.edges:
+                #     self.generate_graph()
                 r.sleep()
             except Exception as e:
                 rospy.logerr('Robot {}: Graph node interrupted!: {}'.format(self.robot_id, e))
@@ -135,8 +137,7 @@ class Graph:
                 break
         now = rospy.Time.now().to_sec()
         t = (now - start_time)
-        self.performance_data.append(
-            {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
+        self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
         if self.debug_mode:
             if not self.plot_data_active:
                 self.plot_data(ppoints, is_initial=True)
@@ -232,8 +233,7 @@ class Graph:
             self.compute_hallway_points()
             now = rospy.Time.now().to_sec()
             t = now - start_time
-            self.performance_data.append(
-                {'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
+            self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
         except Exception as e:
             pu.log_msg(self.robot_id, 'Robot {}: Error in graph computation'.format(self.robot_id), self.debug_mode)
 
