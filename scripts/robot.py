@@ -75,12 +75,11 @@ class Robot:
         self.is_initial_data_sharing = True
         self.initial_receipt = True
         self.is_initial_move = True
-        self.last_map_update_time = rospy.Time.now().secs
+        self.last_map_update_time = rospy.Time.now().to_sec()
         self.frontier_points = []
         self.coverage = None
         self.goal_handle = None
         self.all_feedbacks = {}
-
         # communication synchronizatin variables
         self.comm_session_time = 0
         self.auction_session_time = 0
@@ -444,7 +443,7 @@ class Robot:
             data_vals = rdata.data
             for scan in data_vals:
                 self.karto_pub.publish(scan)
-                sent_data += 1 #sys.getsizeof(scan)
+                sent_data += 1.0 #sys.getsizeof(scan)
         self.map_updating = False
         if session_id:
             data_size = DataSize()
@@ -457,7 +456,7 @@ class Robot:
     def get_message_size(self, msgs):
         size = 0
         for m in msgs:
-            size += sys.getsizeof(m)
+            size += 1.0 #sys.getsizeof(m)
         return size
 
     def shared_data_handler(self, data):
@@ -642,11 +641,9 @@ class Robot:
         return yaw
 
     def save_all_data(self):
-        pu.save_data(self.interconnection_data,
-                     'gvg/interconnections_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+        pu.save_data(self.interconnection_data,'gvg/interconnections_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
                                                                          self.termination_metric, self.robot_id))
-        pu.save_data(self.frontier_data,
-                     'gvg/frontiers_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+        pu.save_data(self.frontier_data,'gvg/frontiers_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
                                                                   self.termination_metric, self.robot_id))
         msg = String()
         msg.data = '{}'.format(self.robot_id)

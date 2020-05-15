@@ -70,22 +70,23 @@ class roscbt:
 
         # we can load the map as an image to determine the location of obstacles in the environment
         self.map_topic = rospy.get_param("map_topic", '')
-        self.robot_ids = rospy.get_param("/roscbt/robot_ids", [])
-        self.robot_ranges = rospy.get_param("/roscbt/robot_ranges", {})
-        self.topics = rospy.get_param("/roscbt/topics", [])
+        self.robot_ids = rospy.get_param("~robot_ids", [])
+        self.robot_ranges = rospy.get_param("~robot_ranges", {})
+        self.topics = rospy.get_param("~topics", [])
 
         # new parameter -- specifying how information is shared among robots
-        self.shared_topics = rospy.get_param("/roscbt/shared_topics", {})
+        self.shared_topics = rospy.get_param("~shared_topics", {})
 
         # processing groundtruth about the map
-        map_image_path = rospy.get_param("/roscbt/map_image_path", '')
-        self.world_scale = rospy.get_param("/roscbt/world_scale", 1)
-        self.map_pose = rospy.get_param("/roscbt/map_pose", [])
-        self.world_center = rospy.get_param("/roscbt/world_center", [])
+        map_image_path = rospy.get_param("~map_image_path", '')
+        self.world_scale = rospy.get_param("~world_scale", 1)
+        self.map_pose = rospy.get_param("~map_pose", [])
+        self.world_center = rospy.get_param("~world_center", [])
 
         self.termination_metric = rospy.get_param("~termination_metric")
         self.robot_count = rospy.get_param("~robot_count")
         self.environment = rospy.get_param("~environment")
+        self.comm_range = rospy.get_param("~comm_range")
         self.run = rospy.get_param("~run")
 
         # difference in center of map image and actual simulation
@@ -195,8 +196,9 @@ class roscbt:
             self.distances[combn] = {current_time: distance}
         if in_range:
             self.publisher_map[topic][receiver_id].publish(data)
-            now = rospy.Time.now().secs
-            data_size = 1 #sys.getsizeof(data)
+            now = rospy.Time.now().to_sec()
+            time_diff = now - start_time
+            data_size = 1.0  # sys.getsizeof(data)
             self.shared_data_size.append({'time': now, 'data_size': data_size})
             if combn in self.sent_data:
                 self.sent_data[combn][current_time] = data_size
@@ -271,7 +273,7 @@ class roscbt:
 
     def robots_inrange(self, loc1, loc2):
         distance = math.floor(math.sqrt(((loc1[0] - loc2[0]) ** 2) + ((loc1[1] - loc2[1]) ** 2)))
-        return distance, True
+        return distance, distance <= self.comm_range
 
     def get_robot_pose(self, robot_id):
         robot_pose = None
@@ -319,12 +321,8 @@ class roscbt:
         rospy.signal_shutdown('ROSCBT: Shutdown command received!')
 
     def save_all_data(self):
-        save_data(self.exploration_data,
-                  'gvg/exploration_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
-                                                              self.termination_metric))
-        save_data(self.shared_data_size,
-                  'gvg/roscbt_data_shared_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
-                                                                     self.termination_metric))
+        save_data(self.exploration_data, 'gvg/exploration_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,self.termination_metric))
+        save_data(self.shared_data_size,'gvg/roscbt_data_shared_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run, self.termination_metric))
 
 
 if __name__ == '__main__':

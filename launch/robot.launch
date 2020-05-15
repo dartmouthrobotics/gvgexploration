@@ -5,8 +5,6 @@
     <arg name="base_stations" default=''/>
     <arg name="frontier_robots" default=''/>
     <arg name="relay_robots" default=''/>
-    <arg name="robot_count" default=''/>
-    <arg name="environment" default=''/>
     <arg name="map_width" default=''/>
     <arg name="map_height" default=''/>
     <arg name="run" default="0"/>
@@ -17,8 +15,6 @@
             <param name="base_stations" value="$(arg base_stations)"/>
             <param name="frontier_robots" value="$(arg frontier_robots)"/>
             <param name="relay_robots" value="$(arg relay_robots)"/>
-            <param name="environment" value="$(arg environment)"/>
-            <param name="robot_count" value="$(arg robot_count)"/>
             <param name="map_width" value="$(arg map_width)"/>
             <param name="map_height" value="$(arg map_height)"/>
             <param name="run" value="$(arg run)"/>
@@ -31,8 +27,6 @@
             <param name="base_stations" value="$(arg base_stations)"/>
             <param name="frontier_robots" value="$(arg frontier_robots)"/>
             <param name="relay_robots" value="$(arg relay_robots)"/>
-            <param name="environment" value="$(arg environment)"/>
-            <param name="robot_count" value="$(arg robot_count)"/>
             <param name="map_width" value="$(arg map_width)"/>
             <param name="map_height" value="$(arg map_height)"/>
             <param name="run" value="$(arg run)"/>
@@ -45,8 +39,6 @@
             <param name="base_stations" value="$(arg base_stations)"/>
             <param name="frontier_robots" value="$(arg frontier_robots)"/>
             <param name="relay_robots" value="$(arg relay_robots)"/>
-            <param name="environment" value="$(arg environment)"/>
-            <param name="robot_count" value="$(arg robot_count)"/>
             <param name="map_width" value="$(arg map_width)"/>
             <param name="map_height" value="$(arg map_height)"/>
             <param name="run" value="$(arg run)"/>

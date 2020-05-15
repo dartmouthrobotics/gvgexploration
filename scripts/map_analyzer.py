@@ -26,19 +26,18 @@ class MapAnalyzer:
         self.all_explored_points = set()
         self.all_maps = {}
         self.robot_maps = {}
-
         for i in range(self.robot_count):
-            exec("def a_{0}(self, data): self.robot_maps[{0}] = data".format(i))
+            exec("def a_{0}(self, data):self.robot_maps[{0}] = data".format(i))
             exec("setattr(MapAnalyzer, 'callback_map_teammate{0}', a_{0})".format(i))
             exec("rospy.Subscriber('/robot_{0}/map', OccupancyGrid, self.callback_map_teammate{0}, "
-                 "queue_size = 10)".format(i))
+                 "queue_size = 1)".format(i))
 
         self.coverage_pub = rospy.Publisher("/coverage", Coverage, queue_size=10)
         rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         rospy.on_shutdown(self.save_all_data)
 
     def spin(self):
-        r = rospy.Rate(0.05)
+        r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             self.publish_coverage()
             r.sleep()
@@ -50,23 +49,27 @@ class MapAnalyzer:
             origin_x0 = map0.info.origin.position.x
             origin_y0 = map0.info.origin.position.y
             for rid in range(self.robot_count):
-                map = self.robot_maps[rid]  # rospy.wait_for_message('/robot_{}/map'.format(rid), OccupancyGrid)
+                map = self.robot_maps[rid]
                 origin_pos = map.info.origin.position
                 origin_x = origin_pos.x - (origin_pos.x - origin_x0)
                 origin_y = origin_pos.y - (origin_pos.y - origin_y0)
                 cov_set, unexplored_set = self.get_map_description(map, rid, origin_x, origin_y)
                 if rid not in self.all_maps:
+                    rospy.logerr('Results for {}'.format(rid))
                     self.all_maps[rid] = cov_set
                 else:
                     self.all_maps[rid] = self.all_maps[rid].union(cov_set)
+                    rospy.logerr('already exists Results for {}, size: {}, received size: {}'.format(rid,len(self.all_maps[rid]),len(cov_set)))
                 common_points.append(self.all_maps[rid])
                 self.all_explored_points = self.all_explored_points.union(cov_set)
+                rospy.logerr('Explored points: {}'.format(len(self.all_explored_points)))
             common_area = set.intersection(*common_points)
             common_area_size = len(common_area) * 0.25
             explored_area = len(self.all_explored_points) * 0.25  # scale of the map in rviz
             cov_ratio = explored_area / self.total_free_area
             common_coverage = common_area_size / self.total_free_area
-            rospy.logerr("Total points: {}, explored area: {}, common area: {}".format(self.total_free_area, cov_ratio,common_coverage))
+            rospy.logerr("Total points: {}, explored area: {}, common area: {}".format(self.total_free_area, cov_ratio,
+                                                                                       common_coverage))
             cov_msg = Coverage()
             cov_msg.header.stamp = rospy.Time.now()
             cov_msg.coverage = cov_ratio
@@ -82,9 +85,6 @@ class MapAnalyzer:
         if not self.map_resolution:
             self.map_resolution = round(resolution, 2)
             self.read_raw_image()
-        # origin_pos = occ_grid.info.origin.position
-        # rospy.logerr(
-        #     "ID: {}, current origin: {}, original: {}".format(rid, (origin_x, origin_y), (origin_pos.x, origin_pos.y)))
         height = occ_grid.info.height
         width = occ_grid.info.width
         grid_values = np.array(occ_grid.data).reshape((height, width)).astype(np.float32)
@@ -133,8 +133,9 @@ class MapAnalyzer:
                     pixel = pixelMap[i, j][0]
                     if pixel > 0:
                         free_points += 1
-        self.total_free_area = free_points  # float(allpixels)
-        self.free_area_ratio = free_points / self.total_free_area
+        free_area = float(free_points)
+        self.free_area_ratio = free_points / float(allpixels)
+        self.total_free_area = free_area
         rospy.logerr(
             "Free pixel ratio: {}, All points: {}, {}".format(self.free_area_ratio, self.total_free_area, im.size))
 
@@ -144,7 +145,7 @@ class MapAnalyzer:
     def save_all_data(self):
         save_data(self.all_coverage_data,
                   'gvg/coverage_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
-                                                           self.termination_metric))
+                                                                 self.termination_metric))
 
 
 if __name__ == '__main__':
