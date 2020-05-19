@@ -420,7 +420,7 @@ class Robot:
         buffered_data.msg_header.header.frame_id = '{}'.format(self.robot_id)
         buffered_data.msg_header.sender_id = str(self.robot_id)
         buffered_data.msg_header.receiver_id = str(receiver_id)
-        buffered_data.msg_header.topic = 'received_data'
+        buffered_data.msg_header.topic = 'initial_data'
         buffered_data.msg_header.header.stamp = rospy.Time.now()
         buffered_data.secs = []
         buffered_data.data = message_data

@@ -18,7 +18,7 @@
             <param name="map_width" value="$(arg map_width)"/>
             <param name="map_height" value="$(arg map_height)"/>
             <param name="run" value="$(arg run)"/>
-            <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
+            <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
         </node>
 
         <node pkg="gvgexploration" type="graph.py" name="node$(arg robot_name)_graph_processor" >
@@ -30,7 +30,7 @@
             <param name="map_width" value="$(arg map_width)"/>
             <param name="map_height" value="$(arg map_height)"/>
             <param name="run" value="$(arg run)"/>
-            <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
+            <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
         </node>
 
         <node pkg="gvgexploration" type="gvg_explore.py" name="node$(arg robot_name)_explore" >
@@ -42,7 +42,7 @@
             <param name="map_width" value="$(arg map_width)"/>
             <param name="map_height" value="$(arg map_height)"/>
             <param name="run" value="$(arg run)"/>
-            <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
+            <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
         </node>
     </group>
 </launch>

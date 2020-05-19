@@ -72,17 +72,19 @@ class Graph:
         self.debug_mode = rospy.get_param("~debug_mode")
         self.method = rospy.get_param("~method")
         self.bs_pose = rospy.get_param('~bs_pose')
+        self.map_scale = rospy.get_param('~map_scale')
         self.termination_metric = rospy.get_param("~termination_metric")
-        self.min_hallway_width = rospy.get_param("~min_hallway_width".format(self.robot_id)) * pu.SCALE
-        self.comm_range = rospy.get_param("~comm_range".format(self.robot_id)) * pu.SCALE
+        self.min_hallway_width = rospy.get_param("~min_hallway_width".format(self.robot_id)) * self.map_scale
+        self.comm_range = rospy.get_param("~comm_range".format(self.robot_id)) * self.map_scale
         self.point_precision = rospy.get_param("~point_precision".format(self.robot_id))
-        self.min_edge_length = rospy.get_param("~min_edge_length".format(self.robot_id)) * pu.SCALE
-        self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius".format(self.robot_id)) * pu.SCALE
+        self.min_edge_length = rospy.get_param("~min_edge_length".format(self.robot_id)) * self.map_scale
+        self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius".format(self.robot_id)) * self.map_scale
         self.lidar_fov = rospy.get_param("~lidar_fov".format(self.robot_id))
         self.slope_bias = rospy.get_param("~slope_bias".format(self.robot_id))
         self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id))
         self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias".format(self.robot_id))
-        rospy.Service('/robot_{}/rendezvous'.format(self.robot_id), RendezvousPoints,self.fetch_rendezvous_points_handler)
+        rospy.Service('/robot_{}/rendezvous'.format(self.robot_id), RendezvousPoints,
+                      self.fetch_rendezvous_points_handler)
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
         rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_callback)
@@ -108,6 +110,7 @@ class Graph:
                 rospy.logerr('Robot {}: Graph node interrupted!: {}'.format(self.robot_id, e))
 
     def map_callback(self, data):
+        rospy.logerr("robot {}:received map".format(self.robot_id))
         self.latest_map = data
 
     def is_same_intersection(self, intersec, robot_pose):
@@ -386,34 +389,6 @@ class Graph:
                 intersections.append(actual_pairs[min_dist])
         return intersections
 
-    # def process_decision(self, ridge, robot_pose):
-    #     p1 = ridge[0]
-    #     p2 = ridge[1]
-    #     obs1 = self.edges[ridge]
-    #     parent = {p2: p1}
-    #     visited = {}
-    #     S = [p2]
-    #     intesec_pose = {}
-    #     intersections = []
-    #     while len(S) > 0:
-    #         u = S.pop()
-    #         e = (parent[u], u)
-    #         if e != ridge and (ridge[0] not in e or ridge[1] not in e):
-    #             obs = self.edges[e]
-    #             intersec = self.get_intersection(robot_pose, ridge, e, obs1, obs)
-    #             if intersec:
-    #                 intesec_pose[pu.D(robot_pose, u)] = intersec
-    #         neighbors = self.adj_list[u]
-    #         for v in neighbors:
-    #             if v not in visited:
-    #                 S.append(v)
-    #                 parent[v] = u
-    #         visited[u] = None
-    #     if intesec_pose:
-    #         min_dist = min(intesec_pose.keys())
-    #         intersections.append(intesec_pose[min_dist])
-    #     return intersections
-
     def get_intersection(self, robot_pose, e1, e2, o1, o2):
         p1 = e1[0]
         p2 = e1[1]
@@ -456,13 +431,13 @@ class Graph:
                 p1[INDEX_FOR_Y] = vertices[ridge_vertex[0]][INDEX_FOR_Y]
                 p2[INDEX_FOR_X] = vertices[ridge_vertex[1]][INDEX_FOR_X]
                 p2[INDEX_FOR_Y] = vertices[ridge_vertex[1]][INDEX_FOR_Y]
-                p1 = tuple(p1)
-                p2 = tuple(p2)
-                e = (p1, p2)
+                p1 = pu.get_point(tuple(p1))
+                p2 = pu.get_point(tuple(p2))
                 if self.is_free(p1) and self.is_free(p2):
+                    e = (p1, p2)
                     q1 = obstacles[ridge_point[0]]
                     q2 = obstacles[ridge_point[1]]
-                    o = (tuple(q1), tuple(q2))
+                    o = (pu.get_point(tuple(q1)), pu.get_point(tuple(q2)))
                     if pu.D(q1, q2) > self.min_hallway_width:
                         self.edges[e] = o
             self.get_adjacency_list(self.edges)
@@ -1054,7 +1029,7 @@ class Graph:
 
     def get_robot_pose(self):
         if self.method == 'recurrent' and self.robot_id == self.robot_count:
-            rospy.logerr("Robot id: {} count: {}, pose: {}".format(self.robot_id,self.robot_count,self.bs_pose))
+            rospy.logerr("Robot id: {} count: {}, pose: {}".format(self.robot_id, self.robot_count, self.bs_pose))
             return self.bs_pose
         robot_pose = None
         while not robot_pose:
@@ -1079,8 +1054,9 @@ class Graph:
 
     def save_all_data(self):
         save_data(self.performance_data,
-                  "gvg/performance_{}_{}_{}_{}_{}.pickle".format(self.environment, self.robot_count, self.run,
-                                                                 self.termination_metric, self.robot_id))
+                  "{}/performance_{}_{}_{}_{}_{}.pickle".format(self.method, self.environment, self.robot_count,
+                                                                self.run,
+                                                                self.termination_metric, self.robot_id))
 
 
 if __name__ == "__main__":
