@@ -116,7 +116,7 @@ class Robot:
         self.alloc_point_srv = rospy.Service("/robot_{}/allocated_point".format(self.robot_id), SharedFrontier,
                                              self.shared_frontier_handler)
         # rospy.Subscriber('/robot_{}/allocated_point'.format(self.robot_id), Frontier, self.allocated_point_callback)
-        rospy.Subscriber('/robot_{}/received_data'.format(self.robot_id), BufferedData,
+        rospy.Subscriber('/robot_{}/initial_data'.format(self.robot_id), BufferedData,
                          self.initial_data_callback)  # just for initial data *
         self.karto_pub = rospy.Publisher("/robot_{}/karto_in".format(self.robot_id), LocalizedScan, queue_size=10)
         self.signal_strength_srv = rospy.ServiceProxy("/signal_strength".format(self.robot_id), HotSpot)
@@ -132,7 +132,7 @@ class Robot:
             received_data_clt = rospy.ServiceProxy("/robot_{}/shared_data".format(rid), SharedData)
             action_points_clt = rospy.ServiceProxy("/robot_{}/auction_points".format(rid), SharedPoint)
             alloc_point_clt = rospy.ServiceProxy("/robot_{}/allocated_point".format(rid), SharedFrontier)
-            pub = rospy.Publisher("/roscbt/robot_{}/received_data".format(rid), BufferedData, queue_size=10)
+            pub = rospy.Publisher("/roscbt/robot_{}/initial_data".format(rid), BufferedData, queue_size=10)
             self.publisher_map[rid] = pub
             self.allocation_pub[rid] = alloc_point_clt
             self.shared_data_srv_map[rid] = received_data_clt

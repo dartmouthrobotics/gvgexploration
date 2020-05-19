@@ -197,8 +197,7 @@ class roscbt:
         if in_range:
             self.publisher_map[topic][receiver_id].publish(data)
             now = rospy.Time.now().to_sec()
-            time_diff = now - start_time
-            data_size = 1.0  # sys.getsizeof(data)
+            data_size =self.get_data_size(topic,data)  # sys.getsizeof(data)
             self.shared_data_size.append({'time': now, 'data_size': data_size})
             if combn in self.sent_data:
                 self.sent_data[combn][current_time] = data_size
@@ -208,6 +207,11 @@ class roscbt:
         else:
             rospy.logerr(
                 "Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
+
+    def get_data_size(self,topic,data):
+        if topic == 'initial_data':
+            return len(data.data)
+        return 1.0
 
     # method to check the constraints for robot communication
     def can_communicate(self, robot_id1, robot_id2):
