@@ -139,7 +139,7 @@ class ScanFilter:
                         break
                 if is_robot:
                     # Value arbitrarily set for nav2d_karto.
-                    new_ranges[i] = -2.0
+                    new_ranges[i] = np.nan
                 else:
                     new_ranges[i] = r
             else:
