@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   nav2d_msgs
+  nav_msgs
   sensor_msgs
   actionlib_msgs
   message_generation
@@ -60,6 +61,7 @@ add_message_files(
    RobotSignal.msg
    SignalStrength.msg
    RobotRange.msg
+   RendezvousLocations.msg
    Frontier.msg
    EdgeList.msg
    Pixel.msg
@@ -79,6 +81,7 @@ add_service_files(
   SharedData.srv
   SharedPoint.srv
   HotSpot.srv
+  HomeAlert.srv
   SharedFrontier.srv
   RendezvousPoints.srv
   CancelExploration.srv
@@ -97,6 +100,7 @@ generate_messages(
    DEPENDENCIES
    std_msgs
    nav2d_msgs
+   nav_msgs
    sensor_msgs
    actionlib_msgs
    visualization_msgs
