@@ -1,7 +1,0 @@
-- implement what I said, change BFS to reflect that. MAke sure A* is commented out.
-- ask about the purpose of "latest map" and the update_map function
-- latest scan function wasnt pushed. Need to implement saving to the list and publishing each message in turn. Check with Kizito on this.
-- why the waypoints part of finding rendezvous locations?
-
-
-- round in update_graph, should be to 0.1 or something more defined... integer values are too big. 

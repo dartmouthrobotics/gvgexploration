@@ -1,6 +1,0 @@
-rosservice call /robot_0/StartExploration "{}"
-rosservice call /robot_1/StartExploration "{}"
-rosservice call /robot_2/StartExploration "{}"
-rosservice call /robot_3/StartExploration "{}"
-rosservice call /robot_4/StartExploration "{}"
-rosservice call /robot_5/StartExploration "{}"
