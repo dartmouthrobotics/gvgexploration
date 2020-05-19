@@ -18,7 +18,7 @@ map_scale: 20     # scale of the map
 bs_pose: [4.0,10.0]
 map_inflation_radius: 1   # inflation radius of the robot
 #map_file: '/home/kmasaba/catkin_ws/src/gvgexploration/world/basic.png'    # environment file
-map_file: '/home/masaba/stage_ws/src/gvgexploration/world/basic.png'    # environment file
+map_file: '$(find gvgexploration)/world/basic.png'    # environment file
 target_distance: 2.0
 target_angle: 1.57
 environment: 'basic'
