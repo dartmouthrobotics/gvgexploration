@@ -16,6 +16,7 @@ from gvgexploration.msg import *
 from gvgexploration.srv import *
 import project_utils as pu
 import tf
+from graham_scan import graham_scan
 from time import sleep
 import shapely.geometry as sg
 from nav_msgs.msg import *
@@ -69,6 +70,8 @@ class Graph:
         self.environment = rospy.get_param("~environment")
         self.run = rospy.get_param("~run")
         self.debug_mode = rospy.get_param("~debug_mode")
+        self.method = rospy.get_param("~method")
+        self.bs_pose = rospy.get_param('~bs_pose')
         self.termination_metric = rospy.get_param("~termination_metric")
         self.min_hallway_width = rospy.get_param("~min_hallway_width".format(self.robot_id)) * pu.SCALE
         self.comm_range = rospy.get_param("~comm_range".format(self.robot_id)) * pu.SCALE
@@ -79,10 +82,9 @@ class Graph:
         self.slope_bias = rospy.get_param("~slope_bias".format(self.robot_id))
         self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id))
         self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias".format(self.robot_id))
-
+        rospy.Service('/robot_{}/rendezvous'.format(self.robot_id), RendezvousPoints,self.fetch_rendezvous_points_handler)
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
         rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
-        # rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_graph_handler)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_callback)
         self.edge_pub = rospy.Publisher('/robot_{}/edge_list'.format(self.robot_id), EdgeList, queue_size=1)
         rospy.Subscriber('/shutdown', String, self.shutdown_callback)
@@ -136,7 +138,8 @@ class Graph:
                 break
         now = rospy.Time.now().to_sec()
         t = (now - start_time)
-        self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
+        self.performance_data.append(
+            {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
         if self.debug_mode:
             if not self.plot_data_active:
                 self.plot_data(ppoints, is_initial=True)
@@ -214,6 +217,28 @@ class Graph:
                 edgelist.pixels.append(pix)
         return edgelist
 
+    def fetch_rendezvous_points_handler(self, data):
+        count = data.count
+        rendezvous_points = []
+        map_msg = self.latest_map
+        self.compute_graph(map_msg)
+        all_points = list(self.pixel_desc)
+        robot_pose = self.get_robot_pose()
+        origin = pu.scale_up(robot_pose)
+
+        free_points = [p for p in all_points if self.pixel_desc[p] == FREE and pu.D(origin, p) <= self.comm_range]
+        rospy.logerr("recieved rv request")
+        if free_points:
+            hull, boundary_points = graham_scan(free_points, count, False)
+            for b in boundary_points:
+                ap = pu.scale_down(b)
+                pose = Pose()
+                pose.position.x = ap[INDEX_FOR_X]
+                pose.position.y = ap[INDEX_FOR_Y]
+                rendezvous_points.append(pose)
+        rospy.logerr("sent response")
+        return RendezvousPointsResponse(poses=rendezvous_points)
+
     def get_closest_edge(self, robot_pose, close_edges):
         linear_edge = {}
         chosen_edge = None
@@ -232,7 +257,8 @@ class Graph:
             self.compute_hallway_points()
             now = rospy.Time.now().to_sec()
             t = now - start_time
-            self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
+            self.performance_data.append(
+                {'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
         except Exception as e:
             pu.log_msg(self.robot_id, 'Robot {}: Error in graph computation'.format(self.robot_id), self.debug_mode)
 
@@ -1027,6 +1053,9 @@ class Graph:
         self.plot_intersection_active = False
 
     def get_robot_pose(self):
+        if self.method == 'recurrent' and self.robot_id == self.robot_count:
+            rospy.logerr("Robot id: {} count: {}, pose: {}".format(self.robot_id,self.robot_count,self.bs_pose))
+            return self.bs_pose
         robot_pose = None
         while not robot_pose:
             try:
@@ -1038,7 +1067,8 @@ class Graph:
                                                                      rospy.Time(0))
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
                 sleep(1)
-            except:
+            except Exception as e:
+                rospy.logerr(e)
                 pass
 
         return robot_pose

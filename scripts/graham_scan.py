@@ -23,7 +23,8 @@ def incremental_farthest_search(points, k):
         for i, p in enumerate(remaining_points):
             for j, s in enumerate(solution_set):
                 distances[i] = min(distances[i], distance(p, s))
-        solution_set.append(remaining_points.pop(distances.index(max(distances))))
+        if distances:
+            solution_set.append(remaining_points.pop(distances.index(max(distances))))
     return solution_set
 
 # Returns the polar angle (radians) from p0 to p1.

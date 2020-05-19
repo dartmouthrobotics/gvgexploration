@@ -80,6 +80,7 @@ add_service_files(
   SharedPoint.srv
   HotSpot.srv
   SharedFrontier.srv
+  RendezvousPoints.srv
   CancelExploration.srv
 #  Service2.srv
 )
