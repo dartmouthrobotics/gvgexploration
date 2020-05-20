@@ -1,0 +1,4 @@
+int32 robot_id
+---
+geometry_msgs/Pose[] poses
+float64 resolution

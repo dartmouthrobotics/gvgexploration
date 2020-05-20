@@ -1,5 +1,6 @@
 debug_mode: 1
-method: 'continuous'
+method: 'recurrent' # method that is running
+max_target_info_ratio: 0.5
 robot_count: 2    # number of robots on the team
 min_hallway_width: 1.0   # allowed minimum separation between two pixels on the graph
 comm_range: 20  # communication range
@@ -17,7 +18,6 @@ termination_metric: 1 # 1: TOTAL COVERAGE, 2: MAXIMUM_EXPLORATION_TIME 3: COMMON
 map_scale: 10     # scale of the map
 bs_pose: [4.0,10.0]
 map_inflation_radius: 1   # inflation radius of the robot
-#map_file: '/home/kmasaba/catkin_ws/src/gvgexploration/world/basic.png'    # environment file
 map_file: '$(find gvgexploration)/world/basic.png'    # environment file
 target_distance: 2.0
 target_angle: 1.57

@@ -82,6 +82,7 @@ add_service_files(
   SharedPoint.srv
   HotSpot.srv
   HomeAlert.srv
+  ExploredRegion.srv
   SharedFrontier.srv
   RendezvousPoints.srv
   CancelExploration.srv

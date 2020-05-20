@@ -1,11 +1,13 @@
 #!/usr/bin/python
+import matplotlib
 
+matplotlib.use('Agg')
 from PIL import Image
 import numpy as np
 import rospy
 from project_utils import INDEX_FOR_X, INDEX_FOR_Y, pixel2pose, FREE, OCCUPIED, save_data, get_point
-from nav_msgs.msg import OccupancyGrid
 from gvgexploration.msg import Coverage
+from gvgexploration.srv import ExploredRegion, ExploredRegionRequest
 from std_msgs.msg import String
 
 
@@ -19,57 +21,51 @@ class MapAnalyzer:
         self.debug_mode = rospy.get_param("~debug_mode")
         self.termination_metric = rospy.get_param("~termination_metric")
         self.environment = rospy.get_param("~environment")
+        self.method = rospy.get_param("~method")
+        self.is_active = False
         self.total_free_area = 0
         self.free_area_ratio = 0
         self.map_resolution = 0
         self.all_coverage_data = []
         self.all_explored_points = set()
         self.all_maps = {}
-        self.robot_maps = {}
+        self.explored_region = {}
+        self.pixel_desc = {}
         for i in range(self.robot_count):
-            exec("def a_{0}(self, data):self.robot_maps[{0}] = data".format(i))
-            exec("setattr(MapAnalyzer, 'callback_map_teammate{0}', a_{0})".format(i))
-            exec("rospy.Subscriber('/robot_{0}/map', OccupancyGrid, self.callback_map_teammate{0}, "
-                 "queue_size = 1)".format(i))
+            p = rospy.ServiceProxy('/robot_{}/explored_region'.format(i), ExploredRegion)
+            p.wait_for_service()
+            rospy.logerr("Service added")
+            self.explored_region[i] = p
+            self.all_maps[i] = set()
 
         self.coverage_pub = rospy.Publisher("/coverage", Coverage, queue_size=10)
         rospy.Subscriber('/shutdown', String, self.shutdown_callback)
+
         rospy.on_shutdown(self.save_all_data)
 
     def spin(self):
-        r = rospy.Rate(0.1)
+        r = rospy.Rate(0.05)
+        self.read_raw_image()
         while not rospy.is_shutdown():
             self.publish_coverage()
             r.sleep()
 
     def publish_coverage(self):
-        common_points = []
-        if len(self.robot_maps) == self.robot_count:
-            map0 = self.robot_maps[0]
-            origin_x0 = map0.info.origin.position.x
-            origin_y0 = map0.info.origin.position.y
+        if not self.is_active:
+            self.is_active = True
+            common_points = []
             for rid in range(self.robot_count):
-                map = self.robot_maps[rid]
-                origin_pos = map.info.origin.position
-                origin_x = origin_pos.x - (origin_pos.x - origin_x0)
-                origin_y = origin_pos.y - (origin_pos.y - origin_y0)
-                cov_set, unexplored_set = self.get_map_description(map, rid, origin_x, origin_y)
-                if rid not in self.all_maps:
-                    rospy.logerr('Results for {}'.format(rid))
-                    self.all_maps[rid] = cov_set
-                else:
-                    self.all_maps[rid] = self.all_maps[rid].union(cov_set)
-                    rospy.logerr('already exists Results for {}, size: {}, received size: {}'.format(rid,len(self.all_maps[rid]),len(cov_set)))
+                self.get_explored_region(rid)
                 common_points.append(self.all_maps[rid])
-                self.all_explored_points = self.all_explored_points.union(cov_set)
-                rospy.logerr('Explored points: {}'.format(len(self.all_explored_points)))
             common_area = set.intersection(*common_points)
-            common_area_size = len(common_area) * 0.25
-            explored_area = len(self.all_explored_points) * 0.25  # scale of the map in rviz
+            scale_val = (self.map_resolution ** 2) / ((1.0 / self.scale) ** 2)
+            common_area_size = len(common_area) * scale_val
+            explored_area = len(self.all_explored_points) * scale_val  # scale of the map in rviz
             cov_ratio = explored_area / self.total_free_area
             common_coverage = common_area_size / self.total_free_area
-            rospy.logerr("Total points: {}, explored area: {}, common area: {}".format(self.total_free_area, cov_ratio,
-                                                                                       common_coverage))
+            rospy.logerr(
+                "Total points: {}, explored area: {}, common area: {}".format(self.total_free_area, cov_ratio,
+                                                                              common_coverage))
             cov_msg = Coverage()
             cov_msg.header.stamp = rospy.Time.now()
             cov_msg.coverage = cov_ratio
@@ -79,9 +75,24 @@ class MapAnalyzer:
             self.all_coverage_data.append(
                 {'time': rospy.Time.now().to_sec(), 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
                  'expected_coverage': self.free_area_ratio})
+            self.is_active = False
+
+    def get_explored_region(self, rid):
+        try:
+            explored_points = self.explored_region[rid](ExploredRegionRequest(robot_id=rid))
+            poses = explored_points.poses
+            self.map_resolution = explored_points.resolution
+            for p in poses:
+                point = (p.position.x, p.position.y)
+                self.all_maps[rid].add(point)
+                self.all_explored_points.add(point)
+        except Exception as e:
+            rospy.logerr(e)
+            pass
 
     def get_map_description(self, occ_grid, rid, origin_x, origin_y):
         resolution = occ_grid.info.resolution
+        rospy.logerr("Resolution: {}".format(resolution))
         if not self.map_resolution:
             self.map_resolution = round(resolution, 2)
             self.read_raw_image()
@@ -122,17 +133,25 @@ class MapAnalyzer:
         pixelMap = im.load()
         free_points = 0
         allpixels = 0
-        for i in range(im.size[0]):
-            for j in range(im.size[1]):
+        width = im.size[0]
+        height = im.size[1]
+        for i in range(width):
+            for j in range(height):
+                index = [0.0] * 2
+                index[INDEX_FOR_X] = i * 0.1
+                index[INDEX_FOR_Y] = (height - j) * 0.1
+                # pose = self.round_point(index)
                 pixel = pixelMap[i, j]
                 allpixels += 1
                 if isinstance(pixel, int):
                     if pixel > 0:
                         free_points += 1
+                        # self.pixel_desc[pose] = None
                 else:
                     pixel = pixelMap[i, j][0]
                     if pixel > 0:
                         free_points += 1
+                        # self.pixel_desc[pose] = None
         free_area = float(free_points)
         self.free_area_ratio = free_points / float(allpixels)
         self.total_free_area = free_area
@@ -144,8 +163,8 @@ class MapAnalyzer:
 
     def save_all_data(self):
         save_data(self.all_coverage_data,
-                  'gvg/coverage_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
-                                                                 self.termination_metric))
+                  '{}/coverage_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count, self.run,
+                                                          self.termination_metric))
 
 
 if __name__ == '__main__':

@@ -40,9 +40,10 @@ class Graph:
         self.height = 0
         self.width = 0
         self.pixel_desc = {}
+        self.all_poses = set()
         self.obstacles = {}
         self.free_points = {}
-        self.resolution = 0.05
+        self.map_resolution = 0.05
         self.plot_intersection_active = False
         self.plot_data_active = False
         self.lock = Lock()
@@ -74,17 +75,19 @@ class Graph:
         self.bs_pose = rospy.get_param('~bs_pose')
         self.map_scale = rospy.get_param('~map_scale')
         self.termination_metric = rospy.get_param("~termination_metric")
-        self.min_hallway_width = rospy.get_param("~min_hallway_width".format(self.robot_id)) * self.map_scale
-        self.comm_range = rospy.get_param("~comm_range".format(self.robot_id)) * self.map_scale
+        self.min_hallway_width = rospy.get_param("~min_hallway_width".format(self.robot_id)) * pu.SCALE
+        self.comm_range = rospy.get_param("~comm_range".format(self.robot_id)) * pu.SCALE
         self.point_precision = rospy.get_param("~point_precision".format(self.robot_id))
-        self.min_edge_length = rospy.get_param("~min_edge_length".format(self.robot_id)) * self.map_scale
-        self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius".format(self.robot_id)) * self.map_scale
+        self.min_edge_length = rospy.get_param("~min_edge_length".format(self.robot_id)) * pu.SCALE
+        self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius".format(self.robot_id)) * pu.SCALE
         self.lidar_fov = rospy.get_param("~lidar_fov".format(self.robot_id))
         self.slope_bias = rospy.get_param("~slope_bias".format(self.robot_id))
         self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id))
         self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias".format(self.robot_id))
         rospy.Service('/robot_{}/rendezvous'.format(self.robot_id), RendezvousPoints,
                       self.fetch_rendezvous_points_handler)
+        rospy.Service('/robot_{}/explored_region'.format(self.robot_id), ExploredRegion,
+                      self.fetch_explored_region_handler)
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
         rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_callback)
@@ -110,7 +113,6 @@ class Graph:
                 rospy.logerr('Robot {}: Graph node interrupted!: {}'.format(self.robot_id, e))
 
     def map_callback(self, data):
-        rospy.logerr("robot {}:received map".format(self.robot_id))
         self.latest_map = data
 
     def is_same_intersection(self, intersec, robot_pose):
@@ -163,14 +165,6 @@ class Graph:
             pu.log_msg(self.robot_id, "Intersection: {}".format(intersecs), self.debug_mode)
             result = pu.D(pu.scale_down(intersec[0][1]), pu.scale_down(intersec[1][0]))
         return IntersectionsResponse(result=result)
-
-    # def fetch_graph_handler(self, data):
-    #     robot_pose = (data.pose.position.x, data.pose.position.y)
-    #     if not self.edges or self.enough_delay():
-    #         self.generate_graph()
-    #     edgelist = self.create_edge_list(robot_pose)
-    #
-    #     return FetchGraphResponse(edgelist=edgelist)
 
     def enough_delay(self):
         return rospy.Time.now().to_sec() - self.last_graph_update_time > 30  # updated last 20 secs
@@ -230,7 +224,6 @@ class Graph:
         origin = pu.scale_up(robot_pose)
 
         free_points = [p for p in all_points if self.pixel_desc[p] == FREE and pu.D(origin, p) <= self.comm_range]
-        rospy.logerr("recieved rv request")
         if free_points:
             hull, boundary_points = graham_scan(free_points, count, False)
             for b in boundary_points:
@@ -239,7 +232,6 @@ class Graph:
                 pose.position.x = ap[INDEX_FOR_X]
                 pose.position.y = ap[INDEX_FOR_Y]
                 rendezvous_points.append(pose)
-        rospy.logerr("sent response")
         return RendezvousPointsResponse(poses=rendezvous_points)
 
     def get_closest_edge(self, robot_pose, close_edges):
@@ -267,6 +259,7 @@ class Graph:
 
     def get_image_desc(self, occ_grid):
         resolution = occ_grid.info.resolution
+        self.map_resolution = resolution
         origin_pos = occ_grid.info.origin.position
         origin_x = origin_pos.x
         origin_y = origin_pos.y
@@ -283,11 +276,21 @@ class Graph:
                 index[INDEX_FOR_X] = col
                 index = tuple(index)
                 pose = pu.pixel2pose(index, origin_x, origin_y, resolution)
+                self.all_poses.add(self.round_point(pose))
                 scaled_pose = pu.get_point(pu.scale_up(pose))
                 p = grid_values[num_rows - row - 1, col]
                 self.pixel_desc[scaled_pose] = p
                 if p == OCCUPIED:
                     self.obstacles[scaled_pose] = OCCUPIED
+
+    def round_point(self, p):
+        xc = round(p[INDEX_FOR_X], 2)
+        yc = round(p[INDEX_FOR_Y], 2)
+        new_p = [0.0] * 2
+        new_p[INDEX_FOR_X] = xc
+        new_p[INDEX_FOR_Y] = yc
+        new_p = tuple(new_p)
+        return new_p
 
     def compute_intersections(self, pose):
         start = rospy.Time.now().to_sec()
@@ -438,8 +441,8 @@ class Graph:
                     q1 = obstacles[ridge_point[0]]
                     q2 = obstacles[ridge_point[1]]
                     o = (pu.get_point(tuple(q1)), pu.get_point(tuple(q2)))
-                    if pu.D(q1, q2) > self.min_hallway_width:
-                        self.edges[e] = o
+                    # if pu.D(q1, q2) > self.min_hallway_width:
+                    self.edges[e] = o
             self.get_adjacency_list(self.edges)
             self.connect_subtrees()
             self.merge_similar_edges()
@@ -455,6 +458,18 @@ class Graph:
             self.get_adjacency_list(self.edges)
         else:
             print("empty subtree")
+
+    def fetch_explored_region_handler(self, data):
+        if self.latest_map and self.enough_delay():
+            self.get_image_desc(self.latest_map)
+        pixel_points = list(self.all_poses)
+        poses = []
+        for p in pixel_points:
+            pose = Pose()
+            pose.position.x = p[INDEX_FOR_X]
+            pose.position.y = p[INDEX_FOR_Y]
+            poses.append(pose)
+        return ExploredRegionResponse(poses=poses, resolution=self.map_resolution)
 
     def already_exists(self, p):
         pose = [0.0] * 2
@@ -592,11 +607,6 @@ class Graph:
         allnodes = list(set(allnodes))  # deal with only unique leaves
         for leaf, adj in self.adj_dict.items():
             adj_leaves = self.leave_dict[leaf]
-            all_nodes = []
-            # for lf, lf_adj in self.adj_dict.items():
-            #     if lf != leaf:
-            #         all_nodes += lf_adj.keys()
-            # allnodes = list(set(all_nodes))  # deal with only unique leaves
             leaf_dist = {}
             for l in adj_leaves:
                 dist_dict = {}
