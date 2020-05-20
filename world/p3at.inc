@@ -21,7 +21,9 @@ define pioneer3at position
 	acceleration_bounds [-0.5 0.5 0 0 0 0 -90.0 90.0 ]
 
 	# Actual size
-	size [0.626 0.505 0.4]
+	#size [0.626 0.505 0.4]
+	size [ 0.2552 0.2552 0.40 ] # Turtlebot size
+
 
 	# The pioneer's center of rotation is offset from its center of area
 	origin [0 0 0 0]
