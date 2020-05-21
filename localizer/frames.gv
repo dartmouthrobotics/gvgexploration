@@ -1,0 +1,30 @@
+digraph G {
+"map" -> "robot_0/map"[label="Broadcaster: /R0_MapAlign\nAverage rate: 10.244 Hz\nMost recent transform: 419.900 ( -0.100 sec old)\nBuffer length: 4.100 sec\n"];
+"map" -> "robot_1/map"[label="Broadcaster: /R1_MapAlign\nAverage rate: 10.244 Hz\nMost recent transform: 419.900 ( -0.100 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_3/offset" -> "robot_3/odom"[label="Broadcaster: /robot_3/Mapper\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_3/map" -> "robot_3/offset"[label="Broadcaster: /robot_3/Mapper\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"map" -> "robot_3/map"[label="Broadcaster: /R3_MapAlign\nAverage rate: 10.244 Hz\nMost recent transform: 419.900 ( -0.100 sec old)\nBuffer length: 4.100 sec\n"];
+"map" -> "robot_2/map"[label="Broadcaster: /R2_MapAlign\nAverage rate: 10.244 Hz\nMost recent transform: 419.900 ( -0.100 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_0/offset" -> "robot_0/odom"[label="Broadcaster: /robot_0/Mapper\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_0/map" -> "robot_0/offset"[label="Broadcaster: /robot_0/Mapper\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_1/offset" -> "robot_1/odom"[label="Broadcaster: /robot_1/Mapper\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_1/map" -> "robot_1/offset"[label="Broadcaster: /robot_1/Mapper\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_0/base_link" -> "robot_0/base_laser_link"[label="Broadcaster: /Stage\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_0/base_footprint" -> "robot_0/base_link"[label="Broadcaster: /Stage\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_0/odom" -> "robot_0/base_footprint"[label="Broadcaster: /Stage\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_1/base_link" -> "robot_1/base_laser_link"[label="Broadcaster: /Stage\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_1/base_footprint" -> "robot_1/base_link"[label="Broadcaster: /Stage\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_1/odom" -> "robot_1/base_footprint"[label="Broadcaster: /Stage\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_2/base_link" -> "robot_2/base_laser_link"[label="Broadcaster: /Stage\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_2/base_footprint" -> "robot_2/base_link"[label="Broadcaster: /Stage\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_2/odom" -> "robot_2/base_footprint"[label="Broadcaster: /Stage\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_2/offset" -> "robot_2/odom"[label="Broadcaster: /robot_2/Mapper\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_3/base_link" -> "robot_3/base_laser_link"[label="Broadcaster: /Stage\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_3/base_footprint" -> "robot_3/base_link"[label="Broadcaster: /Stage\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_3/odom" -> "robot_3/base_footprint"[label="Broadcaster: /Stage\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+"robot_2/map" -> "robot_2/offset"[label="Broadcaster: /robot_2/Mapper\nAverage rate: 10.244 Hz\nMost recent transform: 419.800 ( 0.000 sec old)\nBuffer length: 4.100 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 419.800"[ shape=plaintext ] ;
+ }->"map";
+}

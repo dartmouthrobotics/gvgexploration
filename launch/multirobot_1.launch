@@ -1,7 +1,5 @@
 <launch>
-    <!-- Some general parameters -->
     <param name="use_sim_time" value="true" />
-    <!-- Start Stage simulator with a given environment -->
     <node name="Stage" pkg="stage_ros" type="stageros" args="$(find gvgexploration)/world/maze.world">
         <param name="base_watchdog_timeout" value="0" />
     </node>
@@ -21,7 +19,6 @@
             <rosparam file="$(find gvgexploration)/param/navigator.yaml"/>
             <param name="robot_id" value="1"/>
         </node>
-        <!--        <node pkg="nav2d_navigator" type="explore_client" name="explore_client"/>-->
         <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
         <node name="SetGoal" pkg="nav2d_navigator" type="set_goal_client" />
         <node name="scan_filter" pkg="gvgexploration" type="scan_filter.py">
@@ -32,8 +29,6 @@
             <arg name="robot_name" value="0" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="1" />
-            <arg name="robot_count" value="2"/>
-            <arg name="environment" value="maze"/>
         </include>
 
     </group>

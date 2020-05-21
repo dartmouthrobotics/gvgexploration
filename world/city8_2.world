@@ -33,10 +33,9 @@ floorplan
 (
   name "tutorial"
   bitmap "city.png"
-  size [ 80.0 80.0 10.0 ]
+  size [ 80.0 49.3 10.0 ]
   pose [  39.85  14.55 0.0 0.0 ]
 )
-
 pioneer3at
 (
   name "robot1"

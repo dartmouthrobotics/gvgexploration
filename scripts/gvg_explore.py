@@ -189,7 +189,9 @@ class GVGExplore:
         self.cancel_request = False
 
     def move_to_frontier(self, pose, theta=0):
+        rospy.logerr("Received: {}".format(pose))
         scaled_pose = pu.scale_down(pose)
+        rospy.logerr("Received scaled: {}".format(scaled_pose))
         self.moving_to_frontier = True
         self.move_robot_to_goal(scaled_pose, theta)
         while self.moving_to_frontier:
@@ -215,29 +217,30 @@ class GVGExplore:
             angle = 0
             if parent[u]:
                 angle = pu.theta(parent_nodes[ancestor_id], leave_node)
-            self.move_to_frontier(leave_node, theta=angle)
-            start_time = rospy.Time.now().to_sec()
-            visited_nodes[leave_node] = None
-            self.fetch_new_graph()
-            self.localize_parent_nodes(parent_nodes, actual_visited_nodes)
-            ancestor_node = None
-            if parent[u]:
-                ancestor_node = parent_nodes[parent[u]]
-            leave_node = self.localize_leaf_node(ancestor_node, parent_nodes[u], stack_nodes[u])
-            end_time = rospy.Time.now().to_sec()
-            gvg_time = end_time - start_time
-            self.explore_computation.append({'time': start_time, 'gvg_compute': gvg_time})
-            if leave_node:
-                next_leaves = self.get_leaves(leave_node, parent_nodes[u])
-                for leaf, lp in next_leaves.items():
-                    if leaf not in visited_nodes and leaf not in actual_visited_nodes and self.is_near_unexplored_area(
-                            leaf, lp):
-                        v_id = self.get_id()
-                        S.append(v_id)
-                        parent[v_id] = u
-                        stack_nodes[v_id] = leaf
-                        parent_nodes[v_id] = lp
-            visited.append(u)
+            if leave_node not in visited_nodes:
+                self.move_to_frontier(leave_node, theta=angle)
+                start_time = rospy.Time.now().to_sec()
+                visited_nodes[leave_node] = None
+                self.fetch_new_graph()
+                self.localize_parent_nodes(parent_nodes, actual_visited_nodes)
+                ancestor_node = None
+                if parent[u]:
+                    ancestor_node = parent_nodes[parent[u]]
+                leave_node = self.localize_leaf_node(ancestor_node, parent_nodes[u], stack_nodes[u])
+                end_time = rospy.Time.now().to_sec()
+                gvg_time = end_time - start_time
+                self.explore_computation.append({'time': start_time, 'gvg_compute': gvg_time})
+                if leave_node:
+                    next_leaves = self.get_leaves(leave_node, parent_nodes[u])
+                    for leaf, lp in next_leaves.items():
+                        if leaf not in visited_nodes and leaf not in actual_visited_nodes and self.is_near_unexplored_area(
+                                leaf, lp):
+                            v_id = self.get_id()
+                            S.append(v_id)
+                            parent[v_id] = u
+                            stack_nodes[v_id] = leaf
+                            parent_nodes[v_id] = lp
+                visited.append(u)
         return last_edge
 
     def get_leaves(self, node, parent_node):
