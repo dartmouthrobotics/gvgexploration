@@ -90,34 +90,6 @@ class MapAnalyzer:
             rospy.logerr(e)
             pass
 
-    def get_map_description(self, occ_grid, rid, origin_x, origin_y):
-        resolution = occ_grid.info.resolution
-        rospy.logerr("Resolution: {}".format(resolution))
-        if not self.map_resolution:
-            self.map_resolution = round(resolution, 2)
-            self.read_raw_image()
-        height = occ_grid.info.height
-        width = occ_grid.info.width
-        grid_values = np.array(occ_grid.data).reshape((height, width)).astype(np.float32)
-        num_rows = grid_values.shape[0]
-        num_cols = grid_values.shape[1]
-        explored_poses = set()
-        unexplored_poses = set()
-        for row in range(num_rows):
-            for col in range(num_cols):
-                index = [0] * 2
-                index[INDEX_FOR_Y] = num_rows - row - 1
-                index[INDEX_FOR_X] = col
-                index = tuple(index)
-                pose = pixel2pose(index, origin_x, origin_y, self.map_resolution)
-                pose = self.round_point(pose)
-                p = grid_values[num_rows - row - 1, col]
-                if p == FREE:
-                    explored_poses.add(pose)
-                else:
-                    unexplored_poses.add(pose)
-        return explored_poses, unexplored_poses
-
     def round_point(self, p):
         xc = round(p[INDEX_FOR_X], 2)
         yc = round(p[INDEX_FOR_Y], 2)
