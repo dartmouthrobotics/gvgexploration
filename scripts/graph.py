@@ -82,7 +82,7 @@ class Graph:
         self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius".format(self.robot_id)) * pu.SCALE
         self.lidar_fov = rospy.get_param("~lidar_fov".format(self.robot_id))
         self.slope_bias = rospy.get_param("~slope_bias".format(self.robot_id))
-        self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id))
+        self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id)) * pu.SCALE
         self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias".format(self.robot_id))
         rospy.Service('/robot_{}/rendezvous'.format(self.robot_id), RendezvousPoints,
                       self.fetch_rendezvous_points_handler)
@@ -152,6 +152,7 @@ class Graph:
 
     def intersection_handler(self, data):
         pose_data = data.pose
+        pu.log_msg(self.robot_id, "Received Intersection request", self.debug_mode)
         if not self.edges or self.enough_delay():
             self.generate_graph()
         robot_pose = [0.0] * 2
@@ -276,12 +277,14 @@ class Graph:
                 index[INDEX_FOR_X] = col
                 index = tuple(index)
                 pose = pu.pixel2pose(index, origin_x, origin_y, resolution)
-                self.all_poses.add(self.round_point(pose))
-                scaled_pose = pu.get_point(pu.scale_up(pose))
+                scaled_pose = pu.scale_up(pose)
+                scaled_pose = self.round_point(scaled_pose)
                 p = grid_values[num_rows - row - 1, col]
                 self.pixel_desc[scaled_pose] = p
                 if p == OCCUPIED:
                     self.obstacles[scaled_pose] = OCCUPIED
+                elif p == FREE:
+                    self.all_poses.add(self.round_point(pose))
 
     def round_point(self, p):
         xc = round(p[INDEX_FOR_X], 2)
@@ -317,9 +320,9 @@ class Graph:
             if closest_ridge[cr] < vertex_dict[cr][1]:
                 close_edge = cr
                 intersecs = self.process_decision(vertex_dict, close_edge, robot_pose)
-                if self.debug_mode:
-                    if not self.plot_intersection_active and intersecs:
-                        self.plot_intersections(None, close_edge, intersecs, robot_pose)
+                # if self.debug_mode:
+                if not self.plot_intersection_active:  # and intersecs:
+                    self.plot_intersections(None, close_edge, intersecs, robot_pose)
 
         now = rospy.Time.now().to_sec()
         t = (now - start)
@@ -339,7 +342,8 @@ class Graph:
                 p3 = j[1]
                 v2 = desc[0]
                 w2 = desc[1]
-                if self.lidar_scan_radius < pu.D(p2, p3) < self.comm_range:
+                # if self.lidar_scan_radius < pu.D(p2, p3) < self.comm_range:
+                if pu.D(p2, p3) < self.comm_range:
                     if pu.collinear(p1, p2, p3, w1, self.slope_bias):
                         cos_theta, separation = pu.compute_similarity(v1, v2, ridge, j)
                         if -1 <= cos_theta <= -1 + self.opposite_vector_bias and abs(separation) < abs(w1 - w2):
@@ -352,9 +356,6 @@ class Graph:
                     pass
 
         intersections = self.get_pairs_with_unknown_area(intesec_pose)
-        # if intesec_pose:
-        #     min_dist = min(intesec_pose.keys())
-        #     intersections.append(intesec_pose[min_dist])
         return intersections
 
     def get_pairs_with_unknown_area(self, edge_pairs):
@@ -603,7 +604,8 @@ class Graph:
             return
         allnodes = []  # all leaves for every search
         for k, v in self.leave_dict.items():
-            allnodes += v
+            if k not in allnodes:
+                allnodes += v
         allnodes = list(set(allnodes))  # deal with only unique leaves
         for leaf, adj in self.adj_dict.items():
             adj_leaves = self.leave_dict[leaf]
@@ -1031,9 +1033,8 @@ class Graph:
             y = y_pairs[i]
             ax.plot(x, y, "g-.")
         plt.grid()
-        plt.savefig(
-            "{}/intersections_{}_{}_{}.png".format(self.method, self.robot_id, time.time(),
-                                                   self.run))  # TODO consistent time.
+        plt.savefig("{}/intersections_{}_{}_{}.png".format(self.method, self.robot_id, time.time(),
+                                                           self.run))  # TODO consistent time.
         plt.close(fig)
         self.plot_intersection_active = False
 

@@ -15,6 +15,7 @@ Panels:
         - /EDGE1:Marker1
         - /Leaves1:Marker1
         - /R3:Map1
+        - /L1:Map1
       Splitter Ratio: 0.5
     Tree Height: 1804
   - Class: rviz/Selection
@@ -94,16 +95,6 @@ Visualization Manager:
           Value: true
         robot_1/offset:
           Value: true
-        robot_2/base_footprint:
-          Value: true
-        robot_2/base_laser_link:
-          Value: true
-        robot_2/base_link:
-          Value: true
-        robot_2/map:
-          Value: true
-        robot_2/odom:
-          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
@@ -125,8 +116,6 @@ Visualization Manager:
                   robot_1/base_link:
                     robot_1/base_laser_link:
                       {}
-          robot_2/map:
-            {}
       Update Interval: 0
       Value: true
     - Class: rviz/Marker
@@ -134,7 +123,7 @@ Visualization Manager:
       Marker Topic: /robot_0/navigator/markers
       Name: NP:Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -142,7 +131,7 @@ Visualization Manager:
       Marker Topic: /robot_0/explore/edges
       Name: EDGE:Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -150,7 +139,7 @@ Visualization Manager:
       Marker Topic: /robot_0/explore/vertices
       Name: Leaves:Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -158,7 +147,7 @@ Visualization Manager:
       Marker Topic: /robot_1/navigator/markers
       Name: NP1:Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -166,7 +155,7 @@ Visualization Manager:
       Marker Topic: /robot_1/explore/edges
       Name: EDGE1:Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -174,7 +163,7 @@ Visualization Manager:
       Marker Topic: /robot_1/explore/vertices
       Name: Leaves1:Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Alpha: 0.699999988079071
@@ -184,6 +173,16 @@ Visualization Manager:
       Enabled: true
       Name: R3:Map
       Topic: /robot_2/map
+      Unreliable: false
+      Use Timestamp: false
+      Value: true
+    - Alpha: 0.699999988079071
+      Class: rviz/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: L1:Map
+      Topic: /robot_0/operator/local_map/costmap
       Unreliable: false
       Use Timestamp: false
       Value: true
@@ -221,11 +220,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 17.74710464477539
+      Scale: 38.668235778808594
       Target Frame: dxl_base
       Value: TopDownOrtho (rviz)
-      X: 37.98423385620117
-      Y: 20.96648406982422
+      X: 37.79240417480469
+      Y: 12.205911636352539
     Saved:
       - Angle: 0
         Class: rviz/TopDownOrtho

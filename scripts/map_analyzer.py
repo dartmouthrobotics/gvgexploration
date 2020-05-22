@@ -34,7 +34,6 @@ class MapAnalyzer:
         for i in range(self.robot_count):
             p = rospy.ServiceProxy('/robot_{}/explored_region'.format(i), ExploredRegion)
             p.wait_for_service()
-            rospy.logerr("Service added")
             self.explored_region[i] = p
             self.all_maps[i] = set()
 
@@ -45,7 +44,6 @@ class MapAnalyzer:
 
     def spin(self):
         r = rospy.Rate(0.05)
-        rospy.logerr("Reading image")
         self.read_raw_image()
         while not rospy.is_shutdown():
             try:
@@ -95,34 +93,6 @@ class MapAnalyzer:
             rospy.logerr(e)
             pass
 
-    def get_map_description(self, occ_grid, rid, origin_x, origin_y):
-        resolution = occ_grid.info.resolution
-        rospy.logerr("Resolution: {}".format(resolution))
-        if not self.map_resolution:
-            self.map_resolution = round(resolution, 2)
-            self.read_raw_image()
-        height = occ_grid.info.height
-        width = occ_grid.info.width
-        grid_values = np.array(occ_grid.data).reshape((height, width)).astype(np.float32)
-        num_rows = grid_values.shape[0]
-        num_cols = grid_values.shape[1]
-        explored_poses = set()
-        unexplored_poses = set()
-        for row in range(num_rows):
-            for col in range(num_cols):
-                index = [0] * 2
-                index[INDEX_FOR_Y] = num_rows - row - 1
-                index[INDEX_FOR_X] = col
-                index = tuple(index)
-                pose = pixel2pose(index, origin_x, origin_y, self.map_resolution)
-                pose = self.round_point(pose)
-                p = grid_values[num_rows - row - 1, col]
-                if p == FREE:
-                    explored_poses.add(pose)
-                else:
-                    unexplored_poses.add(pose)
-        return explored_poses, unexplored_poses
-
     def round_point(self, p):
         xc = round(p[INDEX_FOR_X], 2)
         yc = round(p[INDEX_FOR_Y], 2)
@@ -135,7 +105,6 @@ class MapAnalyzer:
     def read_raw_image(self):
         if self.map_file_name:
             im = Image.open(self.map_file_name, 'r')
-            # rospy.logerr(self.map_file_name)
             pixelMap = im.load()
             free_points = 0
             allpixels = 0
@@ -146,22 +115,18 @@ class MapAnalyzer:
                     index = [0.0] * 2
                     index[INDEX_FOR_X] = i * 0.1
                     index[INDEX_FOR_Y] = (height - j) * 0.1
-                    # pose = self.round_point(index)
                     pixel = pixelMap[i, j]
                     allpixels += 1
                     if isinstance(pixel, int):
                         if pixel > 0:
                             free_points += 1
-                            # self.pixel_desc[pose] = None
                     else:
                         pixel = pixelMap[i, j][0]
                         if pixel > 0:
                             free_points += 1
-                            # self.pixel_desc[pose] = None
             free_area = float(free_points)
             self.free_area_ratio = free_points / float(allpixels)
             self.total_free_area = free_area
-            rospy.logerr("Free pixel ratio: {}, All points: {}, {}".format(self.free_area_ratio, self.total_free_area, im.size))
 
     def shutdown_callback(self, msg):
         rospy.signal_shutdown('MapAnalyzer: Shutdown command received!')
