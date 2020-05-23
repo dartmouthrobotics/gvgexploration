@@ -75,14 +75,15 @@ class Graph:
         self.bs_pose = rospy.get_param('~bs_pose')
         self.map_scale = rospy.get_param('~map_scale')
         self.termination_metric = rospy.get_param("~termination_metric")
-        self.min_hallway_width = rospy.get_param("~min_hallway_width".format(self.robot_id)) * pu.SCALE
+        self.frontier_threshold = rospy.get_param("~frontier_threshold")
+        self.min_hallway_width = rospy.get_param("~min_hallway_width".format(self.robot_id)) * self.map_scale
         self.comm_range = rospy.get_param("~comm_range".format(self.robot_id)) * pu.SCALE
         self.point_precision = rospy.get_param("~point_precision".format(self.robot_id))
-        self.min_edge_length = rospy.get_param("~min_edge_length".format(self.robot_id)) * pu.SCALE
-        self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius".format(self.robot_id)) * pu.SCALE
+        self.min_edge_length = rospy.get_param("~min_edge_length".format(self.robot_id)) * self.map_scale
+        self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius".format(self.robot_id)) * self.map_scale
         self.lidar_fov = rospy.get_param("~lidar_fov".format(self.robot_id))
         self.slope_bias = rospy.get_param("~slope_bias".format(self.robot_id))
-        self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id)) * pu.SCALE
+        self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id)) * self.map_scale
         self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias".format(self.robot_id))
         rospy.Service('/robot_{}/rendezvous'.format(self.robot_id), RendezvousPoints,
                       self.fetch_rendezvous_points_handler)
@@ -91,7 +92,8 @@ class Graph:
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
         rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_callback)
-        self.edge_pub = rospy.Publisher('/robot_{}/edge_list'.format(self.robot_id), EdgeList, queue_size=1)
+        rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_edge_handler)
+
         rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         self.already_shutdown = False
         self.robot_pose = None
@@ -125,6 +127,15 @@ class Graph:
             if abs(current_dist - last_dist) > self.comm_range:
                 is_same = False
         return is_same
+
+    def fetch_edge_handler(self, data):
+        self.generate_graph()
+        pose = [0.0] * 2
+        pose[INDEX_FOR_X] = data.pose.position.x
+        pose[INDEX_FOR_Y] = data.pose.position.y
+        robot_pose = pu.scale_up(pose)
+        edgelist = self.create_edge_list(robot_pose)
+        return FetchGraphResponse(edgelist=edgelist)
 
     def frontier_point_handler(self, request):
         count = request.count
@@ -176,10 +187,6 @@ class Graph:
         if not map_msg:
             map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
         self.compute_graph(map_msg)
-        pose = self.get_robot_pose()
-        robot_pose = pu.scale_up(pose)
-        edgelist = self.create_edge_list(robot_pose)
-        self.edge_pub.publish(edgelist)
         self.last_graph_update_time = rospy.Time.now().to_sec()
         self.lock.release()
 
@@ -283,12 +290,21 @@ class Graph:
                 self.pixel_desc[scaled_pose] = p
                 if p == OCCUPIED:
                     self.obstacles[scaled_pose] = OCCUPIED
-                elif p == FREE:
-                    self.all_poses.add(self.round_point(pose))
+                if p == FREE:
+                    self.all_poses.add(self.round_point1(pose))
 
     def round_point(self, p):
         xc = round(p[INDEX_FOR_X], 2)
         yc = round(p[INDEX_FOR_Y], 2)
+        new_p = [0.0] * 2
+        new_p[INDEX_FOR_X] = xc
+        new_p[INDEX_FOR_Y] = yc
+        new_p = tuple(new_p)
+        return new_p
+
+    def round_point1(self, p):
+        xc = round(p[INDEX_FOR_X], 4)
+        yc = round(p[INDEX_FOR_Y], 4)
         new_p = [0.0] * 2
         new_p[INDEX_FOR_X] = xc
         new_p[INDEX_FOR_Y] = yc
@@ -903,7 +919,6 @@ class Graph:
         return [p for p in points if self.pixel_desc[p] == OCCUPIED]
 
     def compute_new_information(self):
-        resolution = 1
         frontier_size = {}
         self.new_information.clear()
         self.known_points.clear()
@@ -922,10 +937,11 @@ class Graph:
             if obs:
                 frontier_size[leaf] = pu.D(obs[0], obs[1])
                 ks, us = self.area(leaf, slope)
-                unknown_area = len(us) * resolution ** 2
-                self.new_information[(edge, obs)] = unknown_area
-                self.known_points[(edge, obs)] = ks
-                self.unknown_points[(edge, obs)] = us
+                unknown_area = len(us) * self.map_resolution ** 2
+                if unknown_area > self.frontier_threshold:
+                    self.new_information[(edge, obs)] = unknown_area
+                    self.known_points[(edge, obs)] = ks
+                    self.unknown_points[(edge, obs)] = us
 
     def area(self, point, orientation):
         known_points = []
@@ -940,9 +956,9 @@ class Graph:
                 pt = [0.0] * 2
                 pt[INDEX_FOR_X] = x
                 pt[INDEX_FOR_Y] = y
-                pt = tuple(pt)
+                pt = self.round_point(pt)
                 distance_points.append(pt)
-            unique_points = list(set(distance_points))
+            unique_points = set(distance_points)
             for p in unique_points:
                 if pu.is_free(p, self.pixel_desc) or pu.is_obstacle(p, self.pixel_desc):
                     known_points.append(p)

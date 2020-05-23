@@ -47,38 +47,37 @@ class MapAnalyzer:
         self.read_raw_image()
         while not rospy.is_shutdown():
             try:
-                self.publish_coverage()
+                if not self.is_active:
+                    self.is_active = True
+                    self.publish_coverage()
+                    self.is_active = False
             except Exception as e:
                 rospy.logerr("Got this result:::::::: {}".format(e))
             r.sleep()
 
     def publish_coverage(self):
-        if not self.is_active:
-            self.is_active = True
-            common_points = []
-            for rid in range(self.robot_count):
-                self.get_explored_region(rid)
-                common_points.append(self.all_maps[rid])
-            common_area = set.intersection(*common_points)
-            scale_val = (self.map_resolution ** 2) / ((1.0 / self.scale) ** 2)
-            rospy.logerr("resolution: {}, scale: {}, scale value: {}".format(self.map_resolution,self.scale,scale_val))
-            common_area_size = len(common_area) * scale_val
-            explored_area = len(self.all_explored_points) * scale_val  # scale of the map in rviz
-            cov_ratio = explored_area / self.total_free_area
-            common_coverage = common_area_size / self.total_free_area
-            rospy.logerr(
-                "Total points: {}, explored area: {}, common area: {}".format(self.total_free_area, cov_ratio,
-                                                                              common_coverage))
-            cov_msg = Coverage()
-            cov_msg.header.stamp = rospy.Time.now()
-            cov_msg.coverage = cov_ratio
-            cov_msg.expected_coverage = self.free_area_ratio
-            cov_msg.common_coverage = common_coverage
-            self.coverage_pub.publish(cov_msg)
-            self.all_coverage_data.append(
-                {'time': rospy.Time.now().to_sec(), 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
-                 'expected_coverage': self.free_area_ratio})
-            self.is_active = False
+        common_points = []
+        for rid in range(self.robot_count):
+            self.get_explored_region(rid)
+            common_points.append(self.all_maps[rid])
+        common_area = set.intersection(*common_points)
+        scale_val = (self.map_resolution ** 2) / ((1.0 / self.scale) ** 2)
+        rospy.logerr("resolution: {}, scale: {}, scale value: {}".format(self.map_resolution,self.scale,scale_val))
+        common_area_size = len(common_area) * scale_val
+        explored_area = len(self.all_explored_points) * scale_val  # scale of the map in rviz
+        cov_ratio = explored_area / self.total_free_area
+        common_coverage = common_area_size / self.total_free_area
+        rospy.logerr( "Total points: {}, explored area: {}, common area: {}".format(self.total_free_area, cov_ratio,
+                                                                          common_coverage))
+        cov_msg = Coverage()
+        cov_msg.header.stamp = rospy.Time.now()
+        cov_msg.coverage = cov_ratio
+        cov_msg.expected_coverage = self.free_area_ratio
+        cov_msg.common_coverage = common_coverage
+        self.coverage_pub.publish(cov_msg)
+        self.all_coverage_data.append(
+            {'time': rospy.Time.now().to_sec(), 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
+             'expected_coverage': self.free_area_ratio})
 
     def get_explored_region(self, rid):
         try:
@@ -92,15 +91,6 @@ class MapAnalyzer:
         except Exception as e:
             rospy.logerr(e)
             pass
-
-    def round_point(self, p):
-        xc = round(p[INDEX_FOR_X], 2)
-        yc = round(p[INDEX_FOR_Y], 2)
-        new_p = [0.0] * 2
-        new_p[INDEX_FOR_X] = xc
-        new_p[INDEX_FOR_Y] = yc
-        new_p = tuple(new_p)
-        return new_p
 
     def read_raw_image(self):
         if self.map_file_name:
