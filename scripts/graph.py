@@ -441,8 +441,8 @@ class Graph:
                     q1 = obstacles[ridge_point[0]]
                     q2 = obstacles[ridge_point[1]]
                     o = (pu.get_point(tuple(q1)), pu.get_point(tuple(q2)))
-                    # if pu.D(q1, q2) > self.min_hallway_width:
-                    self.edges[e] = o
+                    if pu.D(q1, q2) > self.min_hallway_width:
+                        self.edges[e] = o
             self.get_adjacency_list(self.edges)
             self.connect_subtrees()
             self.merge_similar_edges()
@@ -768,7 +768,7 @@ class Graph:
             ax.plot(y, x, "g-o")
         plt.grid()
         plt.axis('off')
-        plt.savefig("gvg/map_update_{}_{}_{}.png".format(self.robot_id, time.time(), self.run))
+        plt.savefig("{}/map_update_{}_{}_{}.png".format(self.method, self.robot_id, time.time(), self.run))
 
         plt.close()
         # plt.show()
@@ -993,7 +993,7 @@ class Graph:
         except:
             pass
         # plt.axis('off')
-        plt.savefig("gvg/plot_{}_{}_{}.png".format(self.robot_id, time.time(), self.run))
+        plt.savefig("{}/plot_{}_{}_{}.png".format(self.method, self.robot_id, time.time(), self.run))
         plt.close()
         # plt.show()
         self.plot_data_active = False
@@ -1032,8 +1032,8 @@ class Graph:
             ax.plot(x, y, "g-.")
         plt.grid()
         plt.savefig(
-            "gvg/intersections_{}_{}_{}.png".format(self.robot_id, time.time(),
-                                                    self.run))  # TODO consistent time.
+            "{}/intersections_{}_{}_{}.png".format(self.method, self.robot_id, time.time(),
+                                                   self.run))  # TODO consistent time.
         plt.close(fig)
         self.plot_intersection_active = False
 
