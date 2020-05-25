@@ -1,13 +1,15 @@
 debug_mode: 1
-method: 'recurrent' # method that is running
+method: 'gvg' # method that is running
+data_share_threshold: 10
 max_target_info_ratio: 0.5
+frontier_threshold: 10
 robot_count: 2    # number of robots on the team
 min_hallway_width: 1.0   # allowed minimum separation between two pixels on the graph
 comm_range: 20  # communication range
 point_precision: 2   # allowed precision of the poses
 min_edge_length: 1   #  allowed edge length
-lidar_scan_radius: 10  # radius of the range finder
-lidar_fov: 120   # range scanner field of view
+lidar_scan_radius: 6  # radius of the range finder
+lidar_fov: 360   # range scanner field of view
 slope_bias: 0.1   # allowed error margin in slope comparisons
 opposite_vector_bias: 0.25  # allowed error margin in vector comparisons (direction)
 separation_bias: 2  # allowed error margin in comparisons of corridor width
@@ -15,7 +17,8 @@ max_coverage: 0.8   # allowed maximum coverage
 max_common_coverage: 0.8
 max_exploration_time: 20
 termination_metric: 1 # 1: TOTAL COVERAGE, 2: MAXIMUM_EXPLORATION_TIME 3: COMMON_COVERAGE, 4: FULL_COVERAGE
-map_scale: 10     # scale of the map
+map_scale: 20.0     # scale of the map
+graph_scale: 10.0     # scale of the map
 bs_pose: [4.0,10.0]
 map_inflation_radius: 1   # inflation radius of the robot
 map_file: '$(find gvgexploration)/world/basic.png'    # environment file

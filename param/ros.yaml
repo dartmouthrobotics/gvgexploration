@@ -20,7 +20,7 @@ map_service: static_map
 
 
 ## Nav2d navigator
-robot_radius: 0.4
+robot_radius: 0.2
 map_inflation_radius: 0.75
 
 

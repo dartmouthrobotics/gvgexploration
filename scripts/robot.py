@@ -110,7 +110,7 @@ class Robot:
         self.environment = rospy.get_param("~environment")
         self.robot_count = rospy.get_param("~robot_count")
         self.debug_mode = rospy.get_param("~debug_mode")
-
+        self.method = rospy.get_param("~method")
         self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,self.shared_data_handler)
         self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,self.shared_point_handler)
         self.alloc_point_srv = rospy.Service("/robot_{}/allocated_point".format(self.robot_id), SharedFrontier,
@@ -398,7 +398,7 @@ class Robot:
     def robots_karto_out_callback(self, data):
         if data.robot_id - 1 == self.robot_id:
             for rid in self.candidate_robots:
-                self.add_to_file(rid, [data])
+                self.add_to_file(rid, data)
             if self.is_initial_data_sharing:
                 self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
                 self.is_initial_data_sharing = False
@@ -441,7 +441,11 @@ class Robot:
         for rid, rdata in buff_data.items():
             data_vals = rdata.data
             for scan in data_vals:
+                sid = str(scan.robot_id - 1)
                 self.karto_pub.publish(scan)
+                for rid in self.candidate_robots:
+                    if rid != sid:
+                        self.add_to_file(rid, scan)
                 sent_data += 1.0 #sys.getsizeof(scan)
         self.map_updating = False
         if session_id:
@@ -601,9 +605,9 @@ class Robot:
     def add_to_file(self, rid, data):
         # self.lock.acquire()
         if rid in self.karto_messages:
-            self.karto_messages[rid] += data
+            self.karto_messages[rid].append(data)
         else:
-            self.karto_messages[rid] = data
+            self.karto_messages[rid] = [data]
         # self.lock.release()
         return True
 
@@ -640,9 +644,9 @@ class Robot:
         return yaw
 
     def save_all_data(self):
-        pu.save_data(self.interconnection_data,'gvg/interconnections_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+        pu.save_data(self.interconnection_data,'{}/interconnections_{}_{}_{}_{}_{}.pickle'.format(self.method,self.environment, self.robot_count, self.run,
                                                                          self.termination_metric, self.robot_id))
-        pu.save_data(self.frontier_data,'gvg/frontiers_{}_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,
+        pu.save_data(self.frontier_data,'{}/frontiers_{}_{}_{}_{}_{}.pickle'.format(self.method,self.environment, self.robot_count, self.run,
                                                                   self.termination_metric, self.robot_id))
         msg = String()
         msg.data = '{}'.format(self.robot_id)

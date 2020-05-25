@@ -33,7 +33,7 @@ floorplan
 (
   name "tutorial"
   bitmap "office.png"
-  size [ 82.1 34.7 2.0 ]
+  size [ 41.05 17.35 2.0 ]
   pose [  39.85  14.55 0.0 0.0 ]
 )
 pioneer3at

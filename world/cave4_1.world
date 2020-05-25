@@ -33,7 +33,7 @@ floorplan
 (
   name "tutorial"
   bitmap "cave.png"
-  size [ 64.0 57.2 2.0 ]
+  size [ 32.0 28.6 2.0 ]
   pose [  39.85  14.55 0.0 0.0 ]
 )
 

@@ -1,7 +1,7 @@
 <launch>
     <param name="use_sim_time" value="true" />
     <node name="R0_MapAlign" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /robot_0/map 100"/>
-    <node name="R1_MapAlign" pkg="tf" type="static_transform_publisher" args="100 0 0 0 0 0 /map /robot_1/map 100"/>
+    <node name="R1_MapAlign" pkg="tf" type="static_transform_publisher" args="50 0 0 0 0 0 /map /robot_1/map 100"/>
 
 
     <group ns="robot_0">
@@ -22,7 +22,6 @@
             <param name="robot_id" value="0" />
             <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
         </node>
-        <node pkg="nav2d_navigator" type="explore_client" name="explore_client"/>
         <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
         <node name="SetGoal" pkg="nav2d_navigator" type="set_goal_client" />
         <include file="$(find gvgexploration)/launch/robot.launch">
@@ -51,7 +50,6 @@
             <param name="robot_id" value="1" />
             <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
         </node>
-        <node pkg="nav2d_navigator" type="explore_client" name="explore_client"/>
         <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
         <node name="SetGoal" pkg="nav2d_navigator" type="set_goal_client" />
 
