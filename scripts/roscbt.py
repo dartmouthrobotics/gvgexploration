@@ -87,6 +87,7 @@ class roscbt:
         self.robot_count = rospy.get_param("~robot_count")
         self.environment = rospy.get_param("~environment")
         self.comm_range = rospy.get_param("~comm_range")
+        self.method = rospy.get_param("~method")
         self.run = rospy.get_param("~run")
 
         # difference in center of map image and actual simulation
@@ -142,7 +143,8 @@ class roscbt:
             # self.listener = tf.TransformListener()
         self.shared_data_size = []
         rospy.Subscriber('/shared_data_size', DataSize, self.shared_data_callback)
-        rospy.Subscriber('/shutdown', String, self.shutdown_callback)
+        rospy.on_shutdown(self.save_all_data)
+        # rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         self.already_shutdown = False
         rospy.loginfo("ROSCBT Initialized Successfully!")
 
@@ -197,7 +199,7 @@ class roscbt:
         if in_range:
             self.publisher_map[topic][receiver_id].publish(data)
             now = rospy.Time.now().to_sec()
-            data_size =self.get_data_size(topic,data)  # sys.getsizeof(data)
+            data_size = self.get_data_size(topic, data)  # sys.getsizeof(data)
             self.shared_data_size.append({'time': now, 'data_size': data_size})
             if combn in self.sent_data:
                 self.sent_data[combn][current_time] = data_size
@@ -208,7 +210,7 @@ class roscbt:
             rospy.logerr(
                 "Robot {} and {} are out of range topic {}: {} m".format(receiver_id, sender_id, topic, distance))
 
-    def get_data_size(self,topic,data):
+    def get_data_size(self, topic, data):
         if topic == 'initial_data':
             return len(data.data)
         return 1.0
@@ -325,8 +327,12 @@ class roscbt:
         rospy.signal_shutdown('ROSCBT: Shutdown command received!')
 
     def save_all_data(self):
-        save_data(self.exploration_data, 'gvg/exploration_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run,self.termination_metric))
-        save_data(self.shared_data_size,'gvg/roscbt_data_shared_{}_{}_{}_{}.pickle'.format(self.environment, self.robot_count, self.run, self.termination_metric))
+        save_data(self.exploration_data,
+                  '{}/exploration_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count, self.run,
+                                                             self.termination_metric))
+        save_data(self.shared_data_size,
+                  '{}/roscbt_data_shared_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count,
+                                                                    self.run, self.termination_metric))
 
 
 if __name__ == '__main__':

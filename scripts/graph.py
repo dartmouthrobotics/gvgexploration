@@ -98,7 +98,6 @@ class Graph:
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_callback)
         rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_edge_handler)
 
-        rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         self.already_shutdown = False
         self.robot_pose = None
         self.listener = tf.TransformListener()
@@ -106,6 +105,7 @@ class Graph:
         self.deleted_nodes = {}
         self.deleted_obstacles = {}
         self.last_graph_update_time = rospy.Time.now().to_sec()
+        rospy.on_shutdown(self.save_all_data)
         rospy.loginfo('Robot {}: Successfully created graph node'.format(self.robot_id))
 
     def spin(self):
@@ -372,7 +372,7 @@ class Graph:
                 v2 = desc[0]
                 w2 = desc[1]
                 # if self.lidar_scan_radius < pu.D(p2, p3) < self.comm_range:
-                if pu.D(p2, p3) < self.comm_range:
+                if pu.D(robot_pose, p3) < self.comm_range:
                     if pu.collinear(p1, p2, p3, w1, self.slope_bias):
                         cos_theta, separation = pu.compute_similarity(v1, v2, ridge, j)
                         if -1 <= cos_theta <= -1 + self.opposite_vector_bias and abs(separation) < abs(w1 - w2):
@@ -781,35 +781,6 @@ class Graph:
                 in_line = True
         return in_line
 
-    def scatter_plot(self):
-        plt.figure(figsize=(12, 9))
-        ax = plt.subplot(111)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.get_xaxis().tick_bottom()
-        ax.get_yaxis().tick_left()
-        plt.xticks(fontsize=FONT_SIZE)
-        plt.yticks(fontsize=FONT_SIZE)
-        ax.set_xlabel("X", fontsize=FONT_SIZE)
-        ax.set_ylabel("Y", fontsize=FONT_SIZE)
-        ax.tick_params(labelsize=FONT_SIZE)
-        obstacles = list(self.obstacles)
-
-        xr = [v[INDEX_FOR_Y] for v in obstacles]
-        yr = [v[INDEX_FOR_X] for v in obstacles]
-        ax.scatter(xr, yr, color='black', marker="1")
-        x_pairs, y_pairs = pu.process_edges(self.edges)
-        for i in range(len(x_pairs)):
-            x = x_pairs[i]
-            y = y_pairs[i]
-            ax.plot(y, x, "g-o")
-        plt.grid()
-        plt.axis('off')
-        plt.savefig("{}/map_update_{}_{}_{}.png".format(self.method, self.robot_id, time.time(), self.run))
-
-        plt.close()
-        # plt.show()
-
     def get_deeepest_tree_source(self):
         self.leave_dict.clear()
         self.adj_dict.clear()
@@ -840,7 +811,9 @@ class Graph:
             self.leave_dict[s] = lf
             self.parent_dict[s] = parents
         if self.tree_size:
-            self.longest = max(self.tree_size, key=self.tree_size.get)
+            max_size = max(self.tree_size.values())
+            best_leaves = [k for k, v in self.tree_size.items() if v == max_size]
+            self.longest = best_leaves[0]  # max(self.tree_size, key=self.tree_size.get)
 
     def merge_similar_edges(self):
         parents = {self.longest: None}
@@ -1027,7 +1000,7 @@ class Graph:
             ax.scatter(fx, fy, color='goldenrod', marker="D", s=MARKER_SIZE + 4)
             pose = self.get_robot_pose()
             point = pu.scale_up(pose, self.graph_scale)
-            ax.scatter(point[INDEX_FOR_X], point[INDEX_FOR_Y], color='goldenrod', marker="D", s=MARKER_SIZE + 4)
+            ax.scatter(point[INDEX_FOR_X], point[INDEX_FOR_Y], color='green', marker="D", s=MARKER_SIZE + 4)
             plt.grid()
         except:
             pass
@@ -1095,10 +1068,6 @@ class Graph:
                 pass
 
         return robot_pose
-
-    def shutdown_callback(self, msg):
-        self.save_all_data()
-        rospy.signal_shutdown('Graph: Shutdown command received!')
 
     def save_all_data(self):
         save_data(self.performance_data,

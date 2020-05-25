@@ -208,23 +208,18 @@ class GVGExplore:
                 leaf_pose = id_pose[u]
                 parent_pose = id_pose[parent_ids[u]]
                 leaves, leaf_value = self.get_leaves(leaf_pose, parent_pose)
-                while len(leaf_value) > 0:
-                    lowest_val = min(leaf_value, key=leaf_value.get)
-                    if lowest_val not in all_visited_poses:
-                        leaf_parent = leaves[lowest_val]
-                        v_id = self.get_id()
-                        p_id = self.get_id()
-                        id_pose[v_id] = lowest_val
-                        id_pose[p_id] = leaf_parent
-                        parent_ids[v_id] = p_id
-                        S.append(v_id)
-                        parent[v_id] = u
-                        break
-                    else:
-                        pu.log_msg(self.robot_id, "Leaves: {}".format(leaf_value), self.debug_mode)
-                    del leaf_value[lowest_val]
+                if leaf_value and leaf_pose not in all_visited_poses:
+                    best_leaf = max(leaf_value, key=leaf_value.get)
+                    leaf_parent = leaves[best_leaf]
+                    v_id = self.get_id()
+                    p_id = self.get_id()
+                    id_pose[v_id] = best_leaf
+                    id_pose[p_id] = leaf_parent
+                    parent_ids[v_id] = p_id
+                    S.append(v_id)
+                    parent[v_id] = u
                 visited.append(u)
-                all_visited_poses[id_pose[u]] = u
+                all_visited_poses[leaf_pose] = u
                 end_time = rospy.Time.now().to_sec()
                 gvg_time = end_time - start_time
                 self.explore_computation.append({'time': start_time, 'gvg_compute': gvg_time})
@@ -310,13 +305,15 @@ class GVGExplore:
                 unknown = self.area(u, s, radius)
                 distance = pu.D(pose, node)
                 weight = len(unknown) / (distance * depth)
-                leaf_value[u] = weight
+                if weight > 0:
+                    rospy.logerr("Leaf has no weight: {}".format(u))
+                    leaf_value[u] = weight
             visited.append(u)
         return leaves, leaf_value
 
     def get_depth(self, leaf, parents):
         l = leaf
-        count = 1.0
+        count = 0.0
         while l != None:
             l = parents[l]
             count += 1
@@ -334,6 +331,9 @@ class GVGExplore:
         if radii:
             radius = max(radii)
         return radius
+
+    def get_floodfill_points(self, length):
+        pass
 
     def edgelist_callback(self, data):
         self.updated_graph = data
