@@ -31,11 +31,8 @@ LOST = 9  # An action client can determine that a goal is LOST. This should not 
 def save_data(data, file_name):
     saved_data = []
     if not path.exists(file_name):
-        f = open(file_name, "wb+")
+        f = open(file_name, "wb")
         f.close()
-    # else:
-    #     saved_data = load_data_from_file(file_name)
-    # saved_data += data
     with open(file_name, 'wb') as fp:
         pickle.dump(data, fp, protocol=pickle.HIGHEST_PROTOCOL)
         fp.close()
@@ -138,8 +135,8 @@ def line_points(p1, p2, parts):
     points = []
     for p in pts:
         point = [0.0] * 2
-        point[INDEX_FOR_X] = round(p[0], PRECISION)
-        point[INDEX_FOR_Y] = round(p[1], PRECISION)
+        point[INDEX_FOR_X] = round(p[0], 2)
+        point[INDEX_FOR_Y] = round(p[1], 2)
         points.append(tuple(point))
     return points
 
@@ -177,18 +174,18 @@ def collinear(p1, p2, p3, width, bias):
     return False
 
 
-def scale_up(pose):
+def scale_up(pose, scale):
     p = [0.0] * 2
-    p[INDEX_FOR_X] = round(pose[INDEX_FOR_X] * SCALE, PRECISION)
-    p[INDEX_FOR_Y] = round(pose[INDEX_FOR_Y] * SCALE, PRECISION)
+    p[INDEX_FOR_X] = round(pose[INDEX_FOR_X] * scale, PRECISION)
+    p[INDEX_FOR_Y] = round(pose[INDEX_FOR_Y] * scale, PRECISION)
     p = tuple(p)
     return p
 
 
-def scale_down(pose):
+def scale_down(pose, scale):
     p = [0.0] * 2
-    p[INDEX_FOR_X] = pose[INDEX_FOR_X] / SCALE
-    p[INDEX_FOR_Y] = pose[INDEX_FOR_Y] / SCALE
+    p[INDEX_FOR_X] = pose[INDEX_FOR_X] / scale
+    p[INDEX_FOR_Y] = pose[INDEX_FOR_Y] / scale
     p = tuple(p)
     return p
 
@@ -210,14 +207,21 @@ def separation(e1, e2):
     p2 = e1[1]
     p3 = e2[0]
     p4 = e2[1]
-    c1 = p1[INDEX_FOR_Y] - slope(p1, p2) * p1[INDEX_FOR_X]
-    c2 = p4[INDEX_FOR_Y] - slope(p3, p4) * p4[INDEX_FOR_X]
-    return abs(c1 - c2)
+    p2_p3 = W(p2, p3)
+    return p2_p3
+    # c1 = p1[INDEX_FOR_Y] - slope(p1, p2) * p1[INDEX_FOR_X]
+    # c2 = p4[INDEX_FOR_Y] - slope(p3, p4) * p4[INDEX_FOR_X]
+    # return abs(c1 - c2)
 
 
 def is_free(p, pixel_desc):
     rounded_pose = get_point(p)
     return rounded_pose in pixel_desc and pixel_desc[rounded_pose] == FREE
+
+
+def is_unknown(p, pixel_desc):
+    rounded_pose = get_point(p)
+    return rounded_pose in pixel_desc and pixel_desc[rounded_pose] == UNKNOWN
 
 
 def is_obstacle(p, pixel_desc):
@@ -233,6 +237,28 @@ def get_point(p):
     new_p[INDEX_FOR_Y] = yc
     new_p = tuple(new_p)
     return new_p
+
+
+def bresenham_path(p1, p2):
+    points = []
+    x1 = p1[INDEX_FOR_X]
+    y1 = p1[INDEX_FOR_Y]
+    x2 = p2[INDEX_FOR_X]
+    y2 = p2[INDEX_FOR_Y]
+    x = x1
+    y = y1
+    dx = x2 - x1
+    dy = y2 - y1
+    p = 2 * dx - dy
+    while (x <= x2):
+        points.append((x, y))
+        x += 1
+        if p < 0:
+            p = p + 2 * dy
+        else:
+            p = p + 2 * dy - 2 * dx
+            y += 1
+    return points
 
 
 def reject_outliers(data):

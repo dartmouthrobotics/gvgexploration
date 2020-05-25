@@ -73,6 +73,7 @@ class GVGExplore:
         self.moving_to_frontier = False
         self.is_processing_graph = False
         self.cancel_request = False
+        self.motion_failed = False
         self.start_time = 0
         self.prev_pose = 0
         self.updated_graph = None
@@ -81,16 +82,17 @@ class GVGExplore:
         self.run = rospy.get_param("~run")
         self.debug_mode = rospy.get_param("~debug_mode")
         self.termination_metric = rospy.get_param("~termination_metric")
-        self.map_scale = rospy.get_param('~map_scale')
-        self.min_edge_length = rospy.get_param("~min_edge_length".format(self.robot_id)) * self.map_scale
-        self.min_hallway_width = rospy.get_param("~min_hallway_width".format(self.robot_id)) * self.map_scale
-        self.comm_range = rospy.get_param("~comm_range".format(self.robot_id)) * self.map_scale
+        self.graph_scale = rospy.get_param('~graph_scale')
+        self.frontier_threshold = rospy.get_param('~frontier_threshold')
+        self.min_edge_length = rospy.get_param("~min_edge_length".format(self.robot_id)) * self.graph_scale
+        self.min_hallway_width = rospy.get_param("~min_hallway_width".format(self.robot_id)) * self.graph_scale
+        self.comm_range = rospy.get_param("~comm_range".format(self.robot_id)) * self.graph_scale
         self.point_precision = rospy.get_param("~point_precision".format(self.robot_id))
-        self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius".format(self.robot_id)) * self.map_scale
+        self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius".format(self.robot_id)) * self.graph_scale
         self.lidar_fov = rospy.get_param("~lidar_fov")
-        self.slope_bias = rospy.get_param("~slope_bias") * self.map_scale
-        self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id)) * self.map_scale
-        self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias") * self.map_scale
+        self.slope_bias = rospy.get_param("~slope_bias") * self.graph_scale
+        self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id)) * self.graph_scale
+        self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias") * self.graph_scale
         self.target_distance = rospy.get_param('~target_distance')
         self.target_angle = rospy.get_param('~target_angle')
         self.robot_count = rospy.get_param("~robot_count")
@@ -117,9 +119,8 @@ class GVGExplore:
                                                  queue_size=1)
 
         self.listener = tf.TransformListener()
-        rospy.Subscriber('/shutdown', String, self.shutdown_callback)
+        rospy.on_shutdown(self.save_all_data)
         self.already_shutdown = False
-
         rospy.loginfo("Robot {}: Exploration server online...".format(self.robot_id))
 
     def spin(self):
@@ -165,8 +166,9 @@ class GVGExplore:
         ridge_dict = self.get_edge(ridge)
         edge = ridge_dict.keys()[0]
         leaf = edge[1]
-        scaled_pose = pu.scale_down(leaf)
+        scaled_pose = pu.scale_down(leaf, self.graph_scale)
         self.moving_to_frontier = True
+        self.motion_failed = False
         self.move_robot_to_goal(scaled_pose, 0)
         while self.moving_to_frontier:
             sleep(1)
@@ -193,38 +195,53 @@ class GVGExplore:
             if self.cancel_request:
                 break
             S = [pivot_id]
-            self.fetch_new_graph()  # 1. Fetch new graph
-            self.localize_nodes(id_pose, pivot_node)  # 2. Localize all nodes into graph
+            self.fetch_new_graph()
+            self.localize_nodes(id_pose, pivot_node)
             while len(S) > 0:
                 u = S.pop()
-                if self.is_near_unexplored_area(id_pose[u]):
-                    pivot_node[pivot_id] = id_pose[parent_ids[u]]
-                    if u not in all_visited_poses:
-                        self.move_to_frontier(id_pose[u], theta=pu.theta(id_pose[parent_ids[u]],
-                                                                         id_pose[u]))  # 3. move to current frontier
-                        self.fetch_new_graph()  # 4. Fetch new graph
-                        self.localize_nodes(id_pose, pivot_node)  # 5. Localize all nodes into graph
-                        leaf_pose = id_pose[u]  # 6. reload the frontier node
-                        parent_pose = id_pose[parent_ids[u]]  # 7. reload the parent node
-                        leaves = self.get_leaves(leaf_pose,
-                                                 parent_pose)  # 8. get leaves located along parent_node -> leaf_node
-                        for v, v_p in leaves.items():
-                            if v not in all_visited_poses and self.is_near_unexplored_area(v):
-                                leaf_parent = list(self.adj_list[v])[0]
-                                v_id = self.get_id()
-                                p_id = self.get_id()
-                                id_pose[v_id] = v
-                                id_pose[p_id] = leaf_parent
-                                parent_ids[v_id] = p_id
-                                S.append(v_id)
-                                parent[v_id] = u
-                        all_visited_poses[leaf_pose] = u
-                        visited.append(u)
+                pivot_node = {parent_ids[u]: id_pose[parent_ids[u]]}
+                self.move_to_frontier(id_pose[u], theta=pu.theta(id_pose[parent_ids[u]], id_pose[u]))
+                pu.log_msg(self.robot_id, "Size of stack: {}".format(len(S)), self.debug_mode)
+                start_time = rospy.Time.now().to_sec()
+                self.fetch_new_graph()
+                self.localize_nodes(id_pose, pivot_node)
+                leaf_pose = id_pose[u]
+                parent_pose = id_pose[parent_ids[u]]
+                leaves, leaf_value = self.get_leaves(leaf_pose, parent_pose)
+                while len(leaf_value) > 0:
+                    lowest_val = min(leaf_value, key=leaf_value.get)
+                    if lowest_val not in all_visited_poses:
+                        leaf_parent = leaves[lowest_val]
+                        v_id = self.get_id()
+                        p_id = self.get_id()
+                        id_pose[v_id] = lowest_val
+                        id_pose[p_id] = leaf_parent
+                        parent_ids[v_id] = p_id
+                        S.append(v_id)
+                        parent[v_id] = u
+                        break
+                    else:
+                        pu.log_msg(self.robot_id, "Leaves: {}".format(leaf_value), self.debug_mode)
+                    del leaf_value[lowest_val]
+                visited.append(u)
+                all_visited_poses[id_pose[u]] = u
+                end_time = rospy.Time.now().to_sec()
+                gvg_time = end_time - start_time
+                self.explore_computation.append({'time': start_time, 'gvg_compute': gvg_time})
+            pu.log_msg(self.robot_id, "Returned from DFS...", self.debug_mode)
             sleep(1)
 
     def get_id(self):
         id = uuid.uuid4()
         return str(id)
+
+    def line_has_obstacles(self, original_node, new_node):
+        points = pu.bresenham_path(original_node, new_node)
+        valid_points = [p for p in points if p in self.pixel_desc]
+        if not valid_points:
+            return False
+        obstacle_points = [p for p in valid_points if self.pixel_desc[p] == OCCUPIED]
+        return len(obstacle_points) > 0
 
     def localize_nodes(self, id_pose, pivot_node):
         all_nodes = list(self.adj_list)
@@ -261,13 +278,18 @@ class GVGExplore:
     def compute_distance(self, id_pose, node_dist, u):
         for k, node in id_pose.items():
             d = pu.D(node, u)
+            if self.line_has_obstacles(u, node):
+                d = INF
             if k not in node_dist:
                 node_dist[k] = {d: u}
             else:
                 node_dist[k][d] = u
 
     def get_leaves(self, node, parent_node):
+        pose = self.get_robot_pose()
+        pose = pu.scale_up(pose, self.graph_scale)
         leaves = {}
+        leaf_value = {}
         parent = {node: None}
         visited = [parent_node]
         S = [node]
@@ -278,12 +300,40 @@ class GVGExplore:
                 if v not in visited:
                     S.append(v)
                     parent[v] = u
-            if len(neighbors) == 1:
+            if len(neighbors) == 1 and parent[u]:
                 leaves[u] = parent[u]
-                if not leaves[u]:
-                    leaves[u] = self.leaves[u][0]
+                s = pu.slope(u, leaves[u])
+                radius = self.get_radius(u, leaves[u])
+                if radius > self.lidar_scan_radius:
+                    radius = self.lidar_scan_radius
+                depth = self.get_depth(u, parent)
+                unknown = self.area(u, s, radius)
+                distance = pu.D(pose, node)
+                weight = len(unknown) / (distance * depth)
+                leaf_value[u] = weight
             visited.append(u)
-        return leaves
+        return leaves, leaf_value
+
+    def get_depth(self, leaf, parents):
+        l = leaf
+        count = 1.0
+        while l != None:
+            l = parents[l]
+            count += 1
+        return count
+
+    def get_radius(self, node, parent):
+        radius = 1.0
+        radii = []
+        e = (parent, node)
+        e1 = (node, parent)
+        if e in self.edges:
+            radii.append(pu.D(self.edges[e][0], self.edges[e][1]))
+        if e1 in self.edges:
+            radii.append(pu.D(self.edges[e1][0], self.edges[e1][1]))
+        if radii:
+            radius = max(radii)
+        return radius
 
     def edgelist_callback(self, data):
         self.updated_graph = data
@@ -299,7 +349,7 @@ class GVGExplore:
         if self.debug_mode:
             marker_pose = (0, 0)
             if self.robot_id == 1:
-                marker_pose = (100, 0)
+                marker_pose = (50, 0)
             self.create_markers(marker_pose)
         return edge
 
@@ -367,19 +417,38 @@ class GVGExplore:
             ax_nodes += pu.line_points(obs[0], obs[1], req_poses)
         return ax_nodes
 
-    def is_near_unexplored_area(self, node):
-        unknown_neighborhood = 0
-        point = sg.Point(node[INDEX_FOR_X], node[INDEX_FOR_Y])
-        circle = point.buffer(self.lidar_scan_radius)
-        region_obstacles = []
-        for k, v in self.pixel_desc.items():
-            geo_p = sg.Point(k[INDEX_FOR_X], k[INDEX_FOR_Y])
-            if circle.contains(geo_p):
-                if v == OCCUPIED:
-                    region_obstacles.append(k)
-                else:
-                    unknown_neighborhood += 1
-        return unknown_neighborhood > 0
+    def is_near_unexplored_area(self, node, parent_node):
+        slope = pu.theta(parent_node, node)
+        unknown_points = self.area(node, slope)
+        return len(unknown_points) > self.lidar_scan_radius
+
+    def area(self, point, orientation, radius):
+        unknown_points = []
+        radius = int(round(radius))
+        for d in np.arange(0, radius, 1):
+            distance_points = set()
+            for theta in range(-1 * self.lidar_fov // 2, self.lidar_fov + 1):
+                angle = np.deg2rad(theta) + orientation
+                x = point[INDEX_FOR_X] + d * np.cos(angle)
+                y = point[INDEX_FOR_Y] + d * np.sin(angle)
+                pt = [0.0] * 2
+                pt[INDEX_FOR_X] = x
+                pt[INDEX_FOR_Y] = y
+                pt = self.round_point(pt)
+                distance_points.add(pt)
+            for p in distance_points:
+                if not pu.is_unknown(p, self.pixel_desc):
+                    unknown_points.append(p)
+        return unknown_points
+
+    def round_point(self, p):
+        xc = round(p[INDEX_FOR_X], 2)
+        yc = round(p[INDEX_FOR_Y], 2)
+        new_p = [0.0] * 2
+        new_p[INDEX_FOR_X] = xc
+        new_p[INDEX_FOR_Y] = yc
+        new_p = tuple(new_p)
+        return new_p
 
     def create_adjlist(self):
         edge_list = list(self.edges)
@@ -391,14 +460,15 @@ class GVGExplore:
             second = e[1]
             edge_dict[(first, second)] = e
             edge_dict[(second, first)] = e
-            if first in self.adj_list:
-                self.adj_list[first].add(second)
-            else:
-                self.adj_list[first] = {second}
-            if second in self.adj_list:
-                self.adj_list[second].add(first)
-            else:
-                self.adj_list[second] = {first}
+            if first != second:
+                if first in self.adj_list:
+                    self.adj_list[first].add(second)
+                else:
+                    self.adj_list[first] = {second}
+                if second in self.adj_list:
+                    self.adj_list[second].add(first)
+                else:
+                    self.adj_list[second] = {first}
 
         for k, v in self.adj_list.items():
             if len(v) == 1:
@@ -424,7 +494,7 @@ class GVGExplore:
         self.start_time = rospy.Time.now().secs
 
     def move_to_frontier(self, pose, theta=0):
-        scaled_pose = pu.scale_down(pose)
+        scaled_pose = pu.scale_down(pose, self.graph_scale)
         self.moving_to_frontier = True
         self.move_robot_to_goal(scaled_pose, theta)
         while self.moving_to_frontier:
@@ -436,39 +506,39 @@ class GVGExplore:
 
     def move_status_callback(self, data):
         id_0 = "robot_{}_{}_explore".format(self.robot_id, self.goal_count - 1)
-        if data.status_list:
-            goal_status = data.status_list[0]
-            if goal_status.goal_id.id:
-                if goal_status.goal_id.id == id_0:
-                    if goal_status.status == pu.ACTIVE:
-                        now = rospy.Time.now().secs
-                        if (now - self.start_time) > 30:  # you can only spend upto 10 sec in same position
-                            pose = self.get_robot_pose()
-                            if pu.D(self.prev_pose, pose) < 0.5:
-                                pu.log_msg(self.robot_id, "Paused for too long", self.debug_mode)
-                                self.has_arrived = True
-                                self.moving_to_frontier = False
-                            self.prev_pose = pose
-                            self.start_time = now
-
-                    else:
-                        if not self.has_arrived:
-                            self.has_arrived = True
-                        self.moving_to_frontier = False
+        # if data.status_list:
+        #     goal_status = data.status_list[0]
+        #     if goal_status.goal_id.id:
+        #         if goal_status.goal_id.id == id_0:
+        #             if goal_status.status == pu.ACTIVE:
+        #                 now = rospy.Time.now().secs
+        #                 if (now - self.start_time) > 30:  # you can only spend upto 10 sec in same position
+        #                     pose = self.get_robot_pose()
+        #                     if pu.D(self.prev_pose, pose) < 0.5:
+        #                         pu.log_msg(self.robot_id, "Paused for too long", self.debug_mode)
+        #                         self.has_arrived = True
+        #                         self.moving_to_frontier = False
+        #                     self.prev_pose = pose
+        #                     self.start_time = now
+        #
+        #             else:
+        #                 if not self.has_arrived:
+        #                     self.has_arrived = True
+        #                 self.moving_to_frontier = False
 
     def move_result_callback(self, data):
         id_0 = "robot_{}_{}_explore".format(self.robot_id, self.goal_count - 1)
         if data.status:
             if data.status.status == pu.ABORTED:
                 pu.log_msg(self.robot_id, "Motion failed", self.debug_mode)
-                # if data.status.goal_id.id == id_0:
+                self.move_to_stop()
+                self.motion_failed = True
                 self.has_arrived = True
                 if self.moving_to_frontier:
                     self.moving_to_frontier = False
                 self.current_point = self.get_robot_pose()
 
             elif data.status.status == pu.SUCCEEDED:
-                # if data.status.goal_id.id == id_0:
                 self.has_arrived = True
                 if self.moving_to_frontier:
                     self.moving_to_frontier = False
@@ -531,7 +601,7 @@ class GVGExplore:
         marker.points = [0.0] * len(vertices)
 
         for i in range(len(vertices)):
-            v_pose = pu.scale_down(vertices[i])
+            v_pose = pu.scale_down(vertices[i], self.graph_scale)
             p = Point()
             p.x = v_pose[INDEX_FOR_X]
             p.y = v_pose[INDEX_FOR_Y]
@@ -556,8 +626,8 @@ class GVGExplore:
 
         for i in range(len(edges)):
             edge = edges[i]
-            v1 = pu.scale_down(edge[0])
-            v2 = pu.scale_down(edge[1])
+            v1 = pu.scale_down(edge[0], self.graph_scale)
+            v2 = pu.scale_down(edge[1], self.graph_scale)
             p1 = Point()
             p1.x = v1[INDEX_FOR_X]
             p1.y = v1[INDEX_FOR_Y]
@@ -590,10 +660,10 @@ class GVGExplore:
 
         return robot_pose
 
-    def shutdown_callback(self, msg):
-        if not self.already_shutdown:
-            self.save_all_data()
-            rospy.signal_shutdown('GVG Explore: Shutdown command received!')
+    # def shutdown_callback(self, msg):
+    #     if not self.already_shutdown:
+    #         self.save_all_data()
+    #         rospy.signal_shutdown('GVG Explore: Shutdown command received!')
 
     def save_all_data(self):
         pu.save_data(self.traveled_distance,
