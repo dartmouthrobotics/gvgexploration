@@ -32,16 +32,16 @@ window
 floorplan
 (
   name "tutorial"
-  bitmap "office.png"
-  size [ 41.05 17.35 2.0 ]
-  pose [  39.85  14.55 0.0 0.0 ]
+  bitmap "cave.png"
+  size [ 32.0 28.6 2.0 ]
+  pose [  20.0  18.00 0.0 0.0 ]
 )
 
 pioneer3at
 (
   name "robot1"
   color "purple"
-  pose [30.0 35.0 0.0 1.0]
+  pose [16.0 6.25 0.0 0.0]
 )
 
 # Put two robots into the world
@@ -49,27 +49,27 @@ pioneer3at
 (
   name "robot2"
   color "purple"
-  pose [24.0 25.0 0.0 0.0]
+  pose [18.0 8.0 0.0 0.0]
 )
 pioneer3at
 (
   name "robot3"
   color "purple"
-  pose [35.0 28.0 0.0 0.0]
+  pose [20.0 6.0 0.0 0.0]
 )
 
 pioneer3at
 (
   name "robot4"
   color "purple"
-  pose [24.0 30.0 0.0 0.0]
+  pose [22.0 8.0 0.0 0.0]
 )
 
 pioneer3at
 (
   name "robot5"
   color "purple"
-  pose [32.0 35.0 0.0 1.0]
+  pose [18.0 6.25 0.0 0.0]
 )
 
 # Put two robots into the world
@@ -77,18 +77,18 @@ pioneer3at
 (
   name "robot6"
   color "purple"
-  pose [26.0 25.0 0.0 0.0]
+  pose [22.0 10.0 0.0 0.0]
 )
 pioneer3at
 (
   name "robot7"
   color "purple"
-  pose [37.0 28.0 0.0 0.0]
+  pose [14.5 6.25 0.0 0.0]
 )
 
 pioneer3at
 (
   name "robot8"
   color "purple"
-  pose [26.0 30.0 0.0 0.0]
+  pose [14.0 8.0 0.0 0.0]
 )
