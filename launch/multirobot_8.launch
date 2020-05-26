@@ -1,16 +1,16 @@
 <launch>
     <param name="use_sim_time" value="true" />
-    <node name="Stage" pkg="stage_ros" type="stageros" args="$(find gvgexploration)/world/city8_1.world">
+    <node name="Stage" pkg="stage_ros" type="stageros" args="$(find gvgexploration)/world/office8.world">
         <param name="base_watchdog_timeout" value="0" />
     </node>
     <node name="R0_MapAlign" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /robot_0/map 100"/>
     <node name="R1_MapAlign" pkg="tf" type="static_transform_publisher" args="100 0 0 0 0 0 /map /robot_1/map 100"/>
-    <node name="R2_MapAlign" pkg="tf" type="static_transform_publisher" args="200 0 0 0 0 0 /map /robot_2/map 100"/>
-    <node name="R3_MapAlign" pkg="tf" type="static_transform_publisher" args="300 0 0 0 0 0 /map /robot_3/map 100"/>
-    <node name="R4_MapAlign" pkg="tf" type="static_transform_publisher" args="0 200 0 0 0 0 /map /robot_4/map 100"/>
-    <node name="R5_MapAlign" pkg="tf" type="static_transform_publisher" args="100 200 0 0 0 0 /map /robot_5/map 100"/>
-    <node name="R6_MapAlign" pkg="tf" type="static_transform_publisher" args="200 200 0 0 0 0 /map /robot_6/map 100"/>
-    <node name="R7_MapAlign" pkg="tf" type="static_transform_publisher" args="300 200 0 0 0 0 /map /robot_7/map 100"/>
+    <node name="R2_MapAlign" pkg="tf" type="static_transform_publisher" args="150 0 0 0 0 0 /map /robot_2/map 100"/>
+    <node name="R3_MapAlign" pkg="tf" type="static_transform_publisher" args="200 0 0 0 0 0 /map /robot_3/map 100"/>
+    <node name="R4_MapAlign" pkg="tf" type="static_transform_publisher" args="0 50 0 0 0 0 /map /robot_4/map 100"/>
+    <node name="R5_MapAlign" pkg="tf" type="static_transform_publisher" args="100 50 0 0 0 0 /map /robot_5/map 100"/>
+    <node name="R6_MapAlign" pkg="tf" type="static_transform_publisher" args="150 50 0 0 0 0 /map /robot_6/map 100"/>
+    <node name="R7_MapAlign" pkg="tf" type="static_transform_publisher" args="200 50 0 0 0 0 /map /robot_7/map 100"/>
 
     <group ns="robot_0">
         <param name="robot_id" value="1" />
@@ -64,7 +64,7 @@
         <include file="$(find gvgexploration)/launch/robot.launch">
             <arg name="robot_name" value="1" />
             <arg name="robot_type" value="2" />
-            <arg name="base_stations" value="0,2,3,7,5,6,7" />
+            <arg name="base_stations" value="0,2,3,4,5,6,7" />
         </include>
     </group>
 

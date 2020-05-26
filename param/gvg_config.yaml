@@ -3,7 +3,7 @@ method: 'gvg' # method that is running
 data_share_threshold: 10
 max_target_info_ratio: 0.5
 frontier_threshold: 10
-robot_count: 2    # number of robots on the team
+robot_count: 4    # number of robots on the team
 min_hallway_width: 1.0   # allowed minimum separation between two pixels on the graph
 comm_range: 20  # communication range
 point_precision: 2   # allowed precision of the poses
@@ -21,9 +21,9 @@ map_scale: 20.0     # scale of the map
 graph_scale: 10.0     # scale of the map
 bs_pose: [4.0,10.0]
 map_inflation_radius: 1   # inflation radius of the robot
-map_file: '$(find gvgexploration)/world/basic.png'    # environment file
+map_file: '$(find gvgexploration)/world/city.png'    # environment file
 target_distance: 2.0
 target_angle: 1.57
-environment: 'basic'
+environment: 'city'
 max_wait_time: 120 # secs
 run: 0
