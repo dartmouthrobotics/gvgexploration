@@ -781,6 +781,35 @@ class Graph:
                 in_line = True
         return in_line
 
+    def scatter_plot(self):
+        plt.figure(figsize=(12, 9))
+        ax = plt.subplot(111)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.get_xaxis().tick_bottom()
+        ax.get_yaxis().tick_left()
+        plt.xticks(fontsize=FONT_SIZE)
+        plt.yticks(fontsize=FONT_SIZE)
+        ax.set_xlabel("X", fontsize=FONT_SIZE)
+        ax.set_ylabel("Y", fontsize=FONT_SIZE)
+        ax.tick_params(labelsize=FONT_SIZE)
+        obstacles = list(self.obstacles)
+
+        xr = [v[INDEX_FOR_Y] for v in obstacles]
+        yr = [v[INDEX_FOR_X] for v in obstacles]
+        ax.scatter(xr, yr, color='black', marker="1")
+        x_pairs, y_pairs = pu.process_edges(self.edges)
+        for i in range(len(x_pairs)):
+            x = x_pairs[i]
+            y = y_pairs[i]
+            ax.plot(y, x, "g-o")
+        plt.grid()
+        plt.axis('off')
+        plt.savefig("{}/map_update_{}_{}_{}.png".format(self.method, self.robot_id, time.time(), self.run))
+
+        plt.close()
+        # plt.show()
+
     def get_deeepest_tree_source(self):
         self.leave_dict.clear()
         self.adj_dict.clear()
@@ -811,9 +840,7 @@ class Graph:
             self.leave_dict[s] = lf
             self.parent_dict[s] = parents
         if self.tree_size:
-            max_size = max(self.tree_size.values())
-            best_leaves = [k for k, v in self.tree_size.items() if v == max_size]
-            self.longest = best_leaves[0]  # max(self.tree_size, key=self.tree_size.get)
+            self.longest = max(self.tree_size, key=self.tree_size.get)
 
     def merge_similar_edges(self):
         parents = {self.longest: None}

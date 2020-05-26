@@ -4,7 +4,7 @@ from threading import Thread
 import matplotlib
 import uuid
 import shapely.geometry as sg
-import shapely.affinity as sa
+from shapely.geometry.polygon import Polygon
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -108,6 +108,9 @@ class GVGExplore:
                                           queue_size=10)
         self.vertex_publisher = rospy.Publisher("/robot_{}/explore/vertices".format(self.robot_id), Marker,
                                                 queue_size=10)
+
+        self.leaf_publisher = rospy.Publisher("/robot_{}/explore/leaf_region".format(self.robot_id), Marker,
+                                              queue_size=10)
         self.edge_publisher = rospy.Publisher("/robot_{}/explore/edges".format(self.robot_id), Marker, queue_size=10)
         self.fetch_graph = rospy.ServiceProxy('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph)
         self.pose_publisher = rospy.Publisher("/robot_{}/cmd_vel".format(self.robot_id), Twist, queue_size=1)
@@ -179,6 +182,53 @@ class GVGExplore:
         self.goal_feedback_pub.publish(pose)  # publish to feedback
         self.start_gvg_exploration(edge)
 
+    # def start_gvg_exploration(self, edge):
+    #     parent_id = self.get_id()
+    #     leaf_id = self.get_id()
+    #     parent_ids = {leaf_id: parent_id, parent_id: parent_id}
+    #     id_pose = {parent_id: edge[0], leaf_id: edge[1]}
+    #     all_visited_poses = {edge[0]: parent_id, edge[1]: leaf_id}
+    #
+    #     # -------------------------------- DFS starts here ---------------
+    #     pivot_node = {parent_id: edge[0]}
+    #     parent = {leaf_id: parent_id}
+    #     visited = [parent_id]
+    #     pivot_id = pivot_node.keys()[0]
+    #     while not rospy.is_shutdown():
+    #         if self.cancel_request:
+    #             break
+    #         S = [pivot_id]
+    #         self.fetch_new_graph()
+    #         self.localize_nodes(id_pose, pivot_node)
+    #         while len(S) > 0:
+    #             u = S.pop()
+    #             pivot_node = {parent_ids[u]: id_pose[parent_ids[u]]}
+    #             self.move_to_frontier(id_pose[u], theta=pu.theta(id_pose[parent_ids[u]], id_pose[u]))
+    #             pu.log_msg(self.robot_id, "Size of stack: {}".format(len(S)), self.debug_mode)
+    #             start_time = rospy.Time.now().to_sec()
+    #             self.fetch_new_graph()
+    #             self.localize_nodes(id_pose, pivot_node)
+    #             leaf_pose = id_pose[u]
+    #             parent_pose = id_pose[parent_ids[u]]
+    #             leaves = self.get_leaves(leaf_pose, parent_pose)
+    #             best_leaf = self.get_best_leaf(leaves)
+    #             if best_leaf:
+    #                 leaf_parent = leaves[best_leaf]
+    #                 v_id = self.get_id()
+    #                 p_id = self.get_id()
+    #                 id_pose[v_id] = best_leaf
+    #                 id_pose[p_id] = leaf_parent
+    #                 parent_ids[v_id] = p_id
+    #                 S.append(v_id)
+    #                 parent[v_id] = u
+    #             visited.append(u)
+    #             all_visited_poses[leaf_pose] = u
+    #             end_time = rospy.Time.now().to_sec()
+    #             gvg_time = end_time - start_time
+    #             self.explore_computation.append({'time': start_time, 'gvg_compute': gvg_time})
+    #         pu.log_msg(self.robot_id, "Returned from DFS...", self.debug_mode)
+    #         sleep(1)
+
     def start_gvg_exploration(self, edge):
         parent_id = self.get_id()
         leaf_id = self.get_id()
@@ -199,17 +249,21 @@ class GVGExplore:
             self.localize_nodes(id_pose, pivot_node)
             while len(S) > 0:
                 u = S.pop()
-                pivot_node = {parent_ids[u]: id_pose[parent_ids[u]]}
+                pivot_node = {u: id_pose[u]}
+                leaf_pose = id_pose[u]
                 self.move_to_frontier(id_pose[u], theta=pu.theta(id_pose[parent_ids[u]], id_pose[u]))
                 pu.log_msg(self.robot_id, "Size of stack: {}".format(len(S)), self.debug_mode)
                 start_time = rospy.Time.now().to_sec()
                 self.fetch_new_graph()
                 self.localize_nodes(id_pose, pivot_node)
-                leaf_pose = id_pose[u]
-                parent_pose = id_pose[parent_ids[u]]
-                leaves, leaf_value = self.get_leaves(leaf_pose, parent_pose)
-                if leaf_value and leaf_pose not in all_visited_poses:
-                    best_leaf = max(leaf_value, key=leaf_value.get)
+                leaves = {id_pose[u]: id_pose[parent_ids[u]]}
+                best_leaf = self.get_best_leaf(leaves)
+                if not best_leaf:
+                    leaf_pose = id_pose[u]
+                    parent_pose = id_pose[parent_ids[u]]
+                    leaves = self.get_leaves(leaf_pose, parent_pose)
+                    best_leaf = self.get_best_leaf(leaves)
+                if best_leaf:
                     leaf_parent = leaves[best_leaf]
                     v_id = self.get_id()
                     p_id = self.get_id()
@@ -232,11 +286,8 @@ class GVGExplore:
 
     def line_has_obstacles(self, original_node, new_node):
         points = pu.bresenham_path(original_node, new_node)
-        valid_points = [p for p in points if p in self.pixel_desc]
-        if not valid_points:
-            return False
-        obstacle_points = [p for p in valid_points if self.pixel_desc[p] == OCCUPIED]
-        return len(obstacle_points) > 0
+        valid_points = [p for p in points if p in self.pixel_desc and self.pixel_desc[p] == OCCUPIED]
+        return not len(valid_points)
 
     def localize_nodes(self, id_pose, pivot_node):
         all_nodes = list(self.adj_list)
@@ -281,10 +332,7 @@ class GVGExplore:
                 node_dist[k][d] = u
 
     def get_leaves(self, node, parent_node):
-        pose = self.get_robot_pose()
-        pose = pu.scale_up(pose, self.graph_scale)
         leaves = {}
-        leaf_value = {}
         parent = {node: None}
         visited = [parent_node]
         S = [node]
@@ -297,19 +345,8 @@ class GVGExplore:
                     parent[v] = u
             if len(neighbors) == 1 and parent[u]:
                 leaves[u] = parent[u]
-                s = pu.slope(u, leaves[u])
-                radius = self.get_radius(u, leaves[u])
-                if radius > self.lidar_scan_radius:
-                    radius = self.lidar_scan_radius
-                depth = self.get_depth(u, parent)
-                unknown = self.area(u, s, radius)
-                distance = pu.D(pose, node)
-                weight = len(unknown) / (distance * depth)
-                if weight > 0:
-                    rospy.logerr("Leaf has no weight: {}".format(u))
-                    leaf_value[u] = weight
             visited.append(u)
-        return leaves, leaf_value
+        return leaves
 
     def get_depth(self, leaf, parents):
         l = leaf
@@ -417,10 +454,22 @@ class GVGExplore:
             ax_nodes += pu.line_points(obs[0], obs[1], req_poses)
         return ax_nodes
 
-    def is_near_unexplored_area(self, node, parent_node):
-        slope = pu.theta(parent_node, node)
-        unknown_points = self.area(node, slope)
-        return len(unknown_points) > self.lidar_scan_radius
+    def get_best_leaf(self, leaves):
+        if not leaves:
+            return
+        polygons, start_end, points, unknown_points, marker_points = self.get_leaf_region(leaves)
+        if self.debug_mode:
+            marker_pose = (0, 0)
+            if self.robot_id == 1:
+                marker_pose = (50, 0)
+            self.create_marker_array(marker_points, marker_pose)
+        valid_leaves = {}
+        for l, v in start_end.items():
+            if self.line_has_obstacles(v[0], v[1]):
+                valid_leaves[l] = unknown_points[l]
+        if not valid_leaves:
+            return
+        return max(valid_leaves, key=valid_leaves.get)
 
     def area(self, point, orientation, radius):
         unknown_points = []
@@ -525,6 +574,37 @@ class GVGExplore:
         #                 if not self.has_arrived:
         #                     self.has_arrived = True
         #                 self.moving_to_frontier = False
+
+    def create_marker_array(self, points, pose):
+        marker = Marker()
+        marker.header.frame_id = 'map'
+        marker.header.stamp = rospy.Time.now()
+        marker.id = 0
+        marker.type = Marker.SPHERE_LIST
+        marker.action = Marker.ADD
+        marker.pose.position.x = pose[INDEX_FOR_X]
+        marker.pose.position.y = pose[INDEX_FOR_Y]
+        marker.pose.position.z = 0
+        marker.pose.orientation.x = 0.0
+        marker.pose.orientation.y = 0.0
+        marker.pose.orientation.z = 0.0
+        marker.pose.orientation.w = 1.0
+        marker.scale.x = 0.1
+        marker.scale.y = 0.1
+        marker.scale.z = 0.1
+        marker.color.a = 1.0
+        marker.color.r = 0.0
+        marker.color.g = 0.0
+        marker.color.b = 1.0
+        marker.points = [0.0] * len(points)
+        for i in range(len(points)):
+            v_pose = pu.scale_down(points[i], self.graph_scale)
+            p = Point()
+            p.x = v_pose[INDEX_FOR_X]
+            p.y = v_pose[INDEX_FOR_Y]
+            p.z = 0
+            marker.points[i] = p
+        self.leaf_publisher.publish(marker)
 
     def move_result_callback(self, data):
         id_0 = "robot_{}_{}_explore".format(self.robot_id, self.goal_count - 1)
@@ -642,6 +722,65 @@ class GVGExplore:
 
         self.edge_publisher.publish(marker)
 
+    def get_leaf_region(self, leaves):
+        polygons = {}
+        start_end = {}
+        for leaf, parent in leaves.items():
+            width = self.get_radius(leaf, parent)
+            radius = self.lidar_scan_radius
+
+            x = leaf[0]
+            y = leaf[1]
+
+            opp = width / 2.0
+            adj = radius
+            hyp = np.sqrt(opp ** 2 + adj ** 2)
+            theta1 = pu.theta(parent, leaf)
+            angle_sum = (np.pi / 2) + theta1
+            cos_val = opp * np.cos(angle_sum)
+            sin_val = opp * np.sin(angle_sum)
+
+            top_left_x = x + cos_val
+            top_left_y = y + sin_val
+
+            bottom_left_x = x - cos_val
+            bottom_left_y = y - sin_val
+
+            lx = x + hyp * np.cos(theta1)
+            ly = y + hyp * np.sin(theta1)
+
+            top_right_x = lx + cos_val
+            top_right_y = ly + sin_val
+
+            bottom_right_x = lx - cos_val
+            bottom_right_y = ly - sin_val
+
+            polygon = Polygon([(bottom_left_x, bottom_left_y), (top_left_x, top_left_y), (top_right_x, top_right_y),
+                               (bottom_right_x, bottom_right_y)])
+
+            polygons[leaf] = polygon
+            start_end[leaf] = (leaf, (lx, ly))
+
+        points = {}
+        unknown_points = {}
+        leaf_keys = leaves.keys()
+        marker_points = []
+        for pose, value in self.pixel_desc.items():
+            point = sg.Point(pose[INDEX_FOR_X], pose[INDEX_FOR_Y])
+            for leaf in leaf_keys:
+                if polygons[leaf].contains(point):
+                    marker_points.append(pose)
+                    if leaf not in points:
+                        points[leaf] = [pose]
+                    else:
+                        points[leaf].append(pose)
+                    if value == UNKNOWN:
+                        if leaf not in unknown_points:
+                            unknown_points[leaf] = 1
+                        else:
+                            unknown_points[leaf] += 1
+        return polygons, start_end, points, unknown_points, marker_points
+
     def get_robot_pose(self):
         robot_pose = None
         while not robot_pose:
@@ -655,15 +794,8 @@ class GVGExplore:
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
                 time.sleep(1)
             except:
-                # rospy.logerr("Robot {}: Can't fetch robot pose from tf".format(self.robot_id))
                 pass
-
         return robot_pose
-
-    # def shutdown_callback(self, msg):
-    #     if not self.already_shutdown:
-    #         self.save_all_data()
-    #         rospy.signal_shutdown('GVG Explore: Shutdown command received!')
 
     def save_all_data(self):
         pu.save_data(self.traveled_distance,
