@@ -1,5 +1,5 @@
-debug_mode: 1
-method: 'gvg' # method that is running
+debug_mode: 0
+method: 'continuous' # method that is running
 data_share_threshold: 10
 max_target_info_ratio: 0.5
 frontier_threshold: 10
@@ -21,9 +21,9 @@ map_scale: 20.0     # scale of the map
 graph_scale: 10.0     # scale of the map
 bs_pose: [4.0,10.0]
 map_inflation_radius: 1   # inflation radius of the robot
-map_file: '$(find gvgexploration)/world/basic.png'    # environment file
+map_file: '$(find gvgexploration)/world/office.png'    # environment file
 target_distance: 2.0
 target_angle: 1.57
-environment: 'basic'
+environment: 'office'
 max_wait_time: 120 # secs
 run: 0

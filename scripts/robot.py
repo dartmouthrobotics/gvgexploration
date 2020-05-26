@@ -651,11 +651,11 @@ class Robot:
         msg = String()
         msg.data = '{}'.format(self.robot_id)
         self.is_shutdown_caller = True
-        self.shutdown_pub.publish(msg)
+        # self.shutdown_pub.publish(msg)
 
-    def shutdown_callback(self, data):
-        if not self.is_shutdown_caller:
-            rospy.signal_shutdown('Robot {}: Received Shutdown Exploration complete!'.format(self.robot_id))
+    # def shutdown_callback(self, data):
+    #     if not self.is_shutdown_caller:
+    #         rospy.signal_shutdown('Robot {}: Received Shutdown Exploration complete!'.format(self.robot_id))
 
 
 if __name__ == "__main__":
