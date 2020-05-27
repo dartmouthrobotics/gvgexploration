@@ -361,8 +361,9 @@ class Robot:
                     p = (rob_poses[k].position.x, rob_poses[k].position.y)
                     if p != pose_i and p not in taken_poses:
                         remaining_poses[rob_distances[k]] = rob_poses[k]
-                next_closest_dist = min(list(remaining_poses))
-                auction_feedback[conflicting_robot_id] = (next_closest_dist, remaining_poses[next_closest_dist])
+                if remaining_poses:
+                    next_closest_dist = min(list(remaining_poses))
+                    auction_feedback[conflicting_robot_id] = (next_closest_dist, remaining_poses[next_closest_dist])
         return taken_poses
 
     def create_frontier(self, receiver, ridge):
