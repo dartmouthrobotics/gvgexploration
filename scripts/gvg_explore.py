@@ -251,19 +251,22 @@ class GVGExplore:
                 u = S.pop()
                 pivot_node = {u: id_pose[u]}
                 leaf_pose = id_pose[u]
-                self.move_to_frontier(id_pose[u], theta=pu.theta(id_pose[parent_ids[u]], id_pose[u]))
-                pu.log_msg(self.robot_id, "Size of stack: {}".format(len(S)), self.debug_mode)
+                if self.is_frontier({id_pose[u]: id_pose[parent_ids[u]]}):
+                    self.move_to_frontier(id_pose[u], theta=pu.theta(id_pose[parent_ids[u]], id_pose[u]))
+                    pu.log_msg(self.robot_id, "Size of stack: {}".format(len(S)), self.debug_mode)
                 start_time = rospy.Time.now().to_sec()
                 self.fetch_new_graph()
                 self.localize_nodes(id_pose, pivot_node)
                 leaves = {id_pose[u]: id_pose[parent_ids[u]]}
-                best_leaf = self.get_best_leaf(leaves)
-                if not best_leaf:
-                    leaf_pose = id_pose[u]
-                    parent_pose = id_pose[parent_ids[u]]
-                    leaves = self.get_leaves(leaf_pose, parent_pose)
-                    best_leaf = self.get_best_leaf(leaves)
-                if best_leaf:
+                leaf_is_frontier = self.is_frontier(leaves)
+                if leaf_is_frontier:
+                    best_leaf = id_pose[u]
+                    # else:
+                    #     leaf_pose = id_pose[u]
+                    #     parent_pose = id_pose[parent_ids[u]]
+                    #     leaves = self.get_leaves(leaf_pose, parent_pose)
+                    #     best_leaf = self.get_best_leaf(leaves)
+                    # if best_leaf:
                     leaf_parent = leaves[best_leaf]
                     v_id = self.get_id()
                     p_id = self.get_id()
@@ -369,8 +372,41 @@ class GVGExplore:
             radius = max(radii)
         return radius
 
-    def get_floodfill_points(self, length):
-        pass
+    def is_frontier(self, leaves):
+        leaf = list(leaves.keys())[0]
+        polygons, start_end, points, unknown_points, marker_points = self.get_leaf_region(leaves)
+        if leaf not in points:
+            return False
+        leaf_region = points[leaf]
+        leaf = pu.get_point(leaf)
+        full_cells = {pu.get_point(p): self.pixel_desc[p] for p in leaf_region}
+        full_cells[leaf] = FREE
+        frontiers = {}
+        self.flood_fill(full_cells, None, leaf, [], frontiers)
+        return len(frontiers) > 0
+
+    def flood_fill(self, cells, prev_point, new_point, visited, frontiers):
+        if new_point not in cells or new_point in visited:
+            return
+        if prev_point and cells[new_point] != cells[prev_point]:
+            if cells[new_point] == UNKNOWN:
+                frontiers[prev_point] = new_point
+            return
+        north_p = list(new_point)
+        east_p = list(new_point)
+        west_p = list(new_point)
+        south_p = list(new_point)
+        north_p[INDEX_FOR_X] += 1
+        east_p[INDEX_FOR_X] -= 1
+        south_p[INDEX_FOR_Y] += 1
+        west_p[INDEX_FOR_Y] -= 1
+        prev_point = new_point
+        visited.append(new_point)
+
+        self.flood_fill(cells, prev_point, tuple(north_p), visited, frontiers)
+        self.flood_fill(cells, prev_point, tuple(east_p), visited, frontiers)
+        self.flood_fill(cells, prev_point, tuple(south_p), visited, frontiers)
+        self.flood_fill(cells, prev_point, tuple(west_p), visited, frontiers)
 
     def edgelist_callback(self, data):
         self.updated_graph = data
