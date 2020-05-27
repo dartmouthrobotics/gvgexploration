@@ -26,4 +26,4 @@ target_distance: 2.0
 target_angle: 1.57
 environment: 'city'
 max_wait_time: 120 # secs
-run: 0
+run: 2
