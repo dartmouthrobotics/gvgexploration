@@ -1,6 +1,6 @@
-debug_mode: 0
-method: 'continuous' # method that is running
-data_share_threshold: 20 # in secs
+debug_mode: 1 
+method: 'recurrent' # method that is running
+data_share_threshold: 10
 max_target_info_ratio: 0.5
 frontier_threshold: 10
 robot_count: 4    # number of robots on the team
@@ -19,11 +19,14 @@ max_exploration_time: 20
 termination_metric: 1 # 1: TOTAL COVERAGE, 2: MAXIMUM_EXPLORATION_TIME 3: COMMON_COVERAGE, 4: FULL_COVERAGE
 map_scale: 20.0     # scale of the map
 graph_scale: 10.0     # scale of the map
-bs_pose: [4.0,10.0]
+#bs_pose: [4.0,10.0]  # basic
+#bs_pose: [18.0,8.0]  # cave
+#bs_pose: [12.0,3.0]  # city
+bs_pose: [18.0,12.0] # office
 map_inflation_radius: 1   # inflation radius of the robot
-map_file: '$(find gvgexploration)/world/cave.png'    # environment file
+map_file: '$(find gvgexploration)/world/office.png'    # environment file
 target_distance: 2.0
 target_angle: 1.57
-environment: 'cave'
+environment: 'office'
 max_wait_time: 120 # secs
-run: 2
+run: 0
