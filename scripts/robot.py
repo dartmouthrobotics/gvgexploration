@@ -162,9 +162,12 @@ class Robot:
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
-            pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),self.debug_mode)
-            if self.is_exploring:
-                self.check_data_sharing_status()
+            try:
+                pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),self.debug_mode)
+                if self.is_exploring:
+                    self.check_data_sharing_status()
+            except Exception as e:
+                pu.log_msg(self.robot_id, "Throwing error: {}".format(e),self.debug_mode)
             r.sleep()
 
 
