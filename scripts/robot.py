@@ -21,6 +21,7 @@ from threading import Thread
 import project_utils as pu
 from std_msgs.msg import String
 
+
 MAX_COVERAGE_RATIO = 0.8
 
 INF = 1000000000000
@@ -113,16 +114,12 @@ class Robot:
         self.method = rospy.get_param("~method")
         self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,self.shared_data_handler)
         self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,self.shared_point_handler)
-        self.alloc_point_srv = rospy.Service("/robot_{}/allocated_point".format(self.robot_id), SharedFrontier,
-                                             self.shared_frontier_handler)
-        rospy.Subscriber('/robot_{}/initial_data'.format(self.robot_id), BufferedData,
-                         self.initial_data_callback)  # just for initial data *
+        self.alloc_point_srv = rospy.Service("/robot_{}/allocated_point".format(self.robot_id), SharedFrontier,self.shared_frontier_handler)
+        rospy.Subscriber('/robot_{}/initial_data'.format(self.robot_id), BufferedData,self.initial_data_callback)  # just for initial data *
         self.karto_pub = rospy.Publisher("/robot_{}/karto_in".format(self.robot_id), LocalizedScan, queue_size=10)
         self.signal_strength_srv = rospy.ServiceProxy("/signal_strength".format(self.robot_id), HotSpot)
-        self.fetch_frontier_points = rospy.ServiceProxy('/robot_{}/frontier_points'.format(self.robot_id),
-                                                        FrontierPoint)
-        self.check_intersections = rospy.ServiceProxy('/robot_{}/check_intersections'.format(self.robot_id),
-                                                      Intersections)
+        self.fetch_frontier_points = rospy.ServiceProxy('/robot_{}/frontier_points'.format(self.robot_id),FrontierPoint)
+        self.check_intersections = rospy.ServiceProxy('/robot_{}/check_intersections'.format(self.robot_id),Intersections)
         rospy.Subscriber('/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
         rospy.Subscriber('/robot_{}/gvgexplore/feedback'.format(self.robot_id), Pose, self.explore_feedback_callback)
