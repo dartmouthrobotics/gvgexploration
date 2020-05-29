@@ -58,7 +58,7 @@ class Robot:
         self.shared_data_srv_map = {}
         self.shared_point_srv_map = {}
         self.auction_feedback_pub = {}
-        self.initial_data=set()
+        self.initial_data = set()
         self.is_exploring = False
         self.exploration_started = False
         self.karto_messages = {}
@@ -111,8 +111,10 @@ class Robot:
         self.robot_count = rospy.get_param("~robot_count")
         self.debug_mode = rospy.get_param("~debug_mode")
         self.method = rospy.get_param("~method")
-        self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,self.shared_data_handler)
-        self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,self.shared_point_handler)
+        self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,
+                                           self.shared_data_handler)
+        self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,
+                                                self.shared_point_handler)
         self.alloc_point_srv = rospy.Service("/robot_{}/allocated_point".format(self.robot_id), SharedFrontier,
                                              self.shared_frontier_handler)
         rospy.Subscriber('/robot_{}/initial_data'.format(self.robot_id), BufferedData,
@@ -139,7 +141,6 @@ class Robot:
         rospy.Subscriber('/karto_out', LocalizedScan, self.robots_karto_out_callback,
                          queue_size=10)
         self.shutdown_pub = rospy.Publisher("/shutdown".format(self.robot_id), String, queue_size=10)
-        rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         self.is_shutdown_caller = False
 
         self.trans_matrices = {}
@@ -163,13 +164,13 @@ class Robot:
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             try:
-                pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),self.debug_mode)
+                pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),
+                           self.debug_mode)
                 if self.is_exploring:
                     self.check_data_sharing_status()
             except Exception as e:
-                pu.log_msg(self.robot_id, "Throwing error: {}".format(e),self.debug_mode)
+                pu.log_msg(self.robot_id, "Throwing error: {}".format(e), self.debug_mode)
             r.sleep()
-
 
     def evaluate_exploration(self):
         # lapsed_time = rospy.Time.now().to_sec() - self.last_evaluation_time
@@ -224,7 +225,7 @@ class Robot:
         local_data_size = 0
         for rid in current_devices:
             message_data = self.load_data_for_id(rid)
-            local_data_size += len(message_data) #self.get_message_size(message_data)
+            local_data_size += len(message_data)  # self.get_message_size(message_data)
             buffered_data = self.create_buffered_data_msg(message_data, self.session_id, rid)
             response = self.shared_data_srv_map[rid](SharedDataRequest(req_data=buffered_data))
             pu.log_msg(self.robot_id, "received feedback from robot: {}".format(response.in_session), self.debug_mode)
@@ -272,11 +273,10 @@ class Robot:
         if ridge:
             self.frontier_ridge = ridge
         # pu.log_msg(self.robot_id, "Going to new frontier now: {}".format(self.frontier_ridge), self.debug_mode)
-        if self.frontier_ridge:
-            self.start_exploration_action(self.frontier_ridge)
-            pu.log_msg(self.robot_id, "Action sent to gvgexplore", self.debug_mode)
-        else:
-            pu.log_msg(self.robot_id, "No frontier point left".format(self.robot_id), self.debug_mode)
+        if not self.frontier_ridge:
+            self.frontier_ridge = list(frontier_points.values())[0]
+        self.start_exploration_action(self.frontier_ridge)
+        pu.log_msg(self.robot_id, "Action sent to gvgexplore", self.debug_mode)
         self.is_sender = False
         self.all_feedbacks.clear()
         # =============Ends here ==============
@@ -402,7 +402,7 @@ class Robot:
     def robots_karto_out_callback(self, data):
         if data.robot_id - 1 == self.robot_id:
             for rid in self.candidate_robots:
-                self.add_to_file(rid, data)
+                self.add_to_file(rid, [data])
             if self.is_initial_data_sharing:
                 self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
                 self.is_initial_data_sharing = False
@@ -441,16 +441,16 @@ class Robot:
         return set(devices)
 
     def process_data(self, buff_data, session_id=None, sent_data=0):
+        self.lock.acquire()
         self.map_updating = True
         for rid, rdata in buff_data.items():
             data_vals = rdata.data
             for scan in data_vals:
-                sid = str(scan.robot_id - 1)
                 self.karto_pub.publish(scan)
-                for rid in self.candidate_robots:
-                    if rid != sid:
-                        self.add_to_file(rid, scan)
-                sent_data += 1.0 #sys.getsizeof(scan)
+            for sid in self.candidate_robots:
+                if sid != rid:
+                    self.add_to_file(sid, data_vals)
+            sent_data += len(data_vals)
         self.map_updating = False
         if session_id:
             data_size = DataSize()
@@ -459,11 +459,12 @@ class Robot:
             data_size.size = sent_data
             data_size.session_id = session_id
             self.data_size_pub.publish(data_size)
+        self.lock.release()
 
     def get_message_size(self, msgs):
         size = 0
         for m in msgs:
-            size += 1.0 #sys.getsizeof(m)
+            size += 1.0  # sys.getsizeof(m)
         return size
 
     def shared_data_handler(self, data):
@@ -478,8 +479,8 @@ class Robot:
         self.session_id = session_id
         thread = Thread(target=self.process_data, args=(received_data,))
         thread.start()
-        # self.process_data(received_data)
         buff_data = self.create_buffered_data_msg(message_data, session_id, sender_id)
+        self.delete_data_for_id(sender_id)
         return SharedDataResponse(in_session=0, res_data=buff_data)
 
     def shared_point_handler(self, auction_data):
@@ -591,8 +592,12 @@ class Robot:
         robot_pose = None
         while not robot_pose:
             try:
-                self.listener.waitForTransform("robot_{}/map".format(self.robot_id),"robot_{}/base_link".format(self.robot_id), rospy.Time(),rospy.Duration(4.0))
-                (robot_loc_val, rot) = self.listener.lookupTransform("robot_{}/map".format(self.robot_id),"robot_{}/base_link".format(self.robot_id),rospy.Time(0))
+                self.listener.waitForTransform("robot_{}/map".format(self.robot_id),
+                                               "robot_{}/base_link".format(self.robot_id), rospy.Time(),
+                                               rospy.Duration(4.0))
+                (robot_loc_val, rot) = self.listener.lookupTransform("robot_{}/map".format(self.robot_id),
+                                                                     "robot_{}/base_link".format(self.robot_id),
+                                                                     rospy.Time(0))
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
                 sleep(1)
             except:
@@ -609,9 +614,9 @@ class Robot:
     def add_to_file(self, rid, data):
         # self.lock.acquire()
         if rid in self.karto_messages:
-            self.karto_messages[rid].append(data)
+            self.karto_messages[rid] += data
         else:
-            self.karto_messages[rid] = [data]
+            self.karto_messages[rid] = data
         # self.lock.release()
         return True
 
@@ -648,10 +653,14 @@ class Robot:
         return yaw
 
     def save_all_data(self):
-        pu.save_data(self.interconnection_data,'{}/interconnections_{}_{}_{}_{}_{}.pickle'.format(self.method,self.environment, self.robot_count, self.run,
-                                                                         self.termination_metric, self.robot_id))
-        pu.save_data(self.frontier_data,'{}/frontiers_{}_{}_{}_{}_{}.pickle'.format(self.method,self.environment, self.robot_count, self.run,
-                                                                  self.termination_metric, self.robot_id))
+        pu.save_data(self.interconnection_data,
+                     '{}/interconnections_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count,
+                                                                        self.run,
+                                                                        self.termination_metric, self.robot_id))
+        pu.save_data(self.frontier_data,
+                     '{}/frontiers_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count,
+                                                                 self.run,
+                                                                 self.termination_metric, self.robot_id))
         msg = String()
         msg.data = '{}'.format(self.robot_id)
         self.is_shutdown_caller = True

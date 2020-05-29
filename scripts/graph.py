@@ -25,6 +25,8 @@ from std_srvs.srv import *
 from project_utils import INDEX_FOR_X, INDEX_FOR_Y, save_data
 from std_msgs.msg import String
 from numpy.linalg import norm
+import shapely.geometry as sg
+from shapely.geometry.polygon import Polygon
 
 INF = 100000
 SCALE = 10
@@ -62,6 +64,9 @@ class Graph:
         self.new_information = {}
         self.known_points = {}
         self.unknown_points = {}
+        self.global_leaves = {}
+        self.leaf_edges = {}
+        self.leaf_obstacles = {}
         self.performance_data = []
         self.explored_points = set()
         self.last_intersection = None
@@ -140,6 +145,7 @@ class Graph:
         robot_pose = pu.scale_up(pose, self.graph_scale)
         edgelist = self.create_edge_list(robot_pose)
         return FetchGraphResponse(edgelist=edgelist)
+
 
     def frontier_point_handler(self, request):
         count = request.count
@@ -689,6 +695,8 @@ class Graph:
         edge_list = list(edge_dict)
         self.adj_list.clear()
         self.leaf_slope.clear()
+        self.global_leaves.clear()
+        self.leaf_edges.clear()
         for e in edge_list:
             first = e[0]
             second = e[1]
@@ -705,7 +713,12 @@ class Graph:
                 del edge_dict[e]
         for k, v in self.adj_list.items():
             if len(v) == 1:
-                self.leaf_slope[k] = pu.theta(list(v)[0], k)
+                parent = list(v)[0]
+                self.leaf_slope[k] = pu.theta(parent, k)
+                self.global_leaves[k] = parent
+                if (parent, k) in self.edges:
+                    self.leaf_edges[k] = (parent, k)
+                    self.leaf_obstacles[k] = self.edges[(parent, k)]
 
     def is_free(self, p):
         xc = int(np.round(p[INDEX_FOR_X]))
@@ -938,29 +951,109 @@ class Graph:
         return [p for p in points if self.pixel_desc[p] == OCCUPIED]
 
     def compute_new_information(self):
-        frontier_size = {}
         self.new_information.clear()
-        self.known_points.clear()
-        self.unknown_points.clear()
-        leaf_copy = copy.deepcopy(self.leaf_slope)
-        edges_copy = copy.deepcopy(self.edges)
-        adjlist_copy = copy.deepcopy(self.adj_list)
-        for leaf, slope in leaf_copy.items():
-            obs = None
-            edge = (list(adjlist_copy[leaf])[0], leaf)
-            redge = (leaf, list(adjlist_copy[leaf])[0])
-            if edge in edges_copy:
-                obs = edges_copy[edge]
-            elif redge in edges_copy:
-                obs = edges_copy[redge]
-            if obs:
-                we = pu.D(obs[0], obs[1])
-                frontier_size[leaf] = we
-                ks, us = self.area(leaf, slope, we)
-                unknown_area = len(us)
-                self.new_information[(edge, obs)] = unknown_area
-                self.known_points[(edge, obs)] = ks
-                self.unknown_points[(edge, obs)] = us
+        leaf_obstacles = copy.deepcopy(self.leaf_obstacles)
+        leaf_edges = copy.deepcopy(self.leaf_edges)
+        polygons, start_end, points, unknown_points, marker_points = self.get_leaf_region(leaf_edges,
+                                                                                          leaf_obstacles)
+        for leaf, edge in leaf_edges.items():
+            if self.is_frontier({leaf: edge[0]}, points[leaf]):
+                edge = leaf_edges[leaf]
+                obs = leaf_obstacles[leaf]
+                self.new_information[(edge, obs)] = unknown_points[leaf]
+
+    def is_frontier(self, edge, leaf_region):
+        leaf = list(edge.keys())[0]
+        leaf = pu.get_point(leaf)
+        full_cells = {pu.get_point(p): self.pixel_desc[p] for p in leaf_region}
+        full_cells[leaf] = FREE
+        frontiers = {}
+        self.flood_fill(full_cells, None, leaf, [], frontiers)
+        return len(frontiers) > 0
+
+    def flood_fill(self, cells, prev_point, new_point, visited, frontiers):
+        if new_point not in cells or new_point in visited:
+            return
+        if prev_point and cells[new_point] != cells[prev_point]:
+            if cells[new_point] == UNKNOWN:
+                frontiers[prev_point] = new_point
+            return
+        north_p = list(new_point)
+        east_p = list(new_point)
+        west_p = list(new_point)
+        south_p = list(new_point)
+        north_p[INDEX_FOR_X] += 1
+        east_p[INDEX_FOR_X] -= 1
+        south_p[INDEX_FOR_Y] += 1
+        west_p[INDEX_FOR_Y] -= 1
+        prev_point = new_point
+        visited.append(new_point)
+
+        self.flood_fill(cells, prev_point, tuple(north_p), visited, frontiers)
+        self.flood_fill(cells, prev_point, tuple(east_p), visited, frontiers)
+        self.flood_fill(cells, prev_point, tuple(south_p), visited, frontiers)
+        self.flood_fill(cells, prev_point, tuple(west_p), visited, frontiers)
+
+    def get_leaf_region(self, leaf_edges, leaf_obstacles):
+        polygons = {}
+        start_end = {}
+        for leaf, edge in leaf_edges.items():
+            parent = edge[0]
+            obs = leaf_obstacles[leaf]
+            width = pu.D(obs[0], obs[1])
+            radius = self.lidar_scan_radius
+
+            x = leaf[0]
+            y = leaf[1]
+
+            opp = width / 2.0
+            adj = radius
+            hyp = np.sqrt(opp ** 2 + adj ** 2)
+            theta1 = pu.theta(parent, leaf)
+            angle_sum = (np.pi / 2) + theta1
+            cos_val = opp * np.cos(angle_sum)
+            sin_val = opp * np.sin(angle_sum)
+
+            top_left_x = x + cos_val
+            top_left_y = y + sin_val
+
+            bottom_left_x = x - cos_val
+            bottom_left_y = y - sin_val
+
+            lx = x + hyp * np.cos(theta1)
+            ly = y + hyp * np.sin(theta1)
+
+            top_right_x = lx + cos_val
+            top_right_y = ly + sin_val
+
+            bottom_right_x = lx - cos_val
+            bottom_right_y = ly - sin_val
+
+            polygon = Polygon([(bottom_left_x, bottom_left_y), (top_left_x, top_left_y), (top_right_x, top_right_y),
+                               (bottom_right_x, bottom_right_y)])
+
+            polygons[leaf] = polygon
+            start_end[leaf] = (leaf, (lx, ly))
+
+        points = {}
+        unknown_points = {}
+        leaf_keys = leaf_edges.keys()
+        marker_points = []
+        for pose, value in self.pixel_desc.items():
+            point = sg.Point(pose[INDEX_FOR_X], pose[INDEX_FOR_Y])
+            for leaf in leaf_keys:
+                if polygons[leaf].contains(point):
+                    marker_points.append(pose)
+                    if leaf not in points:
+                        points[leaf] = [pose]
+                    else:
+                        points[leaf].append(pose)
+                    if value == UNKNOWN:
+                        if leaf not in unknown_points:
+                            unknown_points[leaf] = 1
+                        else:
+                            unknown_points[leaf] += 1
+        return polygons, start_end, points, unknown_points, marker_points
 
     def area(self, point, orientation, radius):
         known_points = []
