@@ -400,12 +400,14 @@ class Robot:
         return auction
 
     def robots_karto_out_callback(self, data):
-        if data.robot_id - 1 == self.robot_id:
-            for rid in self.candidate_robots:
-                self.add_to_file(rid, [data])
-            if self.is_initial_data_sharing:
-                self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
-                self.is_initial_data_sharing = False
+        karto= deepcopy(data)
+        print(karto)
+        karto.robot_id=self.robot_id
+        for rid in self.candidate_robots:
+            self.add_to_file(rid, [data])
+        if self.is_initial_data_sharing:
+           self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
+           self.is_initial_data_sharing = False
 
     def push_messages_to_receiver(self, receiver_ids, session_id, is_alert=0, initiator=0):
         for receiver_id in receiver_ids:
