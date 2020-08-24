@@ -1,9 +1,9 @@
-debug_mode: 0
+debug_mode: 1
 method: 'gvg' # method that is running
 data_share_threshold: 10
 max_target_info_ratio: 0.5
 frontier_threshold: 10
-robot_count: 4    # number of robots on the team
+robot_count: 2    # number of robots on the team
 min_hallway_width: 1.0   # allowed minimum separation between two pixels on the graph
 comm_range: 10  # communication range
 point_precision: 2   # allowed precision of the poses
@@ -29,4 +29,4 @@ target_distance: 2.0
 target_angle: 1.57
 environment: 'city'
 max_wait_time: 120 # secs
-run: 1
+run: 0

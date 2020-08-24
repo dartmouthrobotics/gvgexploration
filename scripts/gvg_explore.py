@@ -257,7 +257,10 @@ class GVGExplore:
                 self.localize_nodes(id_pose, pivot_node)
                 leaves = self.get_leaves(id_pose[u], id_pose[parent_ids[u]])
                 if not leaves:
-                    S.append(u)
+                    if id_pose[u] not in all_visited_poses:
+                        S.append(u)
+                    else:
+                        pivot_node = {parent_ids[u]: id_pose[parent_ids[u]]}
                 else:
                     best_leaf = self.get_best_leaf(leaves)
                     leaf_parent = leaves[best_leaf]
@@ -621,7 +624,7 @@ class GVGExplore:
         marker.scale.z = 0.1
         marker.color.a = 1.0
         marker.color.r = 0.0
-        marker.color.g = 0.0
+        marker.color.g = 1.0
         marker.color.b = 1.0
         marker.points = [0.0] * len(points)
         for i in range(len(points)):

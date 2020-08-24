@@ -1,7 +1,7 @@
 <launch>
     <!-- Some general parameters -->
     <param name="use_sim_time" value="true" />
-    <node name="Stage" pkg="stage_ros" type="stageros" args="$(find gvgexploration)/world/city4.world">
+    <node name="Stage" pkg="stage_ros" type="stageros" args="$(find gvgexploration)/world/office4.world">
         <param name="base_watchdog_timeout" value="0" />
     </node>
     <node name="R0_MapAlign" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /robot_0/map 100"/>

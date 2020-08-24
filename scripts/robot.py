@@ -126,14 +126,14 @@ class Robot:
         self.check_intersections = rospy.ServiceProxy('/robot_{}/check_intersections'.format(self.robot_id),
                                                       Intersections)
         rospy.Subscriber('/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
-        rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
+        rospy.Subscriber('/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
         rospy.Subscriber('/robot_{}/gvgexplore/feedback'.format(self.robot_id), Pose, self.explore_feedback_callback)
         self.data_size_pub = rospy.Publisher('/shared_data_size', DataSize, queue_size=10)
         for rid in self.candidate_robots:
             received_data_clt = rospy.ServiceProxy("/robot_{}/shared_data".format(rid), SharedData)
             action_points_clt = rospy.ServiceProxy("/robot_{}/auction_points".format(rid), SharedPoint)
             alloc_point_clt = rospy.ServiceProxy("/robot_{}/allocated_point".format(rid), SharedFrontier)
-            pub = rospy.Publisher("/roscbt/robot_{}/initial_data".format(rid), BufferedData, queue_size=10)
+            pub = rospy.Publisher("/robot_{}/initial_data".format(rid), BufferedData, queue_size=10)
             self.publisher_map[rid] = pub
             self.allocation_pub[rid] = alloc_point_clt
             self.shared_data_srv_map[rid] = received_data_clt

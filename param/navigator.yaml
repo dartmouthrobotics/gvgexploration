@@ -21,8 +21,6 @@ navigation_homing_distance: 3.0
 exploration_goal_distance: 3.0
 
 # Replanning period (set any to 0 to ignore)
-#min_replanning_period: 3.0
-#max_replanning_period: 1.0
 min_replanning_period: 3.0
 max_replanning_period: 1.0
 

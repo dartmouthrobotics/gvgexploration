@@ -855,7 +855,7 @@ class Graph:
         if self.tree_size:
             self.longest = max(self.tree_size, key=self.tree_size.get)
 
-    def merge_similar_edges(self):
+    def cl_similar_edges(self):
         parents = {self.longest: None}
         deleted_nodes = {}
         S = [self.longest]

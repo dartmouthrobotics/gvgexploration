@@ -10,8 +10,8 @@ map_frame: map
 
 ### ROS topics ############################################
 map_topic: map
-laser_topic: filtered_scan
-#laser_topic: base_scan
+#laser_topic: filtered_scan
+laser_topic: base_scan
 
 scan_subscriber_status: scan_status  # @kizito
 
