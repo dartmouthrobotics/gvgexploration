@@ -2,7 +2,7 @@
 # Defines topics services and frames for all modules
 
 ### TF frames #############################################
-laser_frame: base_laser_link
+laser_frame: laser
 robot_frame: base_link
 odometry_frame: odom
 offset_frame: offset
@@ -11,7 +11,7 @@ map_frame: map
 ### ROS topics ############################################
 map_topic: map
 #laser_topic: filtered_scan
-laser_topic: base_scan
+laser_topic: scan
 
 scan_subscriber_status: scan_status  # @kizito
 
@@ -20,8 +20,8 @@ map_service: static_map
 
 
 ## Nav2d navigator
-robot_radius: 0.2
-map_inflation_radius: 0.75
+robot_radius: 0.4
+map_inflation_radius: 1.0
 
 
 
