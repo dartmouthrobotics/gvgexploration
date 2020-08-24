@@ -1,0 +1,507 @@
+
+
+Found 6 processes that could cause trouble.
+If airodump-ng, aireplay-ng or airtun-ng stops working after
+a short period of time, you may want to kill (some of) them!
+
+PID	Name
+534	avahi-daemon
+586	avahi-daemon
+682	NetworkManager
+811	wpa_supplicant
+1195	dhclient
+1417	dhclient
+Process with PID 1195 (dhclient) is running on interface wlan0
+Process with PID 1417 (dhclient) is running on interface wlan0
+
+
+Interface	Chipset		Driver
+
+wlan0		Unknown 	rtl8723bs - [phy0]
+wlan1		Ralink RT2870/3070	rt2800usb - [phy1]
+				(monitor mode enabled on mon0)
+
+... logging to /home/husarion/.ros/log/9f55ac5e-e5b0-11ea-aa8c-d0c5d3814e57/roslaunch-rosbot5-27802.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;/home/husarion/catkin_ws/src/gvgexploration/launch/husarion.launch
+[1mstarted roslaunch server http://rosbot5:40909/[0m
+
+SUMMARY
+========
+
+PARAMETERS
+ * /Mapper/AngleVariancePenalty: 0.0004
+ * /Mapper/DistanceVariancePenalty: 0.01
+ * /Mapper/LoopSearchMaximumDistance: 10.0
+ * /Mapper/MinimumTravelDistance: 1.0
+ * /Mapper/MinimumTravelHeading: 1.57
+ * /Mapper/ScanBufferSize: 2
+ * /Mapper/UseScanMatching: False
+ * /Mapper/grid_resolution: 0.05
+ * /Mapper/map_update_rate: 5
+ * /Mapper/max_covariance: 0.0
+ * /Mapper/max_particles: 10000
+ * /Mapper/min_map_size: 20
+ * /Mapper/min_particles: 2500
+ * /Mapper/publish_pose_graph: False
+ * /Mapper/range_threshold: 20.0
+ * /Mapper/transform_publish_period: 0.1
+ * /laser_frame: base_laser_link
+ * /laser_topic: base_scan
+ * /map_frame: map
+ * /map_inflation_radius: 0.75
+ * /map_service: static_map
+ * /map_topic: map
+ * /master_discovery/_mcast_group: 224.0.0.1
+ * /master_sync/ignore_nodes: ['/tf', '/msgs_co...
+ * /navigator/command_target_distance: 1.0
+ * /navigator/exploration_goal_distance: 3.0
+ * /navigator/frequency: 10.0
+ * /navigator/map_inflation_radius: 1.0
+ * /navigator/max_replanning_period: 1.0
+ * /navigator/min_replanning_period: 3.0
+ * /navigator/min_target_area_size: 1.0
+ * /navigator/navigation_goal_angle: 1.0
+ * /navigator/navigation_goal_distance: 1.0
+ * /navigator/navigation_homing_distance: 3.0
+ * /navigator/odometry_frame: odom
+ * /navigator/robot_frame: base_link
+ * /navigator/robot_radius: 0.2
+ * /navigator/visualize_frontiers: True
+ * /odometry_frame: odom
+ * /offset_frame: offset
+ * /operator/conformance_weight: 1
+ * /operator/continue_weight: 1
+ * /operator/escape_weight: 1
+ * /operator/frequency: 10
+ * /operator/local_map/cost_scaling_factor: 2.0
+ * /operator/local_map/global_frame: odom
+ * /operator/local_map/height: 6.0
+ * /operator/local_map/inflation_radius: 0.5
+ * /operator/local_map/lethal_cost_threshold: 100
+ * /operator/local_map/map_type: costmap
+ * /operator/local_map/max_obstacle_height: 2.0
+ * /operator/local_map/min_obstacle_height: 0.0
+ * /operator/local_map/observation_sources: scan
+ * /operator/local_map/obstacle_range: 4.0
+ * /operator/local_map/publish_frequency: 1.0
+ * /operator/local_map/publish_voxel_map: True
+ * /operator/local_map/raytrace_range: 4.5
+ * /operator/local_map/resolution: 0.05
+ * /operator/local_map/robot_base_frame: base_link
+ * /operator/local_map/robot_radius: 0.2
+ * /operator/local_map/rolling_window: True
+ * /operator/local_map/scan/clearing: True
+ * /operator/local_map/scan/data_type: LaserScan
+ * /operator/local_map/scan/expected_update_rate: 0.4
+ * /operator/local_map/scan/marking: True
+ * /operator/local_map/scan/max_obstacle_height: 0.4
+ * /operator/local_map/scan/min_obstacle_height: 0.08
+ * /operator/local_map/scan/observation_persistence: 0.0
+ * /operator/local_map/scan/topic: base_scan
+ * /operator/local_map/static_map: False
+ * /operator/local_map/track_unknown_space: False
+ * /operator/local_map/transform_tolerance: 0.3
+ * /operator/local_map/update_frequency: 5.0
+ * /operator/local_map/width: 6.0
+ * /operator/max_free_space: 3.0
+ * /operator/max_velocity: 1.0
+ * /operator/odometry_frame: odom
+ * /operator/publish_route: True
+ * /operator/robot_frame: base_link
+ * /operator/safety_decay: 0.99
+ * /operator/safety_weight: 1
+ * /robot_4/4/node4/base_stations: 5,7,8
+ * /robot_4/4/node4/bs_pose: [18.0, 8.0]
+ * /robot_4/4/node4/comm_range: 10
+ * /robot_4/4/node4/data_share_threshold: 10
+ * /robot_4/4/node4/debug_mode: 1
+ * /robot_4/4/node4/environment: city
+ * /robot_4/4/node4/frontier_robots: 
+ * /robot_4/4/node4/frontier_threshold: 10
+ * /robot_4/4/node4/graph_scale: 10.0
+ * /robot_4/4/node4/lidar_fov: 360
+ * /robot_4/4/node4/lidar_scan_radius: 6
+ * /robot_4/4/node4/map_file: /home/husarion/ca...
+ * /robot_4/4/node4/map_inflation_radius: 1
+ * /robot_4/4/node4/map_scale: 20.0
+ * /robot_4/4/node4/max_common_coverage: 0.8
+ * /robot_4/4/node4/max_coverage: 0.8
+ * /robot_4/4/node4/max_exploration_time: 20
+ * /robot_4/4/node4/max_target_info_ratio: 0.5
+ * /robot_4/4/node4/max_wait_time: 120
+ * /robot_4/4/node4/method: gvg
+ * /robot_4/4/node4/min_edge_length: 1
+ * /robot_4/4/node4/min_hallway_width: 1.0
+ * /robot_4/4/node4/opposite_vector_bias: 0.25
+ * /robot_4/4/node4/point_precision: 2
+ * /robot_4/4/node4/relay_robots: 
+ * /robot_4/4/node4/robot_count: 2
+ * /robot_4/4/node4/robot_id: 4
+ * /robot_4/4/node4/robot_type: 2
+ * /robot_4/4/node4/run: 0
+ * /robot_4/4/node4/separation_bias: 2
+ * /robot_4/4/node4/slope_bias: 0.1
+ * /robot_4/4/node4/target_angle: 1.57
+ * /robot_4/4/node4/target_distance: 2.0
+ * /robot_4/4/node4/termination_metric: 1
+ * /robot_4/4/node4_explore/base_stations: 5,7,8
+ * /robot_4/4/node4_explore/bs_pose: [18.0, 8.0]
+ * /robot_4/4/node4_explore/comm_range: 10
+ * /robot_4/4/node4_explore/data_share_threshold: 10
+ * /robot_4/4/node4_explore/debug_mode: 1
+ * /robot_4/4/node4_explore/environment: city
+ * /robot_4/4/node4_explore/frontier_robots: 
+ * /robot_4/4/node4_explore/frontier_threshold: 10
+ * /robot_4/4/node4_explore/graph_scale: 10.0
+ * /robot_4/4/node4_explore/lidar_fov: 360
+ * /robot_4/4/node4_explore/lidar_scan_radius: 6
+ * /robot_4/4/node4_explore/map_file: /home/husarion/ca...
+ * /robot_4/4/node4_explore/map_inflation_radius: 1
+ * /robot_4/4/node4_explore/map_scale: 20.0
+ * /robot_4/4/node4_explore/max_common_coverage: 0.8
+ * /robot_4/4/node4_explore/max_coverage: 0.8
+ * /robot_4/4/node4_explore/max_exploration_time: 20
+ * /robot_4/4/node4_explore/max_target_info_ratio: 0.5
+ * /robot_4/4/node4_explore/max_wait_time: 120
+ * /robot_4/4/node4_explore/method: gvg
+ * /robot_4/4/node4_explore/min_edge_length: 1
+ * /robot_4/4/node4_explore/min_hallway_width: 1.0
+ * /robot_4/4/node4_explore/opposite_vector_bias: 0.25
+ * /robot_4/4/node4_explore/point_precision: 2
+ * /robot_4/4/node4_explore/relay_robots: 
+ * /robot_4/4/node4_explore/robot_count: 2
+ * /robot_4/4/node4_explore/robot_id: 4
+ * /robot_4/4/node4_explore/robot_type: 2
+ * /robot_4/4/node4_explore/run: 0
+ * /robot_4/4/node4_explore/separation_bias: 2
+ * /robot_4/4/node4_explore/slope_bias: 0.1
+ * /robot_4/4/node4_explore/target_angle: 1.57
+ * /robot_4/4/node4_explore/target_distance: 2.0
+ * /robot_4/4/node4_explore/termination_metric: 1
+ * /robot_4/4/node4_graph_processor/base_stations: 5,7,8
+ * /robot_4/4/node4_graph_processor/bs_pose: [18.0, 8.0]
+ * /robot_4/4/node4_graph_processor/comm_range: 10
+ * /robot_4/4/node4_graph_processor/data_share_threshold: 10
+ * /robot_4/4/node4_graph_processor/debug_mode: 1
+ * /robot_4/4/node4_graph_processor/environment: city
+ * /robot_4/4/node4_graph_processor/frontier_robots: 
+ * /robot_4/4/node4_graph_processor/frontier_threshold: 10
+ * /robot_4/4/node4_graph_processor/graph_scale: 10.0
+ * /robot_4/4/node4_graph_processor/lidar_fov: 360
+ * /robot_4/4/node4_graph_processor/lidar_scan_radius: 6
+ * /robot_4/4/node4_graph_processor/map_file: /home/husarion/ca...
+ * /robot_4/4/node4_graph_processor/map_inflation_radius: 1
+ * /robot_4/4/node4_graph_processor/map_scale: 20.0
+ * /robot_4/4/node4_graph_processor/max_common_coverage: 0.8
+ * /robot_4/4/node4_graph_processor/max_coverage: 0.8
+ * /robot_4/4/node4_graph_processor/max_exploration_time: 20
+ * /robot_4/4/node4_graph_processor/max_target_info_ratio: 0.5
+ * /robot_4/4/node4_graph_processor/max_wait_time: 120
+ * /robot_4/4/node4_graph_processor/method: gvg
+ * /robot_4/4/node4_graph_processor/min_edge_length: 1
+ * /robot_4/4/node4_graph_processor/min_hallway_width: 1.0
+ * /robot_4/4/node4_graph_processor/opposite_vector_bias: 0.25
+ * /robot_4/4/node4_graph_processor/point_precision: 2
+ * /robot_4/4/node4_graph_processor/relay_robots: 
+ * /robot_4/4/node4_graph_processor/robot_count: 2
+ * /robot_4/4/node4_graph_processor/robot_id: 4
+ * /robot_4/4/node4_graph_processor/robot_type: 2
+ * /robot_4/4/node4_graph_processor/run: 0
+ * /robot_4/4/node4_graph_processor/separation_bias: 2
+ * /robot_4/4/node4_graph_processor/slope_bias: 0.1
+[31mERROR: cannot launch node of type [master_discovery_fkie/master_discovery]: master_discovery_fkie
+ROS path [0]=/opt/ros/kinetic/share/ros
+ROS path [1]=/home/husarion/catkin_ws/src
+ROS path [2]=/opt/ros/kinetic/share[0m
+[31mERROR: cannot launch node of type [master_sync_fkie/master_sync]: master_sync_fkie
+ROS path [0]=/opt/ros/kinetic/share/ros
+ROS path [1]=/home/husarion/catkin_ws/src
+ROS path [2]=/opt/ros/kinetic/share[0m
+Traceback (most recent call last):
+  File "/home/husarion/catkin_ws/src/gvgexploration/scripts/graph.py", line 9, in <module>
+    from scipy.spatial import Voronoi
+ImportError: No module named scipy.spatial
+[31m[robot_4/4/node4_graph_processor-8] process has died [pid 28152, exit code 1, cmd /home/husarion/catkin_ws/src/gvgexploration/scripts/graph.py __name:=node4_graph_processor __log:=/home/husarion/.ros/log/9f55ac5e-e5b0-11ea-aa8c-d0c5d3814e57/robot_4-4-node4_graph_processor-8.log].
+log file: /home/husarion/.ros/log/9f55ac5e-e5b0-11ea-aa8c-d0c5d3814e57/robot_4-4-node4_graph_processor-8*.log[0m
+the rosdep view is empty: call 'sudo rosdep init' and 'rosdep update'
+the rosdep view is empty: call 'sudo rosdep init' and 'rosdep update'
+[ERROR] [1598235738.587542]: Robot 4: Is exploring: False, Session ID: None
+the rosdep view is empty: call 'sudo rosdep init' and 'rosdep update'
+[0m[ INFO] [1598235740.271638088]: Loading from pre-hydro parameter style[0m
+[0m[ INFO] [1598235740.444419109]: Using plugin "obstacle_layer"[0m
+[0m[ INFO] [1598235740.514205031]:     Subscribed to Topics: scan[0m
+[0m[ INFO] [1598235740.720781032]: Using plugin "inflation_layer"[0m
+[0m[ INFO] [1598235741.120490129]: Will publish desired direction on 'route' and control direction on 'desired'.[0m
+[0m[ INFO] [1598235741.202737916]: Initializing LUT...[0m
+[33m[ WARN] [1598235741.204897144]: The base_scan observation buffer has not been updated for 0.59 seconds, and it should be updated every 0.40 seconds.[0m
+[0m[ INFO] [1598235741.219311341]: ...done![0m
+[33m[ WARN] [1598235741.404990971]: The base_scan observation buffer has not been updated for 0.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235741.604808370]: The base_scan observation buffer has not been updated for 0.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235741.805070152]: The base_scan observation buffer has not been updated for 1.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235742.005107119]: The base_scan observation buffer has not been updated for 1.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235742.204673329]: The base_scan observation buffer has not been updated for 1.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235742.404831464]: The base_scan observation buffer has not been updated for 1.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235742.604749036]: The base_scan observation buffer has not been updated for 1.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235742.804657569]: The base_scan observation buffer has not been updated for 2.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235743.004741056]: The base_scan observation buffer has not been updated for 2.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235743.204745390]: The base_scan observation buffer has not been updated for 2.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235743.404741263]: The base_scan observation buffer has not been updated for 2.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235743.604761921]: The base_scan observation buffer has not been updated for 2.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235743.804793951]: The base_scan observation buffer has not been updated for 3.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235744.004837645]: The base_scan observation buffer has not been updated for 3.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235744.204836007]: The base_scan observation buffer has not been updated for 3.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235744.404850693]: The base_scan observation buffer has not been updated for 3.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235744.604773235]: The base_scan observation buffer has not been updated for 3.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235744.804750305]: The base_scan observation buffer has not been updated for 4.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235745.004910495]: The base_scan observation buffer has not been updated for 4.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235745.204734333]: The base_scan observation buffer has not been updated for 4.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235745.404733712]: The base_scan observation buffer has not been updated for 4.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235745.604816195]: The base_scan observation buffer has not been updated for 4.99 se[ERROR] [1598235748.598037]: Robot 4: Is exploring: False, Session ID: None
+conds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235745.804744134]: The base_scan observation buffer has not been updated for 5.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235746.004560975]: The base_scan observation buffer has not been updated for 5.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235746.204640102]: The base_scan observation buffer has not been updated for 5.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235746.404554187]: The base_scan observation buffer has not been updated for 5.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235746.604786110]: The base_scan observation buffer has not been updated for 5.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235746.804724399]: The base_scan observation buffer has not been updated for 6.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235747.004737335]: The base_scan observation buffer has not been updated for 6.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235747.204791525]: The base_scan observation buffer has not been updated for 6.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235747.404732870]: The base_scan observation buffer has not been updated for 6.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235747.604767233]: The base_scan observation buffer has not been updated for 6.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235747.804750859]: The base_scan observation buffer has not been updated for 7.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235748.004747898]: The base_scan observation buffer has not been updated for 7.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235748.204811265]: The base_scan observation buffer has not been updated for 7.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235748.404816314]: The base_scan observation buffer has not been updated for 7.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235748.605511277]: The base_scan observation buffer has not been updated for 7.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235748.804797253]: The base_scan observation buffer has not been updated for 8.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235749.004806093]: The base_scan observation buffer has not been updated for 8.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235749.205357143]: The base_scan observation buffer has not been updated for 8.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235749.404829873]: The base_scan observation buffer has not been updated for 8.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235749.606059174]: The base_scan observation buffer has not been updated for 8.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235749.804646328]: The base_scan observation buffer has not been updated for 9.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235750.004804890]: The base_scan observation buffer has not been updated for 9.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235750.204739347]: The base_scan observation buffer has not been updated for 9.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235750.404742328]: The base_scan observation buffer has not been updated for 9.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235750.604728979]: The base_scan observation buffer has not been updated for 9.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235750.804762578]: The base_scan observation buffer has not been updated for 10.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235751.004642796]: The base_scan observation buffer has not been updated for 10.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235751.204667191]: The base_scan observation buffer has not been updated for 10.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235751.404729202]: The base_scan observation buffer has not been updated for 10.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235751.604636083]: The base_scan observation buffer has not been updated for 10.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235751.804707717]: The base_scan observation buffer has not been updated for 11.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235752.004735028]: The base_scan observation buffer has not been updated for 11.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235752.204734179]: The base_scan observation buffer has not been updated for 11.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235752.404742368]: The base_scan observation buffer has not been updated for 11.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235752.604741809]: The base_scan observation buffer has not been updated for 11.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235752.804789948]: The base_scan observation buffer has not been updated for 12.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235753.004772768]: The base_scan observation buffer has not been updated for 12.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235753.204779914]: The base_scan observation buffer has not been updated for 12.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235753.404798430]: The base_scan observation buffer has not been updated for 12.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235753.604699724]: The base_scan observation buffer has not been updated for 12.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235753.804790264]: The base_scan observation buffer has not been updated for 13.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235754.004838523]: The base_scan observation buffer has not been updated for 13.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235754.204756266]: The base_scan observation buffer has not been updated for 13.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235754.404775483]: The base_scan observation buffer has not been updated for 13.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235754.604941957]: The base_scan observation buffer has not been updated for 13.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235754.804757346]: The base_scan observation buffer has not been updated for 14.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235755.004924986]: The base_scan observation buffer has not been updated for 14.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235755.204769944]: The base_scan observation buffer has not been updated for 14.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235755.405094288]: The base_scan observation buffer has not been updated for 14.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235755.604635980]: The base_scan observation buffer has not been updated for 14.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235755.804751247]: The base_scan observation buffer has not been updated for 15.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235756.004640525]: The base_scan o[ERROR] [1598235758.598221]: Robot 4: Is exploring: False, Session ID: None
+bservation buffer has not been updated for 15.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235756.204686505]: The base_scan observation buffer has not been updated for 15.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235756.404726359]: The base_scan observation buffer has not been updated for 15.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235756.604734720]: The base_scan observation buffer has not been updated for 15.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235756.804752996]: The base_scan observation buffer has not been updated for 16.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235757.004742403]: The base_scan observation buffer has not been updated for 16.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235757.204734546]: The base_scan observation buffer has not been updated for 16.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235757.405507883]: The base_scan observation buffer has not been updated for 16.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235757.604750901]: The base_scan observation buffer has not been updated for 16.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235757.804742749]: The base_scan observation buffer has not been updated for 17.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235758.004818870]: The base_scan observation buffer has not been updated for 17.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235758.204672024]: The base_scan observation buffer has not been updated for 17.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235758.404640649]: The base_scan observation buffer has not been updated for 17.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235758.604785401]: The base_scan observation buffer has not been updated for 17.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235758.804737114]: The base_scan observation buffer has not been updated for 18.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235759.004773390]: The base_scan observation buffer has not been updated for 18.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235759.204736580]: The base_scan observation buffer has not been updated for 18.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235759.404748755]: The base_scan observation buffer has not been updated for 18.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235759.604750724]: The base_scan observation buffer has not been updated for 18.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235759.804733739]: The base_scan observation buffer has not been updated for 19.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235760.004559581]: The base_scan observation buffer has not been updated for 19.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235760.204732513]: The base_scan observation buffer has not been updated for 19.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235760.404768115]: The base_scan observation buffer has not been updated for 19.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235760.604652084]: The base_scan observation buffer has not been updated for 19.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235760.805018655]: The base_scan observation buffer has not been updated for 20.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235761.004790065]: The base_scan observation buffer has not been updated for 20.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235761.204632417]: The base_scan observation buffer has not been updated for 20.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235761.404745972]: The base_scan observation buffer has not been updated for 20.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235761.604737638]: The base_scan observation buffer has not been updated for 20.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235761.804736302]: The base_scan observation buffer has not been updated for 21.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235762.005314381]: The base_scan observation buffer has not been updated for 21.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235762.204785907]: The base_scan observation buffer has not been updated for 21.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235762.404768042]: The base_scan observation buffer has not been updated for 21.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235762.605232781]: The base_scan observation buffer has not been updated for 21.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235762.804850996]: The base_scan observation buffer has not been updated for 22.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235763.004859667]: The base_scan observation buffer has not been updated for 22.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235763.204787350]: The base_scan observation buffer has not been updated for 22.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235763.404774824]: The base_scan observation buffer has not been updated for 22.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235763.604754716]: The base_scan observation buffer has not been updated for 22.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235763.804741899]: The base_scan observation buffer has not been updated for 23.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235764.004749785]: The base_scan observation buffer has not been updated for 23.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235764.204735001]: The base_scan observation buffer has not been updated for 23.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235764.404675322]: The base_scan observation buffer has not been updated for 23.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235764.604590564]: The base_scan observation buffer has not been updated for 23.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235764.804838528]: The base_scan observation buffer has not been updated for 24.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235765.004643544]: The base_scan observation buffer has not been updated for 24.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235765.204734405]: The base_scan observation buffer has not been updated for 24.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235765.404726131]: The base_scan observation buffer has not been updated for 24.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235765.604660704]: The base_scan observation buffer has not been updated for 24.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235765.804634642]: The base_scan observation buffer has not been updated for 25.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235766.004550843]: The base_scan observation buffer has not been updated for 25.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235766.205231995]: The base_scan observation buffer has not been updated for 25.59 seconds, and it should be updated [ERROR] [1598235768.597743]: Robot 4: Is exploring: False, Session ID: None
+every 0.40 seconds.[0m
+[33m[ WARN] [1598235766.404635051]: The base_scan observation buffer has not been updated for 25.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235766.604730087]: The base_scan observation buffer has not been updated for 25.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235766.804634704]: The base_scan observation buffer has not been updated for 26.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235767.004653630]: The base_scan observation buffer has not been updated for 26.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235767.204647255]: The base_scan observation buffer has not been updated for 26.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235767.404723706]: The base_scan observation buffer has not been updated for 26.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235767.605015362]: The base_scan observation buffer has not been updated for 26.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235767.804746260]: The base_scan observation buffer has not been updated for 27.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235768.004796175]: The base_scan observation buffer has not been updated for 27.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235768.204771504]: The base_scan observation buffer has not been updated for 27.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235768.404773087]: The base_scan observation buffer has not been updated for 27.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235768.605034200]: The base_scan observation buffer has not been updated for 27.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235768.804789959]: The base_scan observation buffer has not been updated for 28.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235769.004784252]: The base_scan observation buffer has not been updated for 28.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235769.204722033]: The base_scan observation buffer has not been updated for 28.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235769.404566803]: The base_scan observation buffer has not been updated for 28.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235769.604732050]: The base_scan observation buffer has not been updated for 28.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235769.804731956]: The base_scan observation buffer has not been updated for 29.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235770.004731861]: The base_scan observation buffer has not been updated for 29.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235770.204727742]: The base_scan observation buffer has not been updated for 29.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235770.404735590]: The base_scan observation buffer has not been updated for 29.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235770.604732066]: The base_scan observation buffer has not been updated for 29.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235770.804736998]: The base_scan observation buffer has not been updated for 30.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235771.005123936]: The base_scan observation buffer has not been updated for 30.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235771.204745751]: The base_scan observation buffer has not been updated for 30.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235771.404793907]: The base_scan observation buffer has not been updated for 30Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/core.py", line 466, in signal_shutdown
+Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/core.py", line 466, in signal_shutdown
+    h()
+  File "/home/husarion/catkin_ws/src/gvgexploration/scripts/robot.py", line 659, in save_all_data
+    h()
+  File "/home/husarion/catkin_ws/src/gvgexploration/scripts/gvg_explore.py", line 836, in save_all_data
+    self.termination_metric, self.robot_id))
+  File "/home/husarion/catkin_ws/src/gvgexploration/scripts/project_utils.py", line 34, in save_data
+    f = open(file_name, "wb")
+    self.robot_id))
+  File "/home/husarion/catkin_ws/src/gvgexploration/scripts/project_utils.py", line 34, in save_data
+IOError: [Errno 2] No such file or directory: 'gvg/interconnections_city_2_0_1_4.pickle'
+    f = open(file_name, "wb")
+IOError: [Errno 2] No such file or directory: 'gvg/traveled_distance_city_2_0_1_4.pickle'
+[INFO] [1598235737.106933]: ROS Serial Python Node
+[INFO] [1598235737.126156]: Connecting to /dev/ttyCORE2 at 500000 baud
+[INFO] [1598235739.297031]: Note: publish buffer size is 512 bytes
+[INFO] [1598235739.298221]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598235739.305759]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598235739.312951]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598235739.320540]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598235739.328129]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598235739.335917]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598235739.342711]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598235739.350723]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598235739.997917]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598235740.010418]: Note: subscribe buffer size is 512 bytes
+[INFO] [1598235740.011365]: Setup subscriber on /cmd_vel [geometry_msgs/Twist]
+[INFO] [1598235740.021636]: Setup subscriber on /reset_odom [std_msgs/Bool]
+[INFO] [1598235772.488482]: Send tx stop request
+Unhandled exception in thread started by 
+sys.excepthook is missing
+lost sys.stderr
+.79 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235771.604832149]: The base_scan observation buffer has not been updated for 30.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235771.804747041]: The base_scan observation buffer has not been updated for 31.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235772.004758455]: The base_scan observation buffer has not been updated for 31.39 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235772.204772546]: The base_scan observation buffer has not been updated for 31.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598235772.404575524]: The base_scan observation buffer has not been updated for 31.79 seconds, and it should be updated every 0.40 seconds.[0m
+[0m[ INFO] [1598235736.728817089]: RPLIDAR running on ROS package rplidar_ros. SDK Version:1.7.0[0m
+RPLIDAR S/N: A2ED9AF2C1EA9FC0BEEB9CF32D3E3200
+[0m[ INFO] [1598235737.238394891]: Firmware Ver: 1.25[0m
+[0m[ INFO] [1598235737.238479743]: Hardware Rev: 5[0m
+[0m[ INFO] [1598235737.240350280]: RPLidar health status : 0[0m
+[0m[ INFO] [1598235737.822823649]: current scan mode: Express, max_distance: 12.0 m, Point number: 4.0K , angle_compensate: 1[0m
+ * /robot_4/4/node4_graph_processor/target_angle: 1.57
+ * /robot_4/4/node4_graph_processor/target_distance: 2.0
+ * /robot_4/4/node4_graph_processor/termination_metric: 1
+ * /robot_frame: base_link
+ * /robot_radius: 0.2
+ * /rosdistro: kinetic
+ * /rosversion: 1.12.14
+ * /rplidarNode/angle_compensate: True
+ * /rplidarNode/frame_id: laser
+ * /rplidarNode/inverted: False
+ * /rplidarNode/serial_baudrate: 115200
+ * /rplidarNode/serial_port: /dev/ttyUSB0
+ * /scan_subscriber_status: scan_status
+
+NODES
+  /robot_4/4/
+    node4 (gvgexploration/robot.py)
+    node4_explore (gvgexploration/gvg_explore.py)
+    node4_graph_processor (gvgexploration/graph.py)
+  /
+    BaseAlign (tf/static_transform_publisher)
+    GetMap (nav2d_navigator/get_map_client)
+    Mapper (nav2d_karto/mapper)
+    SetGoal (nav2d_navigator/set_goal_client)
+    master_discovery (master_discovery_fkie/master_discovery)
+    master_sync (master_sync_fkie/master_sync)
+    navigator (nav2d_navigator/navigator)
+    operator (nav2d_operator/operator)
+    rplidarNode (rplidar_ros/rplidarNode)
+    serial_bridge (rosbot_webui/serial_bridge.sh)
+
+auto-starting new master
+[1mprocess[master]: started with pid [28063][0m
+[1mROS_MASTER_URI=http://localhost:11311[0m
+]2;/home/husarion/catkin_ws/src/gvgexploration/launch/husarion.launch http://localhost:11311
+[1msetting /run_id to 9f55ac5e-e5b0-11ea-aa8c-d0c5d3814e57[0m
+[1mprocess[rosout-1]: started with pid [28100][0m
+started core service [/rosout]
+[1mprocess[BaseAlign-2]: started with pid [28125][0m
+[1mprocess[operator-3]: started with pid [28126][0m
+[1mprocess[navigator-4]: started with pid [28128][0m
+[1mprocess[GetMap-5]: started with pid [28131][0m
+[1mprocess[SetGoal-6]: started with pid [28139][0m
+[1mprocess[robot_4/4/node4-7]: started with pid [28143][0m
+[1mprocess[robot_4/4/node4_graph_processor-8]: started with pid [28152][0m
+[1mprocess[robot_4/4/node4_explore-9]: started with pid [28168][0m
+[1mprocess[Mapper-10]: started with pid [28173][0m
+[1mprocess[rplidarNode-11]: started with pid [28185][0m
+[1mprocess[serial_bridge-12]: started with pid [28195][0m
+[serial_bridge-12] killing on exit
+[Mapper-10] killing on exit
+[rplidarNode-11] killing on exit
+[robot_4/4/node4_explore-9] killing on exit
+[robot_4/4/node4-7] killing on exit
+[SetGoal-6] killing on exit
+[GetMap-5] killing on exit
+[navigator-4] killing on exit
+[operator-3] killing on exit
+[BaseAlign-2] killing on exit
+[rosout-1] killing on exit
+[master] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m
+Unhandled exception in thread started by 
+sys.excepthook is missing
+lost sys.stderr
