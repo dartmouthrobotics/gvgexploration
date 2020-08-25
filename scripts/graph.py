@@ -486,6 +486,68 @@ class Graph:
             self.connect_subtrees()
             self.merge_similar_edges()
 
+    def merge_similar_edges(self):
+        parents = {self.longest: None}
+        deleted_nodes = {}
+        S = [self.longest]
+        visited = {}
+        while len(S) > 0:
+            u = S.pop()
+            if u not in deleted_nodes:
+                all_neis = []
+                if u in self.adj_list:
+                    all_neis = self.adj_list[u]
+                neighbors = [k for k in all_neis if k != parents[u]]
+                if len(neighbors) == 1:
+                    v = neighbors[0]
+                    if v not in visited:
+                        S.append(v)
+                        if parents[u]:
+                            us = pu.get_vector(parents[u], u)
+                            ps = pu.get_vector(u, v)
+                            cos_theta, separation = pu.compute_similarity(us, ps, (parents[u], u), (u, v))
+                            if 1 - self.opposite_vector_bias <= cos_theta <= 1:
+                                parents[v] = parents[u]
+                                deleted_nodes[u] = None
+                                self.adj_list[v].remove(u)
+                                self.adj_list[v].add(parents[u])
+                                self.adj_list[parents[u]].add(v)
+                                if (u, parents[u]) in self.edges:
+                                    self.edges[(parents[u], v)] = self.edges[(u, parents[u])]
+                                else:
+                                    self.edges[(parents[u], v)] = self.edges[(parents[u], u)]
+                                del self.adj_list[u]
+                            else:
+                                parents[v] = u
+                        else:
+                            parents[v] = u
+                else:
+                    for v in neighbors:
+                        if v not in visited:
+                            S.append(v)
+                            parents[v] = u
+                visited[u] = None
+
+        new_adj_list = {}
+        edges = {}
+        for k, v in self.adj_list.items():
+            if k not in new_adj_list:
+                new_adj_list[k] = []
+            for l in v:
+                if l not in deleted_nodes:
+                    new_adj_list[k].append(l)
+                    if (k, l) in self.edges:
+                        edges[(k, l)] = self.edges[(k, l)]
+                    else:
+                        edges[(k, l)] = self.edges[(l, k)]
+
+        for k, v in new_adj_list.items():
+            if len(v) == 1:
+                self.leaf_slope[k] = pu.theta(k, list(v)[0])
+        self.adj_list = new_adj_list
+        self.edges = edges
+        self.save_deleted_nodes(deleted_nodes)
+
     def merge_graphs(self):
         if self.old_edges and self.edges:
             edge1, subtree1, parents1 = self.localize_robot(self.robot_pose, self.old_adj_list, self.old_edges)
