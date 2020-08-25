@@ -400,9 +400,7 @@ class Robot:
         return auction
 
     def robots_karto_out_callback(self, data):
-        karto= deepcopy(data)
-        print(karto)
-        karto.robot_id=self.robot_id
+        data.robot_id=self.robot_id
         for rid in self.candidate_robots:
             self.add_to_file(rid, [data])
         if self.is_initial_data_sharing:
