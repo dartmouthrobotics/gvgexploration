@@ -100,7 +100,7 @@ class Graph:
                       self.fetch_explored_region_handler)
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
         rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
-        rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_callback)
+        rospy.Subscriber('/map', OccupancyGrid, self.map_callback)
         rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_edge_handler)
 
         self.already_shutdown = False
@@ -203,7 +203,7 @@ class Graph:
         self.lock.acquire()
         map_msg = self.latest_map
         if not map_msg:
-            map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
+            map_msg = rospy.wait_for_message("/map", OccupancyGrid)
         self.compute_graph(map_msg)
         self.last_graph_update_time = rospy.Time.now().to_sec()
         self.lock.release()
@@ -274,14 +274,13 @@ class Graph:
     def compute_graph(self, occ_grid):
         start_time = rospy.Time.now().to_sec()
         self.get_image_desc(occ_grid)
-        try:
-            self.compute_hallway_points()
-            now = rospy.Time.now().to_sec()
-            t = now - start_time
-            self.performance_data.append(
-                {'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
-        except Exception as e:
-            pu.log_msg(self.robot_id, 'Robot {}: Error in graph computation'.format(self.robot_id), self.debug_mode)
+        #try:
+        self.compute_hallway_points()
+        now = rospy.Time.now().to_sec()
+        t = now - start_time
+        self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
+        #except Exception as e:
+        #     pu.log_msg(self.robot_id, 'Robot {}: Error in graph computation'.format(self.robot_id), self.debug_mode)
 
     def get_image_desc(self, occ_grid):
         resolution = occ_grid.info.resolution
@@ -486,6 +485,68 @@ class Graph:
             self.get_adjacency_list(self.edges)
             self.connect_subtrees()
             self.merge_similar_edges()
+
+    def merge_similar_edges(self):
+        parents = {self.longest: None}
+        deleted_nodes = {}
+        S = [self.longest]
+        visited = {}
+        while len(S) > 0:
+            u = S.pop()
+            if u not in deleted_nodes:
+                all_neis = []
+                if u in self.adj_list:
+                    all_neis = self.adj_list[u]
+                neighbors = [k for k in all_neis if k != parents[u]]
+                if len(neighbors) == 1:
+                    v = neighbors[0]
+                    if v not in visited:
+                        S.append(v)
+                        if parents[u]:
+                            us = pu.get_vector(parents[u], u)
+                            ps = pu.get_vector(u, v)
+                            cos_theta, separation = pu.compute_similarity(us, ps, (parents[u], u), (u, v))
+                            if 1 - self.opposite_vector_bias <= cos_theta <= 1:
+                                parents[v] = parents[u]
+                                deleted_nodes[u] = None
+                                self.adj_list[v].remove(u)
+                                self.adj_list[v].add(parents[u])
+                                self.adj_list[parents[u]].add(v)
+                                if (u, parents[u]) in self.edges:
+                                    self.edges[(parents[u], v)] = self.edges[(u, parents[u])]
+                                else:
+                                    self.edges[(parents[u], v)] = self.edges[(parents[u], u)]
+                                del self.adj_list[u]
+                            else:
+                                parents[v] = u
+                        else:
+                            parents[v] = u
+                else:
+                    for v in neighbors:
+                        if v not in visited:
+                            S.append(v)
+                            parents[v] = u
+                visited[u] = None
+
+        new_adj_list = {}
+        edges = {}
+        for k, v in self.adj_list.items():
+            if k not in new_adj_list:
+                new_adj_list[k] = []
+            for l in v:
+                if l not in deleted_nodes:
+                    new_adj_list[k].append(l)
+                    if (k, l) in self.edges:
+                        edges[(k, l)] = self.edges[(k, l)]
+                    else:
+                        edges[(k, l)] = self.edges[(l, k)]
+
+        for k, v in new_adj_list.items():
+            if len(v) == 1:
+                self.leaf_slope[k] = pu.theta(k, list(v)[0])
+        self.adj_list = new_adj_list
+        self.edges = edges
+        self.save_deleted_nodes(deleted_nodes)
 
     def merge_graphs(self):
         if self.old_edges and self.edges:
@@ -1175,11 +1236,11 @@ class Graph:
         robot_pose = None
         while not robot_pose:
             try:
-                self.listener.waitForTransform("robot_{}/map".format(self.robot_id),
-                                               "robot_{}/base_link".format(self.robot_id), rospy.Time(),
+                self.listener.waitForTransform("map".format(self.robot_id),
+                                               "base_link".format(self.robot_id), rospy.Time(),
                                                rospy.Duration(4.0))
-                (robot_loc_val, rot) = self.listener.lookupTransform("robot_{}/map".format(self.robot_id),
-                                                                     "robot_{}/base_link".format(self.robot_id),
+                (robot_loc_val, rot) = self.listener.lookupTransform("map".format(self.robot_id),
+                                                                     "base_link".format(self.robot_id),
                                                                      rospy.Time(0))
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
                 sleep(1)
