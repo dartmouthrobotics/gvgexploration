@@ -38,7 +38,7 @@ SUCCEEDED = 3  # The goal was achieved successfully by the action server (Termin
 ABORTED = 4  # The goal was aborted during execution by the action server due to some failure (Terminal State)
 LOST = 9  # An action client can determine that a goal is LOST. This should not be sent over the wire by an action
 TURNING_ANGLE = np.deg2rad(45)
-
+from wifi_node.msg import WifiStrength
 
 class Robot:
     def __init__(self, robot_id, robot_type=0, base_stations=[], relay_robots=[], frontier_robots=[]):
@@ -111,6 +111,9 @@ class Robot:
         self.robot_count = rospy.get_param("~robot_count")
         self.debug_mode = rospy.get_param("~debug_mode")
         self.method = rospy.get_param("~method")
+        self.mac_id = rospy.get_param("~mac_id")
+        self.comm_range=rospy.get_param("~comm_range")
+        rospy.logerr(self.mac_id)
         self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,
                                            self.shared_data_handler)
         self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,
@@ -127,6 +130,8 @@ class Robot:
                                                       Intersections)
         rospy.Subscriber('/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         rospy.Subscriber('/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
+        rospy.Subscriber('/rosbot{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
+
         rospy.Subscriber('/robot_{}/gvgexplore/feedback'.format(self.robot_id), Pose, self.explore_feedback_callback)
         self.data_size_pub = rospy.Publisher('/shared_data_size', DataSize, queue_size=10)
         for rid in self.candidate_robots:
@@ -160,6 +165,7 @@ class Robot:
         self.sent_messages = []
         self.received_messages = []
 
+
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
@@ -171,6 +177,12 @@ class Robot:
             except Exception as e:
                 pu.log_msg(self.robot_id, "Throwing error: {}".format(e), self.debug_mode)
             r.sleep()
+
+    def wifi_strength_callback(self, data):
+        src_mac=data.src
+        dst_mac=data.dst
+        if self.mac_id[dst_mac]==self.robot_id:
+            self.signal_strength[self.mac_id[src_mac]]=data.signal
 
     def evaluate_exploration(self):
         # lapsed_time = rospy.Time.now().to_sec() - self.last_evaluation_time
@@ -429,15 +441,23 @@ class Robot:
         buffered_data.data = message_data
         return buffered_data
 
+    # def get_close_devices(self):
+    #     ss_data = self.signal_strength_srv(HotSpotRequest(robot_id=str(self.robot_id)))
+    #     data = ss_data.hot_spots
+    #     signals = data.signals
+    #     robots = []
+    #     devices = []
+    #     for rs in signals:
+    #         robots.append([rs.robot_id, rs.rssi])
+    #         devices.append(str(rs.robot_id))
+    #     return set(devices)
+
     def get_close_devices(self):
-        ss_data = self.signal_strength_srv(HotSpotRequest(robot_id=str(self.robot_id)))
-        data = ss_data.hot_spots
-        signals = data.signals
-        robots = []
         devices = []
-        for rs in signals:
-            robots.append([rs.robot_id, rs.rssi])
-            devices.append(str(rs.robot_id))
+        hotspots=list(self.signal_strength)
+        for h in hotspots:
+            if self.signal_strength[h] >=self.comm_range:
+                devices.append(str(rs.robot_id))
         return set(devices)
 
     def process_data(self, buff_data, session_id=None, sent_data=0):

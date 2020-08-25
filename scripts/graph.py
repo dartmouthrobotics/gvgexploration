@@ -27,7 +27,6 @@ from std_msgs.msg import String
 from numpy.linalg import norm
 import shapely.geometry as sg
 from shapely.geometry.polygon import Polygon
-
 INF = 100000
 SCALE = 10
 FREE = 0.0
@@ -70,7 +69,6 @@ class Graph:
         self.performance_data = []
         self.explored_points = set()
         self.last_intersection = None
-
         self.latest_map = None
         self.prev_ridge = None
         rospy.init_node("graph_node")
