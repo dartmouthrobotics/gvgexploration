@@ -263,6 +263,7 @@ class Robot:
         self.process_data(buff_data, session_id=self.session_id, sent_data=local_data_size)
         frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(current_devices) + 1))
         frontier_points = self.parse_frontier_response(frontier_point_response)
+        pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)
         taken_poses = []
         pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)
         if frontier_points:
@@ -573,12 +574,12 @@ class Robot:
                     self.comm_session_time = rospy.Time.now().to_sec()
                     self.waiting_for_response = True
                     close_devices = self.get_close_devices()
+                    rospy.logerr("Close devices {}:".format(close_devices))
                     if close_devices:
                         self.handle_intersection(close_devices)
                 else:
                     pu.log_msg(self.robot_id, "Waiting for frontier points...", self.debug_mode)
-            self.push_messages_to_receiver([sender_id], None, initiator=0)
-
+    
     def start_exploration_action(self, frontier_ridge):
         while self.map_updating:  # wait for map to update
             sleep(1)
