@@ -416,6 +416,7 @@ class Robot:
         for rid in self.candidate_robots:
             self.add_to_file(rid, [data])
         if self.is_initial_data_sharing:
+           rospy.logerr("sending data")
            self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
            self.is_initial_data_sharing = False
 
@@ -424,7 +425,7 @@ class Robot:
             message_data = self.load_data_for_id(receiver_id)
             buffered_data = self.create_buffered_data_msg(message_data, session_id, receiver_id)
             self.publisher_map[str(receiver_id)].publish(buffered_data)
-            self.delete_data_for_id(receiver_id)
+            #self.delete_data_for_id(receiver_id)
 
     def create_buffered_data_msg(self, message_data, session_id, receiver_id):
         buffered_data = BufferedData()
