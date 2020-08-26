@@ -265,6 +265,7 @@ class Robot:
         frontier_points = self.parse_frontier_response(frontier_point_response)
         pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)
         taken_poses = []
+        pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)
         if frontier_points:
             if session_devices:
                 auction = self.create_auction(frontier_points)
@@ -573,6 +574,7 @@ class Robot:
                     self.comm_session_time = rospy.Time.now().to_sec()
                     self.waiting_for_response = True
                     close_devices = self.get_close_devices()
+                    rospy.logerr("Close devices {}:".format(close_devices))
                     if close_devices:
                         self.handle_intersection(close_devices)
                 else:
