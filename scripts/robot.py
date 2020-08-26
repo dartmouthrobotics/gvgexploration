@@ -183,7 +183,6 @@ class Robot:
         dst_mac=data.dst
         if src_mac in self.mac_id and dst_mac in self.mac_id and self.mac_id[dst_mac]==self.robot_id:
             self.signal_strength[self.mac_id[src_mac]]=data.signal
-            rospy.logerr(self.signal_strength)
 
     def evaluate_exploration(self):
         # lapsed_time = rospy.Time.now().to_sec() - self.last_evaluation_time
