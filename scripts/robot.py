@@ -424,7 +424,7 @@ class Robot:
             message_data = self.load_data_for_id(receiver_id)
             buffered_data = self.create_buffered_data_msg(message_data, session_id, receiver_id)
             self.publisher_map[str(receiver_id)].publish(buffered_data)
-            self.delete_data_for_id(receiver_id)
+            #self.delete_data_for_id(receiver_id)
 
     def create_buffered_data_msg(self, message_data, session_id, receiver_id):
         buffered_data = BufferedData()
