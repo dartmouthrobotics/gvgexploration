@@ -39,7 +39,7 @@ ABORTED = 4  # The goal was aborted during execution by the action server due to
 LOST = 9  # An action client can determine that a goal is LOST. This should not be sent over the wire by an action
 TURNING_ANGLE = np.deg2rad(45)
 from wifi_node.msg import WifiStrength
-
+from multimaster_msgs_fkie.msg import LinkStatesStamped
 class Robot:
     def __init__(self, robot_id, robot_type=0, base_stations=[], relay_robots=[], frontier_robots=[]):
         self.lock = Lock()
@@ -131,6 +131,7 @@ class Robot:
         rospy.Subscriber('/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         rospy.Subscriber('/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
         rospy.Subscriber('/rosbot{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
+        rospy.Subscriber('/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped, self.discovery_callback)
 
         rospy.Subscriber('/robot_{}/gvgexplore/feedback'.format(self.robot_id), Pose, self.explore_feedback_callback)
         self.data_size_pub = rospy.Publisher('/shared_data_size', DataSize, queue_size=10)
@@ -164,12 +165,20 @@ class Robot:
         self.first_message_sent = False
         self.sent_messages = []
         self.received_messages = []
+        self.master_links=set()
 
 
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             try:
+                if self.is_initial_data_sharing:
+                    if len(self.master_links)==len(self.candidate_robots)+1:
+                        sleep(5)
+                        rospy.logerr("Sending initial data to all robots...")
+                        self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
+                        self.is_initial_data_sharing = False
+
                 pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),
                            self.debug_mode)
                 if self.is_exploring:
@@ -183,6 +192,10 @@ class Robot:
         dst_mac=data.dst
         if src_mac in self.mac_id and dst_mac in self.mac_id and self.mac_id[dst_mac]==self.robot_id:
             self.signal_strength[self.mac_id[src_mac]]=data.signal
+
+    def discovery_callback(self, data):
+        for d in data.links:
+            self.master_links.add(d.destination)
 
     def evaluate_exploration(self):
         # lapsed_time = rospy.Time.now().to_sec() - self.last_evaluation_time
@@ -251,6 +264,7 @@ class Robot:
         frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(current_devices) + 1))
         frontier_points = self.parse_frontier_response(frontier_point_response)
         taken_poses = []
+        pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)
         if frontier_points:
             if session_devices:
                 auction = self.create_auction(frontier_points)
@@ -415,9 +429,9 @@ class Robot:
         data.robot_id=self.robot_id
         for rid in self.candidate_robots:
             self.add_to_file(rid, [data])
-        if self.is_initial_data_sharing:
-           self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
-           self.is_initial_data_sharing = False
+        # if self.is_initial_data_sharing:
+        #    self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
+        #    self.is_initial_data_sharing = False
 
     def push_messages_to_receiver(self, receiver_ids, session_id, is_alert=0, initiator=0):
         for receiver_id in receiver_ids:
@@ -457,7 +471,7 @@ class Robot:
         hotspots=list(self.signal_strength)
         for h in hotspots:
             if self.signal_strength[h] >=self.comm_range:
-                devices.append(str(rs.robot_id))
+                devices.append(str(h))
         return set(devices)
 
     def process_data(self, buff_data, session_id=None, sent_data=0):
@@ -559,11 +573,11 @@ class Robot:
                     self.comm_session_time = rospy.Time.now().to_sec()
                     self.waiting_for_response = True
                     close_devices = self.get_close_devices()
+                    rospy.logerr("Close devices {}:".format(close_devices))
                     if close_devices:
                         self.handle_intersection(close_devices)
                 else:
                     pu.log_msg(self.robot_id, "Waiting for frontier points...", self.debug_mode)
-        #self.push_messages_to_receiver([sender_id], None, initiator=1)
 
     def start_exploration_action(self, frontier_ridge):
         while self.map_updating:  # wait for map to update
