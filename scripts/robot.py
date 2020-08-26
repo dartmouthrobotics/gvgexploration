@@ -573,12 +573,11 @@ class Robot:
                     self.comm_session_time = rospy.Time.now().to_sec()
                     self.waiting_for_response = True
                     close_devices = self.get_close_devices()
+                    rospy.logerr("Close devices {}:".format(close_devices))
                     if close_devices:
                         self.handle_intersection(close_devices)
                 else:
                     pu.log_msg(self.robot_id, "Waiting for frontier points...", self.debug_mode)
-
-#        self.push_messages_to_receiver([sender_id], None, initiator=1)
 
     def start_exploration_action(self, frontier_ridge):
         while self.map_updating:  # wait for map to update
