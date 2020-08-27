@@ -505,3 +505,2068 @@ shutting down processing monitor...
 Unhandled exception in thread started by 
 sys.excepthook is missing
 lost sys.stderr
+... logging to /home/husarion/.ros/log/c1d1eaf4-e81c-11ea-80e8-d0c5d3814189/roslaunch-rosbot4-7738.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;/home/husarion/catkin_ws/src/gvgexploration/launch/husarion.launch
+[1mstarted roslaunch server http://10.0.0.13:35782/[0m
+
+SUMMARY
+========
+
+PARAMETERS
+ * /Mapper/AngleVariancePenalty: 0.0004
+ * /Mapper/DistanceVariancePenalty: 0.01
+ * /Mapper/LoopSearchMaximumDistance: 10.0
+ * /Mapper/MinimumTravelDistance: 1.0
+ * /Mapper/MinimumTravelHeading: 1.57
+ * /Mapper/ScanBufferSize: 2
+ * /Mapper/UseScanMatching: False
+ * /Mapper/grid_resolution: 0.05
+ * /Mapper/map_update_rate: 5
+ * /Mapper/max_covariance: 0.0
+ * /Mapper/max_particles: 10000
+ * /Mapper/min_map_size: 20
+ * /Mapper/min_particles: 2500
+ * /Mapper/publish_pose_graph: True
+ * /Mapper/range_threshold: 8.0
+ * /Mapper/transform_publish_period: 0.1
+ * /laser_frame: laser
+ * /laser_topic: scan
+ * /map_frame: map
+ * /map_inflation_radius: 1.0
+ * /map_service: static_map
+ * /map_topic: map
+ * /master_discovery/_mcast_group: 224.0.0.1
+ * /master_sync/ignore_nodes: ['/tf', '/msgs_co...
+ * /navigator/command_target_distance: 1.0
+ * /navigator/exploration_goal_distance: 3.0
+ * /navigator/frequency: 10.0
+ * /navigator/map_inflation_radius: 1.0
+ * /navigator/max_replanning_period: 1.0
+ * /navigator/min_replanning_period: 3.0
+ * /navigator/min_target_area_size: 1.0
+ * /navigator/navigation_goal_angle: 1.0
+ * /navigator/navigation_goal_distance: 1.0
+ * /navigator/navigation_homing_distance: 3.0
+ * /navigator/odometry_frame: odom
+ * /navigator/robot_frame: base_link
+ * /navigator/robot_radius: 0.2
+ * /navigator/visualize_frontiers: True
+ * /odometry_frame: odom
+ * /offset_frame: offset
+ * /operator/conformance_weight: 1
+ * /operator/continue_weight: 1
+ * /operator/escape_weight: 1
+ * /operator/frequency: 10
+ * /operator/local_map/cost_scaling_factor: 2.0
+ * /operator/local_map/global_frame: odom
+ * /operator/local_map/height: 6.0
+ * /operator/local_map/inflation_radius: 0.5
+ * /operator/local_map/lethal_cost_threshold: 100
+ * /operator/local_map/map_type: costmap
+ * /operator/local_map/max_obstacle_height: 2.0
+ * /operator/local_map/min_obstacle_height: 0.0
+ * /operator/local_map/observation_sources: scan
+ * /operator/local_map/obstacle_range: 4.0
+ * /operator/local_map/publish_frequency: 1.0
+ * /operator/local_map/publish_voxel_map: True
+ * /operator/local_map/raytrace_range: 4.5
+ * /operator/local_map/resolution: 0.05
+ * /operator/local_map/robot_base_frame: base_link
+ * /operator/local_map/robot_radius: 0.2
+ * /operator/local_map/rolling_window: True
+ * /operator/local_map/scan/clearing: True
+ * /operator/local_map/scan/data_type: LaserScan
+ * /operator/local_map/scan/expected_update_rate: 0.4
+ * /operator/local_map/scan/marking: True
+ * /operator/local_map/scan/max_obstacle_height: 0.4
+ * /operator/local_map/scan/min_obstacle_height: 0.08
+ * /operator/local_map/scan/observation_persistence: 0.0
+ * /operator/local_map/scan/topic: scan
+ * /operator/local_map/static_map: False
+ * /operator/local_map/track_unknown_space: False
+ * /operator/local_map/transform_tolerance: 0.3
+ * /operator/local_map/update_frequency: 5.0
+ * /operator/local_map/width: 6.0
+ * /operator/max_free_space: 3.0
+ * /operator/max_velocity: 1.0
+ * /operator/odometry_frame: odom
+ * /operator/publish_route: True
+ * /operator/robot_frame: base_link
+ * /operator/safety_decay: 0.99
+ * /operator/safety_weight: 1
+ * /robot_4/4/node4/base_stations: 5,7,8
+ * /robot_4/4/node4/bs_pose: [4.0, 10.0]
+ * /robot_4/4/node4/comm_range: -70
+ * /robot_4/4/node4/data_share_threshold: 10
+ * /robot_4/4/node4/debug_mode: 1
+ * /robot_4/4/node4/environment: city
+ * /robot_4/4/node4/frontier_robots: 
+ * /robot_4/4/node4/frontier_threshold: 10
+ * /robot_4/4/node4/graph_scale: 10.0
+ * /robot_4/4/node4/lidar_fov: 360
+ * /robot_4/4/node4/lidar_scan_radius: 6
+ * /robot_4/4/node4/mac_id/00:0f:00:4d:b9:de: 8
+ * /robot_4/4/node4/mac_id/00:0f:00:4d:ba:32: 5
+ * /robot_4/4/node4/mac_id/00:0f:00:4e:07:64: 4
+ * /robot_4/4/node4/mac_id/00:0f:00:4f:0d:19: 7
+ * /robot_4/4/node4/mac_id/d0:c5:d3:81:41:89: 4
+ * /robot_4/4/node4/mac_id/d0:c5:d3:81:41:8b: 7
+ * /robot_4/4/node4/mac_id/d0:c5:d3:81:44:1f: 8
+ * /robot_4/4/node4/mac_id/d0:c5:d3:81:4e:57: 5
+ * /robot_4/4/node4/map_file: /home/husarion/ca...
+ * /robot_4/4/node4/map_inflation_radius: 1
+ * /robot_4/4/node4/map_scale: 20.0
+ * /robot_4/4/node4/max_common_coverage: 0.8
+ * /robot_4/4/node4/max_coverage: 0.8
+ * /robot_4/4/node4/max_exploration_time: 20
+ * /robot_4/4/node4/max_target_info_ratio: 0.5
+ * /robot_4/4/node4/max_wait_time: 120
+ * /robot_4/4/node4/method: gvg
+ * /robot_4/4/node4/min_edge_length: 1
+ * /robot_4/4/node4/min_hallway_width: 0.5
+ * /robot_4/4/node4/opposite_vector_bias: 0.25
+ * /robot_4/4/node4/point_precision: 2
+ * /robot_4/4/node4/relay_robots: 
+ * /robot_4/4/node4/robot_count: 1
+ * /robot_4/4/node4/robot_id: 4
+ * /robot_4/4/node4/robot_type: 2
+ * /robot_4/4/node4/run: 0
+ * /robot_4/4/node4/separation_bias: 2
+ * /robot_4/4/node4/slope_bias: 0.1
+ * /robot_4/4/node4/target_angle: 1.57
+ * /robot_4/4/node4/target_distance: 2.0
+ * /robot_4/4/node4/termination_metric: 1
+ * /robot_4/4/node4_explore/base_stations: 5,7,8
+ * /robot_4/4/node4_explore/bs_pose: [4.0, 10.0]
+ * /robot_4/4/node4_explore/comm_range: -70
+ * /robot_4/4/node4_explore/data_share_threshold: 10
+ * /robot_4/4/node4_explore/debug_mode: 1
+ * /robot_4/4/node4_explore/environment: city
+ * /robot_4/4/node4_explore/frontier_robots: 
+ * /robot_4/4/node4_explore/frontier_threshold: 10
+ * /robot_4/4/node4_explore/graph_scale: 10.0
+ * /robot_4/4/node4_explore/lidar_fov: 360
+ * /robot_4/4/node4_explore/lidar_scan_radius: 6
+ * /robot_4/4/node4_explore/mac_id/00:0f:00:4d:b9:de: 8
+ * /robot_4/4/node4_explore/mac_id/00:0f:00:4d:ba:32: 5
+ * /robot_4/4/node4_explore/mac_id/00:0f:00:4e:07:64: 4
+ * /robot_4/4/node4_explore/mac_id/00:0f:00:4f:0d:19: 7
+ * /robot_4/4/node4_explore/mac_id/d0:c5:d3:81:41:89: 4
+ * /robot_4/4/node4_explore/mac_id/d0:c5:d3:81:41:8b: 7
+ * /robot_4/4/node4_explore/mac_id/d0:c5:d3:81:44:1f: 8
+ * /robot_4/4/node4_explore/mac_id/d0:c5:d3:81:4e:57: 5
+ * /robot_4/4/node4_explore/map_file: /home/husarion/ca...
+ * /robot_4/4/node4_explore/map_inflation_radius: 1
+ * /robot_4/4/node4_explore/map_scale: 20.0
+ * /robot_4/4/node4_explore/max_common_coverage: 0.8
+ * /robot_4/4/node4_explore/max_coverage: 0.8
+ * /robot_4/4/node4_explore/max_exploration_time: 20
+ * /robot_4/4/node4_explore/max_target_info_ratio: 0.5
+ * /robot_4/4/node4_explore/max_wait_time: 120
+ * /robot_4/4/node4_explore/method: gvg
+ * /robot_4/4/node4_explore/min_edge_length: 1
+ * /robot_4/4/node4_explore/min_hallway_width: 0.5
+ * /robot_4/4/node4_explore/opposite_vector_bias: 0.25
+ * /robot_4/4/node4_explore/point_precision: 2
+ * /robot_4/4/node4_explore/relay_robots: 
+ * /robot_4/4/node4_explore/robot_count: 1
+ * /robot_4/4/node4_explore/robot_id: 4
+ * /robot_4/4/node4_explore/robot_type: 2
+ * /robot_4/4/node4_explore/run: 0
+ * /robot_4/4/node4_explore/separation_bias: 2
+ * /robot_4/4/node4_explore/slope_bias: 0.1
+ * /robot_4/4/node4_explore/target_angle: 1.57
+ * /robot_4/4/node4_explore/target_distance: 2.0
+ * /robot_4/4/node4_explore/termination_metric: 1
+ * /robot_4/4/node4_graph_processor/base_stations: 5,7,8
+ * /robot_4/4/node4_graph_processor/bs_pose: [4.0, 10.0]
+ * /robot_4/4/node4_graph_processor/comm_range: -70
+ * /robot_4/4/node4_graph_processor/data_share_threshold: 10
+ * /robot_4/4/node4_graph_processor/debug_mode: 1
+ * /robot_4/4/node4_graph_processor/environment: city
+ * /robot_4/4/node4_graph_processor/frontier_robots: 
+ * /robot_4/4/node4_graph_processor/frontier_threshold: 10
+ * /robot_4/4/node4_graph_processor/graph_scale: 10.0
+ * /robot_4/4/node4_graph_processor/lidar_fov: 360
+ * /robot_4/4/node4_graph_processor/lidar_scan_radius: 6
+ * /robot_4/4/node4_graph_processor/mac_id/00:0f:00:4d:b9:de: 8
+ * /robot_4/4/node4_graph_processor/mac_id/00:0f:00:4d:ba:32: 5
+ * /robot_4/4/node4_graph_processor/mac_id/00:0f:00:4e:07:64: 4
+ * /robot_4/4/node4_graph_processor/mac_id/00:0f:00:4f:0d:19: 7
+ * /robot_4/4/node4_graph_processo[WARN] [1598502091.411983]: Master_discovery node appear not to running. Wait for topic with type 'MasterState.
+[ERROR] [1598502093.992070]: {'00:0f:00:4d:b9:de': 8, '00:0f:00:4e:07:64': 4, 'd0:c5:d3:81:41:89': 4, '00:0f:00:4f:0d:19': 7, 'd0:c5:d3:81:41:8b': 7, 'd0:c5:d3:81:44:1f': 8, 'd0:c5:d3:81:4e:57': 5, '00:0f:00:4d:ba:32': 5}
+[ERROR] [1598502094.414478]: Robot 4: Is exploring: False, Session ID: None
+[ERROR] [1598502104.419778]: Robot 4: Is exploring: False, Session ID: None
+[ERROR] [1598502114.420213]: Robot 4: Is exploring: False, Session ID: None
+[ERROR] [1598502124.419842]: Robot 4: Is exploring: False, Session ID: None
+[ERROR] [1598502134.424091]: Robot 4: Is exploring: False, Session ID: None
+[ERROR] [1598502144.420968]: Robot 4: Is exploring: False, Session ID: None
+]2;master_sync[INFO] [1598502091.102789]: ignore_hosts: []
+[INFO] [1598502091.163544]: sync_hosts: []
+[INFO] [1598502091.200436]: sync_topics_on_demand: False
+[INFO] [1598502091.252050]: resync_on_reconnect: True
+[INFO] [1598502091.299894]: resync_on_reconnect_timeout: 0
+[INFO] [1598502092.524872]: listen for updates on /master_discovery/changes
+[INFO] [1598502106.973982]: [10.0.0.234] ignore_nodes: ['/rplidarNode', '/node_manager', '/BaseAlign', '/rosbot_ekf', '/master_sync', '/operator', '/rosout', '/GetMap', '/tf', '/Mapper', '/navigator', '/master_discovery', '/SetGoal', '/zeroconf', '/msgs_conversion', '/OdomAlign', '/serial_node', '/MapAlign']
+[INFO] [1598502106.996575]: [10.0.0.234] sync_nodes: []
+[INFO] [1598502107.014582]: [10.0.0.234] ignore_topics: ['/rosout', '/rosout_agg']
+[INFO] [1598502107.027198]: [10.0.0.234] sync_topics: []
+[INFO] [1598502107.052617]: [10.0.0.234] ignore_services: ['/*get_loggers', '/*set_logger_level']
+[INFO] [1598502107.075974]: [10.0.0.234] sync_services: []
+[INFO] [1598502107.094339]: [10.0.0.234] ignore_type: ['bond/Status']
+[INFO] [1598502107.112536]: [10.0.0.234] ignore_publishers: []
+[INFO] [1598502107.130000]: [10.0.0.234] ignore_subscribers: []
+[INFO] [1598502107.938440]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502107.993423]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502107.998903]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502112.544173]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502112.652967]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502112.733643]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /karto_out
+[INFO] [1598502112.756747]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /tf
+[INFO] [1598502112.770200]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /robot_5/gvgexplore/feedback
+[INFO] [1598502112.786982]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /robot_5/initial_data
+[INFO] [1598502112.827385]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /map
+[INFO] [1598502112.844233]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /robot_5/gvgexplore/goal
+[INFO] [1598502112.866712]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /master_discovery/linkstats
+[INFO] [1598502112.923521]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502112.939836]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502113.041933]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502113.052330]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502122.739790]: ROS masters obtained from '/master_discovery/list_masters': ['10.0.0.234', '10.0.0.13']
+[INFO] [1598502145.182171]: [10.0.0.15] ignore_nodes: ['/rplidarNode', '/node_manager', '/BaseAlign', '/rosbot_ekf', '/master_sync', '/operator', '/rosout', '/GetMap', '/tf', '/Mapper', '/navigator', '/master_discovery', '/SetGoal', '/zeroconf', '/msgs_conversion', '/OdomAlign', '/serial_node', '/MapAlign']
+[INFO] [1598502145.194001]: [10.0.0.15] sync_nodes: []
+[INFO] [1598502145.205271]: [10.0.0.15] ignore_topics: ['/rosout', '/rosout_agg']
+[INFO] [1598502145.215426]: [10.0.0.15] sync_topics: []
+[INFO] [1598502145.223647]: [10.0.0.15] ignore_services: ['/*get_loggers', '/*set_logger_level']
+[INFO] [1598502145.237148]: [10.0.0.15] sync_services: []
+[INFO] [1598502145.247016]: [10.0.0.15] ignore_type: ['bond/Status']
+[INFO] [1598502145.259802]: [10.0.0.15] ignore_publishers: []
+[INFO] [1598502145.274916]: [10.0.0.15] ignore_subscribers: []
+[INFO] [1598502146.756541]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502146.821528]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502146.837113]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1[WARN] [1598502150.740678]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+[ERROR] [1598502154.423909]: Robot 4: Is exploring: False, Session ID: None
+[ERROR] [1598502165.338432]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 262, in _request_remote_state
+    remote_state = remote_monitor.masterInfoFiltered(self._filter.to_list())
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+598502149.818913]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502149.895424]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502149.996001]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /robot_7/gvgexplore/goal
+[INFO] [1598502150.040564]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /karto_out
+[INFO] [1598502150.058373]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /robot_7/gvgexplore/feedback
+[INFO] [1598502150.072877]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /tf
+[INFO] [1598502150.091324]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /robot_7/initial_data
+[INFO] [1598502150.131705]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /map
+[INFO] [1598502150.173784]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /master_discovery/linkstats
+[INFO] [1598502150.219970]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502151.952225]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502152.024197]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502152.034253]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502152.826009]: ROS masters obtained from '/master_discovery/list_masters': ['10.0.0.15', '10.0.0.234', '10.0.0.13']
+[INFO] [1598502159.311987]: [10.0.0.144] ignore_nodes: ['/rplidarNode', '/node_manager', '/BaseAlign', '/rosbot_ekf', '/master_sync', '/operator', '/rosout', '/GetMap', '/tf', '/Mapper', '/navigator', '/master_discovery', '/SetGoal', '/zeroconf', '/msgs_conversion', '/OdomAlign', '/serial_node', '/MapAlign']
+[INFO] [1598502159.342937]: [10.0.0.144] sync_nodes: []
+[INFO] [1598502159.362118]: [10.0.0.144] ignore_topics: ['/rosout', '/rosout_agg']
+[INFO] [1598502159.376837]: [10.0.0.144] sync_topics: []
+[INFO] [1598502159.385897]: [10.0.0.144] ignore_services: ['/*get_loggers', '/*set_logger_level']
+[INFO] [1598502159.394723]: [10.0.0.144] sync_services: []
+[INFO] [1598502159.405388]: [10.0.0.144] ignore_type: ['bond/Status']
+[INFO] [1598502159.413038]: [10.0.0.144] ignore_publishers: []
+[INFO] [1598502159.424095]: [10.0.0.144] ignore_subscribers: []
+[INFO] [1598502160.446115]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502160.610987]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502160.620469]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502163.061567]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502163.289514]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502163.293626]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502165.312819]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502165.417176]:   Stop synchronization to `10.0.0.144`
+[INFO] [1598502165.482573]:   Finished synchronization to `10.0.0.144`
+[INFO] [1598502167.733964]: [10.0.0.144] ignore_nodes: ['/rplidarNode', '/node_manager', '/BaseAlign', '/rosbot_ekf', '/master_sync', '/operator', '/rosout', '/GetMap', '/tf', '/Mapper', '/navigator', '/master_discovery', '/SetGoal', '/zeroconf', '/msgs_conversion', '/OdomAlign', '/serial_node', '/MapAlign']
+[INFO] [1598502167.761083]: [10.0.0.144] sync_nodes: []
+[INFO] [1598502167.792339]: [10.0.0.144] ignore_topics: ['/rosout', '/rosout_agg']
+[INFO] [1598502167.815193]: [10.0.0.144] sync_topics: []
+[INFO] [1598502167.829852]: [10.0.0.144] ignore_services: ['/*get_loggers', '/*set_logger_level']
+[INFO] [1598502167.857913]: [10.0.0.144] sync_services: []
+[INFO] [1598502167.884469]: [10.0.0.144] ignore_type: ['bond/Status']
+[INFO] [1598502167.925828]: [10.0.0.144] ignore_publishers: []
+[INFO] [1598502167.953548]: [10.0.0.144] ignore_subscribers: []
+[INFO] [1598502168.513914]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [ERROR] [1598502169.428022]: Sending initial data to all robots...
+[ERROR] [1598502169.445019]: Robot 4: Is exploring: False, Session ID: None
+[ERROR] [1598502172.019698]: Counts: 1
+[ERROR] [1598502173.389768]: Counts: 2
+[ERROR] [1598502174.415239]: Robot 4: Is exploring: False, Session ID: None
+[WARN] [1598502178.225134]: MasterMonitor[/robot_8/check_intersections]: can't get contact information. ROS master responds with: no provider
+[WARN] [1598502178.228080]: MasterMonitor[/robot_8/explored_region]: can't get contact information. ROS master responds with: no provider
+[ERROR] [1598502184.423784]: Robot 4: Is exploring: False, Session ID: None
+[ERROR] [1598502185.452172]: Counts: 3
+[ERROR] [1598502185.455791]: Close devices set(['8', '5', '7']):
+[ERROR] [1598502185.577570]: Robot 4: received feedback from robot: 0
+[ERROR] [1598502185.723866]: Robot 4: received feedback from robot: 0
+[ERROR] [1598502185.903128]: Robot 4: received feedback from robot: 0
+[ERROR] [1598502185.907113]: Received and processed the data
+[ERROR] [1598502189.567110]: Robot 4: Received frontier points: {}
+[ERROR] [1598502189.569065]: Robot 4: Just send an empty message so that the robots move on
+[ERROR] [1598502189.639686]: bad callback: <bound method Robot.initial_data_callback of <__main__.Robot instance at 0xb4c6c5f8>>
+Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/topics.py", line 750, in _invoke_callback
+    cb(msg)
+  File "/home/husarion/catkin_ws/src/gvgexploration/scripts/robot.py", line 581, in initial_data_callback
+    self.handle_intersection(close_devices)
+  File "/home/husarion/catkin_ws/src/gvgexploration/scripts/robot.py", line 298, in handle_intersection
+    self.shared_point_srv_map[rid](SharedPointRequest(req_data=auction))
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/impl/tcpros_service.py", line 435, in __call__
+    return self.call(*args, **kwds)
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/impl/tcpros_service.py", line 515, in call
+    responses = transport.receive_once()
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/impl/tcpros_base.py", line 727, in receive_once
+    p.read_messages(b, msg_queue, sock)
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/impl/tcpros_service.py", line 353, in read_messages
+    self._read_ok_byte(b, sock)
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/impl/tcpros_service.py", line 336, in _read_ok_byte
+    raise ServiceException("service [%s] responded with an error: %s"%(self.resolved_name, str))
+ServiceException: service [/robot_8/auction_points] responded with an error: error processing request: Invalid number of arguments, args should be ['nodes', 'obstacles', 'scale'] args are(None,)
+
+[ERROR] [1598502194.420238]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502204.419846]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+
+Session terminated, terminating shell... ...terminated.
+Exception in thread Thread-256:
+Traceback (most recent call last):
+  File "/usr/lib/python2.7/threading.py", line 801, in __bootstrap_inner
+    self.run()
+  File "/usr/lib/python2.7/threading.py", line 1073, in run
+    self.function(*self.args, **self.kwargs)
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/master_sync.py", line 113, in obtain_masters
+    service_names = interface_finder.get_listmaster_service(masteruri_from_master(), False)
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_discovery_fkie/interface_finder.py", line 152, in get_listmaster_service
+    return _get_service(masteruri, 'list_masters', wait)
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_discovery_fkie/interface_finder.py", line 201, in _get_service
+    code, msg, val = master.getSystemState(rospy.get_name())
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502214.423289]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502224.420626]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+[WARN] [1598502234.418095]: MasterMonitor[/rosout/set_logger_level]: can't get contact information. ROS master responds with: no provider
+[ERROR] [1598502234.423223]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_discovery_fkie/master_monitor.py", line 513, in updateState
+    r = param_server_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+[1598502168.659214]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502168.751087]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /robot_8/initial_data
+[INFO] [1598502168.767078]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /map
+[INFO] [1598502168.804482]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /master_discovery/linkstats
+[INFO] [1598502168.873867]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /tf
+[INFO] [1598502168.913745]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /karto_out
+[INFO] [1598502168.973451]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502171.277478]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502171.441575]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502171.490355]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502173.929070]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502174.100082]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502174.158692]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /robot_8/initial_data
+[INFO] [1598502174.186885]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /karto_out
+[INFO] [1598502174.207779]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /master_discovery/linkstats
+[INFO] [1598502174.222265]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /tf
+[INFO] [1598502174.242582]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /map
+[INFO] [1598502174.266809]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502176.698574]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502176.845423]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502176.887675]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502177.737128]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502178.044077]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502178.220495]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /robot_8/gvgexplore/goal
+[INFO] [1598502178.295744]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /tf
+[INFO] [1598502178.345139]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /map
+[INFO] [1598502178.415657]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502182.938230]: ROS masters obtained from '/master_discovery/list_masters': ['10.0.0.15', '10.0.0.234', '10.0.0.144', '10.0.0.13']
+[INFO] [1598502223.936909]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502224.039804]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502224.336809]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502225.393228]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502225.455270]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502225.717984]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502229.963665]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502230.058193]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502230.145737]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502231.767275]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502231.943777]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502232.022603]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502235.320007]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502235.678034]: SyncThread[10.0.0.144] Applying remote state.[ERROR] [1598502235.687013]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[33m[ WARN] [1598502094.983374296]: Timed out waiting for transform from base_link to odom to become available before running costmap, tf error: Could not find a connection between 'odom' and 'base_link' because they are not part of the same tree.Tf has two or more unconnected trees.. canTransform returned after 0.100686 timeout was 0.1.[0m
+[0m[ INFO] [1598502096.684508228]: Loading from pre-hydro parameter style[0m
+[0m[ INFO] [1598502097.152156936]: Using plugin "obstacle_layer"[0m
+[0m[ INFO] [1598502097.252363091]:     Subscribed to Topics: scan[0m
+[0m[ INFO] [1598502097.590505380]: Using plugin "inflation_layer"[0m
+[33m[ WARN] [1598502098.028353578]: The scan observation buffer has not been updated for 0.57 seconds, and it should be updated every 0.40 seconds.[0m
+[0m[ INFO] [1598502098.153711774]: Will publish desired direction on 'route' and control direction on 'desired'.[0m
+[0m[ INFO] [1598502098.220147745]: Initializing LUT...[0m
+[33m[ WARN] [1598502098.226791400]: The scan observation buffer has not been updated for 0.77 seconds, and it should be updated every 0.40 seconds.[0m
+[0m[ INFO] [1598502098.228683253]: ...done![0m
+[33m[ WARN] [1598502231.826856831]: The scan observation buffer has not been updated for 0.58 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502232.027241597]: The scan observation buffer has not been updated for 0.78 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502232.226809057]: The scan observation buffer has not been updated for 0.98 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502232.426853105]: The scan observation buffer has not been updated for 1.18 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502232.626798860]: The scan observation buffer has not been updated for 1.38 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502232.826825116]: The scan observation buffer has not been updated for 1.58 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502233.027297620]: The scan observation buffer has not been updated for 1.78 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502234.827201014]: The scan observation buffer has not been updated for 0.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502235.027477702]: The scan observation buffer has not been updated for 0.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502235.226802044]: The scan observation buffer has not been updated for 0.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502235.426775348]: The scan observation buffer has not been updated for 1.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502235.627458282]: The scan observation buffer has not been updated for 1.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502235.826815583]: The scan observation buffer has not been updated for 1.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502236.026797049]: The scan observation buffer has not been updated for 1.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502236.226817551]: The scan observation buffer has not been updated for 1.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502236.426822303]: The scan observation buffer has not been updated for 2.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502236.626792930]: The scan observation buffer has not been updated for 2.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502236.826803224]: The scan observation buffer has not been updated for 2.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502237.026831304]: The scan observation buffer has not been updated for 2.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [159850[ERROR] [1598502239.680387]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+2237.226888213]: The scan observation buffer has not been updated for 2.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502237.426802203]: The scan observation buffer has not been updated for 3.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502237.626828486]: The scan observation buffer has not been updated for 3.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502237.826790311]: The scan observation buffer has not been updated for 3.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502238.026837881]: The scan observation buffer has not been updated for 3.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502238.227492657]: The scan observation buffer has not been updated for 3.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502238.426791175]: The scan observation buffer has not been updated for 4.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502238.626789989]: The scan observation buffer has not been updated for 4.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502238.826794345]: The scan observation buffer has not been updated for 4.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502239.026811237]: The scan observation buffer has not been updated for 4.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502239.227309627]: The scan observation buffer has not been updated for 4.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502239.427311306]: The scan observation buffer has not been updated for 5.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502239.626784190]: The scan observation buffer has not been updated for 5.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502239.826772452]: The scan observation buffer has not been updated for 5.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502240.026794835]: The scan observation buffer has not been updated for 5.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502240.227317381]: The scan observation buffer has not been updated for 5.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502240.427117174]: The scan observation buffer has not been updated for 6.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502240.627045300]: The scan observation buffer has not been updated for 6.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502240.826787926]: The scan observation buffer has not been updated for 6.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502241.026854298]: The scan observation buffer has not been updated for 6.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502241.226797540]: The scan observation buffer has not been updated for 6.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502241.426779865]: The scan observation buffer has not been updated for 7.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502241.626781441]: The scan observation buffer has not been updated for 7.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502241.827185226]: The scan observation buffer has not been updated for 7.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502242.026792753]: The scan observation buffer has not been updated for 7.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502242.226822568]: The scan observation buffer has not been updated for 7.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502242.426796967]: The scan observation buffer has not been updated for 8.09 seconds, and it should be updated every 0.4[ERROR] [1598502244.420498]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502246.276674]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502247.011638]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+0 seconds.[0m
+[33m[ WARN] [1598502242.626793533]: The scan observation buffer has not been updated for 8.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502242.827543185]: The scan observation buffer has not been updated for 8.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502243.027689954]: The scan observation buffer has not been updated for 8.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502243.226785214]: The scan observation buffer has not been updated for 8.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502243.426792812]: The scan observation buffer has not been updated for 9.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502243.626797493]: The scan observation buffer has not been updated for 9.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502243.826788757]: The scan observation buffer has not been updated for 9.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502244.027413811]: The scan observation buffer has not been updated for 9.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502244.226805646]: The scan observation buffer has not been updated for 9.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502244.426784026]: The scan observation buffer has not been updated for 10.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502244.627528909]: The scan observation buffer has not been updated for 10.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502244.828184834]: The scan observation buffer has not been updated for 10.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502245.026797328]: The scan observation buffer has not been updated for 10.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502245.227213450]: The scan observation buffer has not been updated for 10.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502245.426832736]: The scan observation buffer has not been updated for 11.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502245.626853648]: The scan observation buffer has not been updated for 11.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502245.826841602]: The scan observation buffer has not been updated for 11.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502246.026807676]: The scan observation buffer has not been updated for 11.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502246.226823288]: The scan observation buffer has not been updated for 11.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502246.426833650]: The scan observation buffer has not been updated for 12.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502246.626782761]: The scan observation buffer has not been updated for 12.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502246.826799831]: The scan observation buffer has not been updated for 12.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502247.026812230]: The scan observation buffer has not been updated for 12.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502247.226784333]: The scan observation buffer has not been updated for 12.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502247.426867270]: The scan observation buffer has not been updated for 13.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502247.626816331]: The scan observation buffer has not been updated for 13.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502247.826808559]: The scan observation buffer has not been updated [ERROR] [1598502249.343153]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502252.035488]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+for 13.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502248.026803115]: The scan observation buffer has not been updated for 13.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502248.226785376]: The scan observation buffer has not been updated for 13.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502248.426795638]: The scan observation buffer has not been updated for 14.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502248.626747566]: The scan observation buffer has not been updated for 14.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502248.827243745]: The scan observation buffer has not been updated for 14.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502249.026797833]: The scan observation buffer has not been updated for 14.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502249.226810670]: The scan observation buffer has not been updated for 14.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502249.426759922]: The scan observation buffer has not been updated for 15.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502249.626778009]: The scan observation buffer has not been updated for 15.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502249.826792012]: The scan observation buffer has not been updated for 15.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502250.026813301]: The scan observation buffer has not been updated for 15.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502250.226809463]: The scan observation buffer has not been updated for 15.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502250.426774999]: The scan observation buffer has not been updated for 16.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502250.626852244]: The scan observation buffer has not been updated for 16.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502250.827338116]: The scan observation buffer has not been updated for 16.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502251.026792354]: The scan observation buffer has not been updated for 16.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502251.226766007]: The scan observation buffer has not been updated for 16.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502251.427454829]: The scan observation buffer has not been updated for 17.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502251.626888022]: The scan observation buffer has not been updated for 17.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502251.826903092]: The scan observation buffer has not been updated for 17.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502252.027301992]: The scan observation buffer has not been updated for 17.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502252.226888845]: The scan observation buffer has not been updated for 17.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502252.427655200]: The scan observation buffer has not been updated for 18.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502252.626885927]: The scan observation buffer has not been updated for 18.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502252.827305491]: The scan observation buffer has not been updated for 18.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502253.026829630]: The scan observation buffer has not been updated for 18.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502253[ERROR] [1598502254.427190]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+.226837309]: The scan observation buffer has not been updated for 18.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502253.426859572]: The scan observation buffer has not been updated for 19.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502253.626872794]: The scan observation buffer has not been updated for 19.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502253.826858015]: The scan observation buffer has not been updated for 19.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502254.026889315]: The scan observation buffer has not been updated for 19.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502254.227175488]: The scan observation buffer has not been updated for 19.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502254.427134993]: The scan observation buffer has not been updated for 20.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502254.626834623]: The scan observation buffer has not been updated for 20.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502254.826813962]: The scan observation buffer has not been updated for 20.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502255.026928630]: The scan observation buffer has not been updated for 20.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502255.226953420]: The scan observation buffer has not been updated for 20.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502255.426813418]: The scan observation buffer has not been updated for 21.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502255.626811958]: The scan observation buffer has not been updated for 21.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502255.826991332]: The scan observation buffer has not been updated for 21.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502256.027362326]: The scan observation buffer has not been updated for 21.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502256.226856525]: The scan observation buffer has not been updated for 21.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502256.426796683]: The scan observation buffer has not been updated for 22.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502256.626815591]: The scan observation buffer has not been updated for 22.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502256.826776458]: The scan observation buffer has not been updated for 22.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502257.026815486]: The scan observation buffer has not been updated for 22.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502257.227373055]: The scan observation buffer has not been updated for 22.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502257.426914455]: The scan observation buffer has not been updated for 23.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502257.626996606]: The scan observation buffer has not been updated for 23.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502257.826819174]: The scan observation buffer has not been updated for 23.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502258.026784362]: The scan observation buffer has not been updated for 23.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502258.226775464]: The scan observation buffer has not been updated for 23.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502258.426786692]: The scan observation buffer has not been updated for 24.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502258.626789462]: The scan observation buffer has not been updated for 24.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502258.826769773]: The scan observation buffer has not been updated for 24.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502259.026811621]: The scan observation buffer has not been updated for 24.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502259.226778467]: The scan observation buffer has not been updated for 24.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502259.426774772]: The scan observation buffer has not been updated for 25.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502259.627154327]: The scan observation buffer has not been updated for 25.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502259.826734131]: The scan observation buffer has not been updated for 25.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502260.026730431]: The scan observation buffer has not been updated for 25.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502260.226796980]: The scan observation buffer has not been updated for 25.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502260.426810445]: The scan observation buffer has not been updated for 26.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502260.626869702]: The scan observation buffer has not been updated for 26.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502260.826822209]: The scan observation buffer has not been updated for 26.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502261.027170794]: The scan observation buffer has not been updated for 26.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502261.226808545]: The scan observation buffer has not been updated for 26.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502261.426891088]: The scan observation buffer has not been updated for 27.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502261.626839755]: The scan observation buffer has not been updated for 27.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502261.826825464]: The scan observation buffer has not been updated for 27.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502262.026811169]: The scan observation buffer has not been updated for 27.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502262.226784288]: The scan observation buffer has not been updated for 27.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502262.426797950]: The scan observation buffer has not been updated for 28.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502262.626780695]: The scan observation buffer has not been updated for 28.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502262.826811565]: The scan observation buffer has not been updated for 28.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502263.026783805]: The scan observation buffer has not been updated for 28.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502263.226721003]: The scan observation buffer has not been updated for 28.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502263.426728492]: The scan observation buffer has not been updated for 29.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502263.626777398]: The scan observation buffer has not been updated for 29.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502263.826751054]: The scan observat[ERROR] [1598502264.419822]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+ion buffer has not been updated for 29.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502264.026760580]: The scan observation buffer has not been updated for 29.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502264.226767438]: The scan observation buffer has not been updated for 29.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502264.426784505]: The scan observation buffer has not been updated for 30.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502264.626771530]: The scan observation buffer has not been updated for 30.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502264.827558014]: The scan observation buffer has not been updated for 30.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502265.026781743]: The scan observation buffer has not been updated for 30.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502265.226827929]: The scan observation buffer has not been updated for 30.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502265.426797408]: The scan observation buffer has not been updated for 31.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502265.626988844]: The scan observation buffer has not been updated for 31.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502265.826837281]: The scan observation buffer has not been updated for 31.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502266.026821046]: The scan observation buffer has not been updated for 31.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502266.226786686]: The scan observation buffer has not been updated for 31.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502266.426796368]: The scan observation buffer has not been updated for 32.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502266.626811300]: The scan observation buffer has not been updated for 32.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502266.826830607]: The scan observation buffer has not been updated for 32.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502267.026836492]: The scan observation buffer has not been updated for 32.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502267.226820168]: The scan observation buffer has not been updated for 32.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502267.426794220]: The scan observation buffer has not been updated for 33.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502267.626936855]: The scan observation buffer has not been updated for 33.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502267.826809699]: The scan observation buffer has not been updated for 33.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502268.026753121]: The scan observation buffer has not been updated for 33.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502268.226832125]: The scan observation buffer has not been updated for 33.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502268.426790964]: The scan observation buffer has not been updated for 34.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502268.626786844]: The scan observation buffer has not been updated for 34.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502268.826785641]: The scan observation buffer has not been updated for 34.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502269.027227474]: The scan observation buffer has not been updated for 34.69 seconds, and it should be updated every 0.40 secon[ERROR] [1598502274.420113]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+ds.[0m
+[33m[ WARN] [1598502269.226798933]: The scan observation buffer has not been updated for 34.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502269.426781059]: The scan observation buffer has not been updated for 35.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502269.626796143]: The scan observation buffer has not been updated for 35.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502269.827166769]: The scan observation buffer has not been updated for 35.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502270.026774682]: The scan observation buffer has not been updated for 35.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502270.226963260]: The scan observation buffer has not been updated for 35.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502270.426801840]: The scan observation buffer has not been updated for 36.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502270.626839919]: The scan observation buffer has not been updated for 36.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502270.826799832]: The scan observation buffer has not been updated for 36.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502271.026892448]: The scan observation buffer has not been updated for 36.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502271.226867482]: The scan observation buffer has not been updated for 36.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502271.439367533]: The scan observation buffer has not been updated for 37.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502271.627007424]: The scan observation buffer has not been updated for 37.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502271.828453913]: The scan observation buffer has not been updated for 37.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502272.026763237]: The scan observation buffer has not been updated for 37.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502272.226763017]: The scan observation buffer has not been updated for 37.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502272.427011296]: The scan observation buffer has not been updated for 38.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502272.626814492]: The scan observation buffer has not been updated for 38.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502272.826800855]: The scan observation buffer has not been updated for 38.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502273.027503836]: The scan observation buffer has not been updated for 38.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502273.226815822]: The scan observation buffer has not been updated for 38.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502273.427024972]: The scan observation buffer has not been updated for 39.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502273.626828707]: The scan observation buffer has not been updated for 39.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502273.826791108]: The scan observation buffer has not been updated for 39.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502274.027118669]: The scan observation buffer has not been updated for 39.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502274.227096191]: The scan observation buffer has not been updated for 39.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502274.427043963]: The scan observation buffer has not been updated for 40.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502274.627032860]: The scan observation buffer has not been updated for 40.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502274.826779091]: The scan observation buffer has not been updated for 40.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502275.026784608]: The scan observation buffer has not been updated for 40.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502275.226816043]: The scan observation buffer has not been updated for 40.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502275.426861187]: The scan observation buffer has not been updated for 41.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502275.626885039]: The scan observation buffer has not been updated for 41.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502275.826814683]: The scan observation buffer has not been updated for 41.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502276.026824238]: The scan observation buffer has not been updated for 41.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502276.226826462]: The scan observation buffer has not been updated for 41.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502276.426882643]: The scan observation buffer has not been updated for 42.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502276.626785700]: The scan observation buffer has not been updated for 42.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502276.826733382]: The scan observation buffer has not been updated for 42.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502277.026822517]: The scan observation buffer has not been updated for 42.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502277.226772196]: The scan observation buffer has not been updated for 42.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502277.426801499]: The scan observation buffer has not been updated for 43.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502277.627748383]: The scan observation buffer has not been updated for 43.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502277.826804981]: The scan observation buffer has not been updated for 43.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502278.026766030]: The scan observation buffer has not been updated for 43.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502278.226928580]: The scan observation buffer has not been updated for 43.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502278.427113005]: The scan observation buffer has not been updated for 44.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502278.627112222]: The scan observation buffer has not been updated for 44.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502278.826867899]: The scan observation buffer has not been updated for 44.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502279.026908819]: The scan observation buffer has not been updated for 44.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502279.226836242]: The scan observation buffer has not been updated for 44.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502279.426919707]: The scan observation buffer has not been updated for 45.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502279.626945129]: The scan observation buffer has not been updated for 45.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [15985022[ERROR] [1598502284.424866]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+79.826931469]: The scan observation buffer has not been updated for 45.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502280.027051678]: The scan observation buffer has not been updated for 45.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502280.226937349]: The scan observation buffer has not been updated for 45.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502280.426883977]: The scan observation buffer has not been updated for 46.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502280.628399183]: The scan observation buffer has not been updated for 46.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502280.827429982]: The scan observation buffer has not been updated for 46.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502281.027408398]: The scan observation buffer has not been updated for 46.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502281.228234354]: The scan observation buffer has not been updated for 46.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502281.426894985]: The scan observation buffer has not been updated for 47.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502281.626985069]: The scan observation buffer has not been updated for 47.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502281.826831905]: The scan observation buffer has not been updated for 47.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502282.026912067]: The scan observation buffer has not been updated for 47.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502282.226848108]: The scan observation buffer has not been updated for 47.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502282.426914523]: The scan observation buffer has not been updated for 48.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502282.626906563]: The scan observation buffer has not been updated for 48.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502282.827812100]: The scan observation buffer has not been updated for 48.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502283.026916014]: The scan observation buffer has not been updated for 48.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502283.226911219]: The scan observation buffer has not been updated for 48.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502283.427588046]: The scan observation buffer has not been updated for 49.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502283.627041337]: The scan observation buffer has not been updated for 49.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502283.826930084]: The scan observation buffer has not been updated for 49.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502284.026999950]: The scan observation buffer has not been updated for 49.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502284.226891279]: The scan observation buffer has not been updated for 49.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502284.426923482]: The scan observation buffer has not been updated for 50.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502284.626873727]: The scan observation buffer has not been updated for 50.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502284.827514052]: The scan observation buffer has not been updated for 50.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502285.027066752]: The scan observation buffer has not been updated for 50.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502285.227025704]: The scan observation buffer has not been updated for 50.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502285.427797527]: The scan observation buffer has not been updated for 51.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502285.626913274]: The scan observation buffer has not been updated for 51.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502285.827534889]: The scan observation buffer has not been updated for 51.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502286.026991880]: The scan observation buffer has not been updated for 51.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502286.226951371]: The scan observation buffer has not been updated for 51.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502286.427018779]: The scan observation buffer has not been updated for 52.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502286.627274310]: The scan observation buffer has not been updated for 52.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502286.826917053]: The scan observation buffer has not been updated for 52.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502287.038328185]: The scan observation buffer has not been updated for 52.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502287.227146611]: The scan observation buffer has not been updated for 52.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502287.427491349]: The scan observation buffer has not been updated for 53.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502287.627031967]: The scan observation buffer has not been updated for 53.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502287.828374491]: The scan observation buffer has not been updated for 53.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502288.027201982]: The scan observation buffer has not been updated for 53.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502288.227796926]: The scan observation buffer has not been updated for 53.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502288.426879295]: The scan observation buffer has not been updated for 54.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502288.641258035]: The scan observation buffer has not been updated for 54.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502288.826947730]: The scan observation buffer has not been updated for 54.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502289.026912964]: The scan observation buffer has not been updated for 54.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502289.226970034]: The scan observation buffer has not been updated for 54.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502289.427035855]: The scan observation buffer has not been updated for 55.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502289.626929593]: The scan observation buffer has not been updated for 55.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502289.827114704]: The scan observation buffer has not been updated for 55.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502290.027151936]: The scan observation buffer has not been updated for 55.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502290.226989049]: The scan observation buffer has not been updated for 55.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502290.426895578]: The scan observ[ERROR] [1598502294.420721]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+ation buffer has not been updated for 56.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502290.627814475]: The scan observation buffer has not been updated for 56.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502290.826866426]: The scan observation buffer has not been updated for 56.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502291.026849366]: The scan observation buffer has not been updated for 56.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502291.226906934]: The scan observation buffer has not been updated for 56.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502291.426896253]: The scan observation buffer has not been updated for 57.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502291.626985030]: The scan observation buffer has not been updated for 57.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502291.828028426]: The scan observation buffer has not been updated for 57.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502292.026926039]: The scan observation buffer has not been updated for 57.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502292.227982517]: The scan observation buffer has not been updated for 57.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502292.426971676]: The scan observation buffer has not been updated for 58.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502292.626876953]: The scan observation buffer has not been updated for 58.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502292.826867688]: The scan observation buffer has not been updated for 58.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502293.026924335]: The scan observation buffer has not been updated for 58.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502293.226910361]: The scan observation buffer has not been updated for 58.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502293.426906887]: The scan observation buffer has not been updated for 59.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502293.626997621]: The scan observation buffer has not been updated for 59.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502293.826922398]: The scan observation buffer has not been updated for 59.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502294.027562332]: The scan observation buffer has not been updated for 59.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502294.226856779]: The scan observation buffer has not been updated for 59.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502294.426873389]: The scan observation buffer has not been updated for 60.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502294.626852373]: The scan observation buffer has not been updated for 60.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502294.826953857]: The scan observation buffer has not been updated for 60.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502295.026874212]: The scan observation buffer has not been updated for 60.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502295.226852279]: The scan observation buffer has not been updated for 60.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502295.426943513]: The scan observation buffer has not been updated for 61.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502295.626925372]: The scan observation buffer has not been updated for 61.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502295.827158355]: The scan observation buffer has not been updated for 61.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502296.026943336]: The scan observation buffer has not been updated for 61.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502296.227371400]: The scan observation buffer has not been updated for 61.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502296.427065637]: The scan observation buffer has not been updated for 62.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502296.626882081]: The scan observation buffer has not been updated for 62.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502296.826902982]: The scan observation buffer has not been updated for 62.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502297.026897628]: The scan observation buffer has not been updated for 62.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502297.226896904]: The scan observation buffer has not been updated for 62.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502297.427416510]: The scan observation buffer has not been updated for 63.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502297.626939498]: The scan observation buffer has not been updated for 63.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502297.828222973]: The scan observation buffer has not been updated for 63.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502298.026975670]: The scan observation buffer has not been updated for 63.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502298.227500776]: The scan observation buffer has not been updated for 63.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502298.426951098]: The scan observation buffer has not been updated for 64.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502298.626923791]: The scan observation buffer has not been updated for 64.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502298.826960067]: The scan observation buffer has not been updated for 64.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502299.026866256]: The scan observation buffer has not been updated for 64.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502299.226919700]: The scan observation buffer has not been updated for 64.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502299.426837519]: The scan observation buffer has not been updated for 65.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502299.626895338]: The scan observation buffer has not been updated for 65.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502299.827297320]: The scan observation buffer has not been updated for 65.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502300.026859304]: The scan observation buffer has not been updated for 65.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502300.227333578]: The scan observation buffer has not been updated for 65.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502300.426872193]: The scan observation buffer has not been updated for 66.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502300.627759463]: The scan observation buffer has not been updated for 66.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502300.827797407]: The scan observation buffer has not been updated for 66.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502301.026935270]: The scan observation buffer has not been upda[ERROR] [1598502304.420486]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+ted for 66.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502301.226867883]: The scan observation buffer has not been updated for 66.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502301.427071743]: The scan observation buffer has not been updated for 67.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502301.626972856]: The scan observation buffer has not been updated for 67.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502301.826855302]: The scan observation buffer has not been updated for 67.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502302.026910700]: The scan observation buffer has not been updated for 67.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502302.226879147]: The scan observation buffer has not been updated for 67.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502302.427152091]: The scan observation buffer has not been updated for 68.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502302.626900331]: The scan observation buffer has not been updated for 68.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502302.826920111]: The scan observation buffer has not been updated for 68.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502303.026888261]: The scan observation buffer has not been updated for 68.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502303.226886125]: The scan observation buffer has not been updated for 68.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502303.426880198]: The scan observation buffer has not been updated for 69.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502303.627676930]: The scan observation buffer has not been updated for 69.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502303.826857843]: The scan observation buffer has not been updated for 69.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502304.026888952]: The scan observation buffer has not been updated for 69.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502304.227571894]: The scan observation buffer has not been updated for 69.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502304.426854558]: The scan observation buffer has not been updated for 70.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502304.626850048]: The scan observation buffer has not been updated for 70.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502304.826960163]: The scan observation buffer has not been updated for 70.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502305.027033814]: The scan observation buffer has not been updated for 70.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502305.228027630]: The scan observation buffer has not been updated for 70.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502305.426889675]: The scan observation buffer has not been updated for 71.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502305.626917500]: The scan observation buffer has not been updated for 71.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502305.827571236]: The scan observation buffer has not been updated for 71.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502306.027039644]: The scan observation buffer has not been updated for 71.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502306.227031263]: The scan observation buffer has not been updated for 71.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502306.426904466]: The scan observation buffer has not been updated for 72.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502306.626860502]: The scan observation buffer has not been updated for 72.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502306.826890329]: The scan observation buffer has not been updated for 72.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502307.026971192]: The scan observation buffer has not been updated for 72.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502307.226898896]: The scan observation buffer has not been updated for 72.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502307.426977974]: The scan observation buffer has not been updated for 73.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502307.627485798]: The scan observation buffer has not been updated for 73.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502307.826877132]: The scan observation buffer has not been updated for 73.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502308.026887372]: The scan observation buffer has not been updated for 73.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502308.226878619]: The scan observation buffer has not been updated for 73.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502308.426866950]: The scan observation buffer has not been updated for 74.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502308.626940447]: The scan observation buffer has not been updated for 74.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502308.826860819]: The scan observation buffer has not been updated for 74.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502309.026972227]: The scan observation buffer has not been updated for 74.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502309.227848343]: The scan observation buffer has not been updated for 74.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502309.426867727]: The scan observation buffer has not been updated for 75.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502309.626876143]: The scan observation buffer has not been updated for 75.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502309.826858309]: The scan observation buffer has not been updated for 75.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502310.027056301]: The scan observation buffer has not been updated for 75.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502310.226908346]: The scan observation buffer has not been updated for 75.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502310.426975931]: The scan observation buffer has not been updated for 76.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502310.626896225]: The scan observation buffer has not been updated for 76.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502310.826979559]: The scan observation buffer has not been updated for 76.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502311.026937765]: The scan observation buffer has not been updated for 76.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502311.226857728]: The scan observation buffer has not been updated for 76.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502311.427009272]: The scan observation buffer has not been updated for 77.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502311.626891611]: The scan observation buffer has not been updated for 77.29 seconds, and it [ERROR] [1598502313.013438]: SyncThread[10.0.0.15] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502314.421467]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502314.928501]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502316.158496]: SyncThread[10.0.0.15] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502311.826848032]: The scan observation buffer has not been updated for 77.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502312.026851698]: The scan observation buffer has not been updated for 77.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502312.226869621]: The scan observation buffer has not been updated for 77.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502312.426876461]: The scan observation buffer has not been updated for 78.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502312.626862301]: The scan observation buffer has not been updated for 78.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502312.826868266]: The scan observation buffer has not been updated for 78.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502313.026924684]: The scan observation buffer has not been updated for 78.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502313.226927985]: The scan observation buffer has not been updated for 78.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502313.426947911]: The scan observation buffer has not been updated for 79.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502313.627120669]: The scan observation buffer has not been updated for 79.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502313.827437800]: The scan observation buffer has not been updated for 79.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502314.027049100]: The scan observation buffer has not been updated for 79.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502314.226987030]: The scan observation buffer has not been updated for 79.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502314.426949751]: The scan observation buffer has not been updated for 80.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502314.626916263]: The scan observation buffer has not been updated for 80.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502314.826897943]: The scan observation buffer has not been updated for 80.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502315.026849284]: The scan observation buffer has not been updated for 80.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502315.226934173]: The scan observation buffer has not been updated for 80.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502315.426873231]: The scan observation buffer has not been updated for 81.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502315.626925454]: The scan observation buffer has not been updated for 81.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502315.826990802]: The scan observation buffer has not been updated for 81.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502316.026898063]: The scan observation buffer has not been updated for 81.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502316.226841166]: The scan observation buffer has not been updated for 81.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502316.426874100]: The scan observation buffer has not been updated for 82.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502316.626892452]: The scan observation buffer has not been updated for 82.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502316.826904095]: The scan observation buffer has not been updated for 82.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502317.026915733]: The scan obse[ERROR] [1598502318.335501]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+..
+[INFO] [1598502235.688099]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502239.583549]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502239.676484]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502239.682853]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502246.200367]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502246.273669]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502246.281436]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502246.936582]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502247.008288]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502247.014289]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502249.173750]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502249.338558]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502249.344825]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502251.902867]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502252.025127]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502252.041062]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502300.313141]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502300.421091]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502300.443896]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502300.521663]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502300.656607]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502300.675504]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502301.759810]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502301.884372]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502301.898179]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502305.881007]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502305.953448]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502305.975122]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502307.004442]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502307.048001]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502307.068474]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502307.497123]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502307.657641]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502307.676509]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502312.023271]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502312.068513]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502312.079537]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502312.883389]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502312.991604]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502313.014664]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502314.737326]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502314.925137]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502314.933105]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502316.066326]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502316.153738]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502316.159685]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502318.236796]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502318.332997]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502318.338529]: S[ERROR] [1598502320.741898]: SyncThread[10.0.0.15] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+rvation buffer has not been updated for 82.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502317.226899630]: The scan observation buffer has not been updated for 82.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502317.426957026]: The scan observation buffer has not been updated for 83.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502317.627324168]: The scan observation buffer has not been updated for 83.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502317.827035360]: The scan observation buffer has not been updated for 83.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502318.027029169]: The scan observation buffer has not been updated for 83.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502318.226982986]: The scan observation buffer has not been updated for 83.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502318.426910846]: The scan observation buffer has not been updated for 84.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502318.626872830]: The scan observation buffer has not been updated for 84.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502318.827133769]: The scan observation buffer has not been updated for 84.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502319.026905000]: The scan observation buffer has not been updated for 84.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502319.226856154]: The scan observation buffer has not been updated for 84.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502319.426885766]: The scan observation buffer has not been updated for 85.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502319.626920920]: The scan observation buffer has not been updated for 85.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502319.826990489]: The scan observation buffer has not been updated for 85.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502320.027782212]: The scan observation buffer has not been updated for 85.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502320.227258793]: The scan observation buffer has not been updated for 85.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502320.427790903]: The scan observation buffer has not been updated for 86.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502320.627497897]: The scan observation buffer has not been updated for 86.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502320.826864229]: The scan observation buffer has not been updated for 86.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502321.027347335]: The scan observation buffer has not been updated for 86.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502321.226842253]: The scan observation buffer has not been updated for 86.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502321.426955496]: The scan observation buffer has not been updated for 87.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502321.626903075]: The scan observation buffer has not been updated for 87.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502321.826988319]: The scan observation buffer has not been updated for 87.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502322.026921310]: The scan observation buffer has not been updated for 87.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502322.227562718]: The scan observation buffer has not been updated for 87.89 seconds, and it should be updated every 0.40 s[ERROR] [1598502323.562159]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502323.619975]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502323.661967]: SyncThread[10.0.0.15] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502324.423022]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502326.320989]: SyncThread[10.0.0.15] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502327.021018]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502327.202499]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+econds.[0m
+[33m[ WARN] [1598502322.427702757]: The scan observation buffer has not been updated for 88.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502322.626982973]: The scan observation buffer has not been updated for 88.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502322.826961430]: The scan observation buffer has not been updated for 88.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502323.026888550]: The scan observation buffer has not been updated for 88.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502323.226946011]: The scan observation buffer has not been updated for 88.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502323.426896432]: The scan observation buffer has not been updated for 89.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502323.626880685]: The scan observation buffer has not been updated for 89.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502323.827915217]: The scan observation buffer has not been updated for 89.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502324.026917436]: The scan observation buffer has not been updated for 89.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502324.226840111]: The scan observation buffer has not been updated for 89.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502324.426852910]: The scan observation buffer has not been updated for 90.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502324.626925208]: The scan observation buffer has not been updated for 90.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502324.826861883]: The scan observation buffer has not been updated for 90.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502325.028402116]: The scan observation buffer has not been updated for 90.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502325.237774631]: The scan observation buffer has not been updated for 90.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502325.426923826]: The scan observation buffer has not been updated for 91.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502325.627260625]: The scan observation buffer has not been updated for 91.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502325.826956350]: The scan observation buffer has not been updated for 91.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502326.026894149]: The scan observation buffer has not been updated for 91.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502326.226889375]: The scan observation buffer has not been updated for 91.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502326.426969765]: The scan observation buffer has not been updated for 92.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502326.627052781]: The scan observation buffer has not been updated for 92.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502326.826910633]: The scan observation buffer has not been updated for 92.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502327.026998894]: The scan observation buffer has not been updated for 92.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502327.226946833]: The scan observation buffer has not been updated for 92.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502327.426947854]: The scan observation buffer has not been updated for 93.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502327.626883544]: The scan observation buffer has not been up[ERROR] [1598502329.305967]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502329.447300]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502330.012950]: SyncThread[10.0.0.15] ERROR while ending: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 460, in _unreg_on_finish
+    _ = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+dated for 93.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502327.826884857]: The scan observation buffer has not been updated for 93.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502328.026914456]: The scan observation buffer has not been updated for 93.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502328.245773476]: The scan observation buffer has not been updated for 93.91 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502328.427178922]: The scan observation buffer has not been updated for 94.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502328.627346738]: The scan observation buffer has not been updated for 94.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502328.828702204]: The scan observation buffer has not been updated for 94.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502329.027002500]: The scan observation buffer has not been updated for 94.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502329.226872201]: The scan observation buffer has not been updated for 94.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502329.426841358]: The scan observation buffer has not been updated for 95.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502329.626984637]: The scan observation buffer has not been updated for 95.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502329.827752658]: The scan observation buffer has not been updated for 95.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502330.027192445]: The scan observation buffer has not been updated for 95.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502330.226933777]: The scan observation buffer has not been updated for 95.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502330.426976396]: The scan observation buffer has not been updated for 96.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502330.626855976]: The scan observation buffer has not been updated for 96.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502330.826903554]: The scan observation buffer has not been updated for 96.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502331.026847588]: The scan observation buffer has not been updated for 96.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502331.227685535]: The scan observation buffer has not been updated for 96.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502331.426912046]: The scan observation buffer has not been updated for 97.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502331.627365582]: The scan observation buffer has not been updated for 97.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502331.828213737]: The scan observation buffer has not been updated for 97.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502332.026883462]: The scan observation buffer has not been updated for 97.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502332.227636207]: The scan observation buffer has not been updated for 97.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502332.426991305]: The scan observation buffer has not been updated for 98.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502332.626920979]: The scan observation buffer has not been updated for 98.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502332.826893819]: The scan observation buffer has not been updated for 98.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598[ERROR] [1598502333.946913]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502334.420481]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502334.952791]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+502333.026985654]: The scan observation buffer has not been updated for 98.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502333.226925208]: The scan observation buffer has not been updated for 98.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502333.427636793]: The scan observation buffer has not been updated for 99.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502333.626937023]: The scan observation buffer has not been updated for 99.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502333.826912160]: The scan observation buffer has not been updated for 99.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502334.026891668]: The scan observation buffer has not been updated for 99.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502334.227507260]: The scan observation buffer has not been updated for 99.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502334.426879495]: The scan observation buffer has not been updated for 100.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502334.626872680]: The scan observation buffer has not been updated for 100.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502334.827150235]: The scan observation buffer has not been updated for 100.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502335.026881795]: The scan observation buffer has not been updated for 100.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502335.226895360]: The scan observation buffer has not been updated for 100.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502335.426828134]: The scan observation buffer has not been updated for 101.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502335.626894490]: The scan observation buffer has not been updated for 101.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502335.826889680]: The scan observation buffer has not been updated for 101.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502336.026898867]: The scan observation buffer has not been updated for 101.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502336.227020894]: The scan observation buffer has not been updated for 101.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502336.426860884]: The scan observation buffer has not been updated for 102.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502336.626866247]: The scan observation buffer has not been updated for 102.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502336.826873360]: The scan observation buffer has not been updated for 102.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502337.027963411]: The scan observation buffer has not been updated for 102.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502337.226931587]: The scan observation buffer has not been updated for 102.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502337.427592280]: The scan observation buffer has not been updated for 103.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502337.627790104]: The scan observation buffer has not been updated for 103.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502337.827359397]: The scan observation buffer has not been updated for 103.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502338.026891353]: The scan observation buffer has not been updated for 103.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502338.227914546]: The scan observation buffer has not been updated for 103.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502338.426966394]: The scan observation buffer has not been updated for 104.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502338.626864355]: The scan observation buffer has not been updated for 104.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502338.827025686]: The scan observation buffer has not been updated for 104.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502339.026997725]: The scan observation buffer has not been updated for 104.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502339.228726997]: The scan observation buffer has not been updated for 104.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502339.426949323]: The scan observation buffer has not been updated for 105.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502339.627688693]: The scan observation buffer has not been updated for 105.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502339.827386830]: The scan observation buffer has not been updated for 105.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502340.026913174]: The scan observation buffer has not been updated for 105.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502340.228014170]: The scan observation buffer has not been updated for 105.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502340.428228514]: The scan observation buffer has not been updated for 106.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502340.626838716]: The scan observation buffer has not been updated for 106.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502340.827833839]: The scan observation buffer has not been updated for 106.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502341.026958530]: The scan observation buffer has not been updated for 106.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502341.227119464]: The scan observation buffer has not been updated for 106.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502341.426873822]: The scan observation buffer has not been updated for 107.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502341.627934825]: The scan observation buffer has not been updated for 107.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502341.826989486]: The scan observation buffer has not been updated for 107.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502342.026828422]: The scan observation buffer has not been updated for 107.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502342.226979114]: The scan observation buffer has not been updated for 107.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502342.426925641]: The scan observation buffer has not been updated for 108.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502342.626906586]: The scan observation buffer has not been updated for 108.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502342.826902113]: The scan observation buffer has not been updated for 108.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502343.026898803]: The scan observation buffer has not been updated for 108.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502343.226938337]: The scan observation buffer has not been updated for 108.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502343.426892997]: The scan observation buffer has not been updated for 109.09 seconds, and it should be updated every 0.40 seconds.[0m
+[[ERROR] [1598502344.423400]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+[WARN] [1598502345.445204]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+[WARN] [1598502345.453595]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+[WARN] [1598502345.509720]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+[WARN] [1598502345.529290]: ERROR while update master[10.0.0.15]: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/master_sync.py", line 171, in update_master
+    self.masters[mastername] = SyncThread(mastername, masteruri, discoverer_name, monitoruri, 0.0, self.__sync_topics_on_demand)
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 113, in __init__
+    [])
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_discovery_fkie/filter_interface.py", line 68, in load
+    self.__interface_file = interface_file = resolve_url(rospy.get_param('~interface_url', ''))
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/client.py", line 465, in get_param
+    return _param_server[param_name] #MasterProxy does all the magic for us
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/msproxy.py", line 121, in __getitem__
+    code, msg, value = self.target.getParam(rospy.names.get_caller_id(), resolved_key)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[WARN] [1598502345.928594]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+33m[ WARN] [1598502343.626876531]: The scan observation buffer has not been updated for 109.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502343.826888065]: The scan observation buffer has not been updated for 109.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502344.027013928]: The scan observation buffer has not been updated for 109.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502344.227652209]: The scan observation buffer has not been updated for 109.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502344.427412296]: The scan observation buffer has not been updated for 110.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502344.627246757]: The scan observation buffer has not been updated for 110.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502344.826907387]: The scan observation buffer has not been updated for 110.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502345.026884467]: The scan observation buffer has not been updated for 110.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502345.226875516]: The scan observation buffer has not been updated for 110.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502345.426977689]: The scan observation buffer has not been updated for 111.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502345.626854114]: The scan observation buffer has not been updated for 111.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502345.827506069]: The scan observation buffer has not been updated for 111.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502346.026952874]: The scan observation buffer has not been updated for 111.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502346.227508254]: The scan observation buffer has not been updated for 111.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502346.426876571]: The scan observation buffer has not been updated for 112.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502346.627242079]: The scan observation buffer has not been updated for 112.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502346.826923932]: The scan observation buffer has not been updated for 112.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502347.026983193]: The scan observation buffer has not been updated for 112.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502347.226959882]: The scan observation buffer has not been updated for 112.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502347.426863656]: The scan observation buffer has not been updated for 113.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502347.626954093]: The scan observation buffer has not been updated for 113.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502347.826969865]: The scan observation buffer has not been updated for 113.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502348.027132631]: The scan observation buffer has not been updated for 113.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502348.227784483]: The scan observation buffer has not been updated for 113.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502348.426917361]: The scan observation buffer has not been updated for 114.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502348.626843559]: The scan observation buffer has not been updated for 114.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502348.826861046]: The scan observation buffer has[ERROR] [1598502350.927277]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+ not been updated for 114.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502349.026929280]: The scan observation buffer has not been updated for 114.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502349.226960734]: The scan observation buffer has not been updated for 114.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502349.427025437]: The scan observation buffer has not been updated for 115.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502349.626884227]: The scan observation buffer has not been updated for 115.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502349.828278907]: The scan observation buffer has not been updated for 115.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502350.026845925]: The scan observation buffer has not been updated for 115.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502350.226882012]: The scan observation buffer has not been updated for 115.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502350.426919265]: The scan observation buffer has not been updated for 116.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502350.626877478]: The scan observation buffer has not been updated for 116.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502350.826986771]: The scan observation buffer has not been updated for 116.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502351.027330558]: The scan observation buffer has not been updated for 116.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502351.226888578]: The scan observation buffer has not been updated for 116.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502351.426894006]: The scan observation buffer has not been updated for 117.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502351.626916935]: The scan observation buffer has not been updated for 117.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502351.827655309]: The scan observation buffer has not been updated for 117.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502352.026898623]: The scan observation buffer has not been updated for 117.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502352.226873685]: The scan observation buffer has not been updated for 117.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502352.426902413]: The scan observation buffer has not been updated for 118.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502352.626847143]: The scan observation buffer has not been updated for 118.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502352.826917578]: The scan observation buffer has not been updated for 118.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502353.026886804]: The scan observation buffer has not been updated for 118.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502353.226855709]: The scan observation buffer has not been updated for 118.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502353.427913093]: The scan observation buffer has not been updated for 119.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502353.626901432]: The scan observation buffer has not been updated for 119.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502353.826936835]: The scan observation buffer has not been updated for 119.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502354.027774012]: The scan observation buffer has not been updated for 119.69 seconds, and it should be updated eve[ERROR] [1598502354.422064]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+ry 0.40 seconds.[0m
+[33m[ WARN] [1598502354.226887440]: The scan observation buffer has not been updated for 119.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502354.426847562]: The scan observation buffer has not been updated for 120.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502354.626967513]: The scan observation buffer has not been updated for 120.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502354.827609831]: The scan observation buffer has not been updated for 120.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502355.027516283]: The scan observation buffer has not been updated for 120.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502355.226885174]: The scan observation buffer has not been updated for 120.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502355.427559540]: The scan observation buffer has not been updated for 121.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502355.626881765]: The scan observation buffer has not been updated for 121.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502355.826829312]: The scan observation buffer has not been updated for 121.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502356.027375636]: The scan observation buffer has not been updated for 121.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502356.226952448]: The scan observation buffer has not been updated for 121.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502356.426932045]: The scan observation buffer has not been updated for 122.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502356.626882475]: The scan observation buffer has not been updated for 122.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502356.826843405]: The scan observation buffer has not been updated for 122.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502357.026851581]: The scan observation buffer has not been updated for 122.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502357.227060682]: The scan observation buffer has not been updated for 122.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502357.426919207]: The scan observation buffer has not been updated for 123.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502357.626876896]: The scan observation buffer has not been updated for 123.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502357.826913625]: The scan observation buffer has not been updated for 123.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502358.026837770]: The scan observation buffer has not been updated for 123.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502358.226896049]: The scan observation buffer has not been updated for 123.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502358.426977953]: The scan observation buffer has not been updated for 124.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502358.626855403]: The scan observation buffer has not been updated for 124.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502358.826874016]: The scan observation buffer has not been updated for 124.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502359.026870169]: The scan observation buffer has not been updated for 124.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502359.226875626]: The scan observation buffer has not been updated for 124.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502359.426920165]: The scan[WARN] [1598502359.661881]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+[WARN] [1598502359.767677]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+[WARN] [1598502359.779545]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+[WARN] [1598502360.481569]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+[ERROR] [1598502363.809248]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
+    result = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+[ERROR] [1598502364.420386]: Robot 4: Is exploring: False, Session ID: 4_1598502185.46
+ observation buffer has not been updated for 125.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502359.627472486]: The scan observation buffer has not been updated for 125.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502359.826924078]: The scan observation buffer has not been updated for 125.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502360.026912907]: The scan observation buffer has not been updated for 125.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502360.226861748]: The scan observation buffer has not been updated for 125.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502360.426906546]: The scan observation buffer has not been updated for 126.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502360.626899720]: The scan observation buffer has not been updated for 126.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502360.826965810]: The scan observation buffer has not been updated for 126.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502361.026851941]: The scan observation buffer has not been updated for 126.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502361.226890583]: The scan observation buffer has not been updated for 126.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502361.427591294]: The scan observation buffer has not been updated for 127.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502361.626964365]: The scan observation buffer has not been updated for 127.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502361.827931655]: The scan observation buffer has not been updated for 127.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502362.027719756]: The scan observation buffer has not been updated for 127.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502362.226971755]: The scan observation buffer has not been updated for 127.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502362.427822640]: The scan observation buffer has not been updated for 128.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502362.626864935]: The scan observation buffer has not been updated for 128.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502362.827488616]: The scan observation buffer has not been updated for 128.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502363.027188895]: The scan observation buffer has not been updated for 128.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502363.226946019]: The scan observation buffer has not been updated for 128.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502363.426888931]: The scan observation buffer has not been updated for 129.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502363.627032506]: The scan observation buffer has not been updated for 129.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502363.826887628]: The scan observation buffer has not been updated for 129.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502364.026927368]: The scan observation buffer has not been updated for 129.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502364.226874624]: The scan observation buffer has not been updated for 129.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502364.426901794]: The scan observation buffer has not been updated for 130.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502364.627264082]: The scan observation buffer has not been updated for 130.29 seconds, and i[WARN] [1598502367.298339]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+[ERROR] [1598502367.379112]: SyncThread[10.0.0.234] ERROR while ending: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 460, in _unreg_on_finish
+    _ = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+yncThread[10.0.0.144] remote state applied.
+[INFO] [1598502320.538336]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502320.716920]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502320.746851]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502323.378994]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502323.427828]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502323.484945]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502323.559108]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502323.567002]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502323.579485]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502323.617413]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502323.644988]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502323.663051]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502325.955120]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502326.277128]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502326.322847]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502326.904795]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502327.008261]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502327.017005]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502327.022775]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502327.183616]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502327.210216]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502329.155532]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502329.302260]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502329.333514]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502329.340507]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502329.440599]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502329.448878]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502329.999414]:   Stop synchronization to `10.0.0.15`
+[INFO] [1598502330.014214]:   Finished synchronization to `10.0.0.15`
+[INFO] [1598502331.271128]: SyncThread[10.0.0.144] Requesting remote state from 'http://10.0.0.144:11611'
+[INFO] [1598502331.420131]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502331.547605]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502331.599377]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502331.786906]: SyncThread[10.0.0.144] Applying remote state...
+[INFO] [1598502332.003558]: SyncThread[10.0.0.144] remote state applied.
+[INFO] [1598502333.876850]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502333.940663]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502333.952188]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502334.802269]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502334.945650]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502334.953847]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502350.852114]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502350.925132]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502350.928262]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502363.727457]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502363.806853]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502363.810300]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502367.375330]:   Stop synchronization to `10.0.0.234`
+[INFO] [1598502367.380285]:   Finish[WARN] [1598502367.938357]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+[WARN] [1598502367.952418]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+[WARN] [1598502367.955004]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+[WARN] [1598502367.959378]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+t should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502364.827385751]: The scan observation buffer has not been updated for 130.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502365.026886762]: The scan observation buffer has not been updated for 130.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502365.227032315]: The scan observation buffer has not been updated for 130.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502365.426883290]: The scan observation buffer has not been updated for 131.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502365.626892346]: The scan observation buffer has not been updated for 131.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502365.826904026]: The scan observation buffer has not been updated for 131.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502366.027008744]: The scan observation buffer has not been updated for 131.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502366.227372427]: The scan observation buffer has not been updated for 131.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502366.426922960]: The scan observation buffer has not been updated for 132.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502366.626869860]: The scan observation buffer has not been updated for 132.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502366.828090443]: The scan observation buffer has not been updated for 132.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502367.026867780]: The scan observation buffer has not been updated for 132.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502367.226861606]: The scan observation buffer has not been updated for 132.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502367.426867390]: The scan observation buffer has not been updated for 133.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502367.626857424]: The scan observation buffer has not been updated for 133.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502367.826878083]: The scan observation buffer has not been updated for 133.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502368.026934322]: The scan observation buffer has not been updated for 133.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502368.226873867]: The scan observation buffer has not been updated for 133.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502368.426829162]: The scan observation buffer has not been updated for 134.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502368.626861748]: The scan observation buffer has not been updated for 134.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502368.826867500]: The scan observation buffer has not been updated for 134.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502369.026905916]: The scan observation buffer has not been updated for 134.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502369.226958011]: The scan observation buffer has not been updated for 134.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502369.426911234]: The scan observation buffer has not been updated for 135.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502369.626918413]: The scan observation buffer has not been updated for 135.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502369.826905177]: The scan observation buffer has not been updated for 135.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [15985023[WARN] [1598502373.836769]: unable to communicate with ROS Master, registrations are now out of sync
+[WARN] [1598502373.848040]: Error while unsubscribe from `/roslaunch/uris`: [Errno 111] Connection refused
+[INFO] [1598502091.029012]: ROS Serial Python Node
+[INFO] [1598502091.252210]: Connecting to /dev/ttyCORE2 at 500000 baud
+[INFO] [1598502093.544748]: Note: publish buffer size is 512 bytes
+[INFO] [1598502093.546199]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502093.577099]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502093.609720]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502093.628509]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502093.644684]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502093.661506]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502093.683542]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502093.706139]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502096.337416]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502096.369917]: Note: subscribe buffer size is 512 bytes
+[INFO] [1598502096.370893]: Setup subscriber on /cmd_vel [geometry_msgs/Twist]
+[INFO] [1598502096.408995]: Setup subscriber on /reset_odom [std_msgs/Bool]
+[INFO] [1598502373.858535]: Send tx stop request
+[ERROR] [1598502373.889847]: SyncThread[10.0.0.144] ERROR while ending: Traceback (most recent call last):
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 460, in _unreg_on_finish
+    _ = own_master_multi()
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
+    return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
+    return self.__send(self.__name, args)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
+    verbose=self.__verbose
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1283, in request
+    return self.single_request(host, handler, request_body, verbose)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1311, in single_request
+    self.send_content(h, request_body)
+  File "/usr/lib/python2.7/xmlrpclib.py", line 1459, in send_content
+    connection.endheaders(request_body)
+  File "/usr/lib/python2.7/httplib.py", line 1069, in endheaders
+    self._send_output(message_body)
+  File "/usr/lib/python2.7/httplib.py", line 907, in _send_output
+    self.send(msg)
+  File "/usr/lib/python2.7/httplib.py", line 869, in send
+    self.connect()
+  File "/usr/lib/python2.7/httplib.py", line 846, in connect
+    self.timeout, self.source_address)
+  File "/usr/lib/python2.7/socket.py", line 575, in create_connection
+    raise err
+error: [Errno 111] Connection refused
+
+70.026942978]: The scan observation buffer has not been updated for 135.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502370.226891794]: The scan observation buffer has not been updated for 135.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502370.426896026]: The scan observation buffer has not been updated for 136.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502370.626944591]: The scan observation buffer has not been updated for 136.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502370.826879407]: The scan observation buffer has not been updated for 136.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502371.026938177]: The scan observation buffer has not been updated for 136.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502371.226887546]: The scan observation buffer has not been updated for 136.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502371.426890288]: The scan observation buffer has not been updated for 137.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502371.627179442]: The scan observation buffer has not been updated for 137.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502371.826872441]: The scan observation buffer has not been updated for 137.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502372.026885680]: The scan observation buffer has not been updated for 137.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502372.226916391]: The scan observation buffer has not been updated for 137.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502372.427036350]: The scan observation buffer has not been updated for 138.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502372.626955064]: The scan observation buffer has not been updated for 138.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502372.827033023]: The scan observation buffer has not been updated for 138.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502373.026977983]: The scan observation buffer has not been updated for 138.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502373.226877416]: The scan observation buffer has not been updated for 138.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502373.426864348]: The scan observation buffer has not been updated for 139.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502373.627076149]: The scan observation buffer has not been updated for 139.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502373.826895667]: The scan observation buffer has not been updated for 139.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502374.026810847]: Costmap2DROS transform timeout. Current time: 1598502374.0266, global_pose stamp: 1598502373.7202, tolerance: 0.3000[0m
+[33m[ WARN] [1598502374.033941945]: Could not get robot pose, cancelling reconfiguration[0m
+[0m[ INFO] [1598502089.785737371]: RPLIDAR running on ROS package rplidar_ros. SDK Version:1.7.0[0m
+RPLIDAR S/N: 72C19AF2C1EA9FC0BEEB9CF3FD123200
+[0m[ INFO] [1598502090.294294134]: Firmware Ver: 1.25[0m
+[0m[ INFO] [1598502090.294404682]: Hardware Rev: 5[0m
+[0m[ INFO] [1598502090.296371505]: RPLidar health status : 0[0m
+[0m[ INFO] [1598502090.916645066]: current scan mode: Express, max_distance: 12.0 m, Point number: 4.0K , angle_compensate: 1[0m
+ed synchronization to `10.0.0.234`
+[INFO] [1598502373.824345]: Stop synchronization...
+[INFO] [1598502373.825232]:   Stop timers...
+[INFO] [1598502373.826095]:   Unregister from master discovery...
+[INFO] [1598502373.844692]:   Remove master: 10.0.0.144
+[INFO] [1598502373.877560]:   Stop synchronization to `10.0.0.144`
+[INFO] [1598502373.887720]:   Wait for ending of 1 threads ...
+[INFO] [1598502373.890997]:   Finished synchronization to `10.0.0.144`
+[INFO] [1598502374.889636]: Synchronization is now off
+./launch_robot4.sh: line 13:  7738 Terminated              roslaunch gvgexploration husarion.launch robot_id:=4 base_station:=5,7,8 robot_type:=2
