@@ -505,12 +505,24 @@ shutting down processing monitor...
 Unhandled exception in thread started by 
 sys.excepthook is missing
 lost sys.stderr
+<<<<<<< HEAD
 ... logging to /home/husarion/.ros/log/e1d0a70a-e81c-11ea-a03a-d0c5d381418b/roslaunch-rosbot7-26659.log
+=======
+[31mroscore cannot run as another roscore/master is already running. 
+Please kill other roscore/master processes before relaunching.
+The ROS_MASTER_URI is http://10.0.0.144:11311/[0m
+[31mThe traceback for the exception was written to the log file[0m
+... logging to /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/roslaunch-rosbot8-12226.log
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
 Checking log directory for disk usage. This may take awhile.
 Press Ctrl-C to interrupt
 Done checking log file disk usage. Usage is <1GB.
 ]2;/home/husarion/catkin_ws/src/gvgexploration/launch/husarion.launch
+<<<<<<< HEAD
 [1mstarted roslaunch server http://10.0.0.15:34034/[0m
+=======
+[1mstarted roslaunch server http://10.0.0.144:37373/[0m
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
 
 SUMMARY
 ========
@@ -597,6 +609,7 @@ PARAMETERS
  * /operator/robot_frame: base_link
  * /operator/safety_decay: 0.99
  * /operator/safety_weight: 1
+<<<<<<< HEAD
  * /robot_7/7/node7/base_stations: 4,8,5
  * /robot_7/7/node7/bs_pose: [4.0, 10.0]
  * /robot_7/7/node7/comm_range: -70
@@ -828,6 +841,602 @@ error: [Errno 111] Connection refused
 
 [ERROR] [1598502226.999276]: Robot 7: Is exploring: False, Session ID: 4_1598502185.46
 [ERROR] [1598502232.677984]: SyncThread[10.0.0.13] ERROR: Traceback (most recent call last):
+=======
+ * /robot_8/8/node8/base_stations: 4,7,5
+ * /robot_8/8/node8/bs_pose: [4.0, 10.0]
+ * /robot_8/8/node8/comm_range: -70
+ * /robot_8/8/node8/data_share_threshold: 10
+ * /robot_8/8/node8/debug_mode: 1
+ * /robot_8/8/node8/environment: city
+ * /robot_8/8/node8/frontier_robots: 
+ * /robot_8/8/node8/frontier_threshold: 10
+ * /robot_8/8/node8/graph_scale: 10.0
+ * /robot_8/8/node8/lidar_fov: 360
+ * /robot_8/8/node8/lidar_scan_radius: 6
+ * /robot_8/8/node8/mac_id/00:0f:00:4d:b9:de: 8
+ * /robot_8/8/node8/mac_id/00:0f:00:4d:ba:32: 5
+ * /robot_8/8/node8/mac_id/00:0f:00:4e:07:64: 4
+ * /robot_8/8/node8/mac_id/00:0f:00:4f:0d:19: 7
+ * /robot_8/8/node8/mac_id/d0:c5:d3:81:41:89: 4
+ * /robot_8/8/node8/mac_id/d0:c5:d3:81:41:8b: 7
+ * /robot_8/8/node8/mac_id/d0:c5:d3:81:44:1f: 8
+ * /robot_8/8/node8/mac_id/d0:c5:d3:81:4e:57: 5
+ * /robot_8/8/node8/map_file: /home/husarion/ca...
+ * /robot_8/8/node8/map_inflation_radius: 1
+ * /robot_8/8/node8/map_scale: 20.0
+ * /robot_8/8/node8/max_common_coverage: 0.8
+ * /robot_8/8/node8/max_coverage: 0.8
+ * /robot_8/8/node8/max_exploration_time: 20
+ * /robot_8/8/node8/max_target_info_ratio: 0.5
+ * /robot_8/8/node8/max_wait_time: 120
+ * /robot_8/8/node8/method: gvg
+ * /robot_8/8/node8/min_edge_length: 1
+ * /robot_8/8/node8/min_hallway_width: 0.5
+ * /robot_8/8/node8/opposite_vector_bias: 0.25
+ * /robot_8/8/node8/point_precision: 2
+ * /robot_8/8/node8/relay_robots: 
+ * /robot_8/8/node8/robot_count: 1
+ * /robot_8/8/node8/robot_id: 8
+ * /robot_8/8/node8/robot_type: 2
+ * /robot_8/8/node8/run: 0
+ * /robot_8/8/node8/separation_bias: 2
+ * /robot_8/8/node8/slope_bias: 0.1
+ * /robot_8/8/node8/target_angle: 1.57
+ * /robot_8/8/node8/target_distance: 2.0
+ * /robot_8/8/node8/termination_metric: 1
+ * /robot_8/8/node8_explore/base_stations: 4,7,5
+ * /robot_8/8/node8_explore/bs_pose: [4.0, 10.0]
+ * /robot_8/8/node8_explore/comm_range: -70
+ * /robot_8/8/node8_explore/data_share_threshold: 10
+ * /robot_8/8/node8_explore/debug_mode: 1
+ * /robot_8/8/node8_explore/environment: city
+ * /robot_8/8/node8_explore/frontier_robots: 
+ * /robot_8/8/node8_explore/frontier_threshold: 10
+ * /robot_8/8/node8_explore/graph_scale: 10.0
+ * /robot_8/8/node8_explore/lidar_fov: 360
+ * /robot_8/8/node8_explore/lidar_scan_radius: 6
+ * /robot_8/8/node8_explore/mac_id/00:0f:00:4d:b9:de: 8
+ * /robot_8/8/node8_explore/mac_id/00:0f:00:4d:ba:32: 5
+ * /robot_8/8/node8_explore/mac_id/00:0f:00:4e:07:64: 4
+ * /robot_8/8/node8_explore/mac_id/00:0f:00:4f:0d:19: 7
+ * /robot_8/8/node8_explore/mac_id/d0:c5:d3:81:41:89: 4
+ * /robot_8/8/node8_explore/mac_id/d0:c5:d3:81:41:8b: 7
+ * /robot_8/8/node8_explore/mac_id/d0:c5:d3:81:44:1f: 8
+ * /robot_8/8/node8_explore/mac_id/d0:c5:d3:81:4e:57: 5
+ * /robot_8/8/node8_explore/map_file: /home/husarion/ca...
+ * /robot_8/8/node8_explore/map_inflation_radius: 1
+ * /robot_8/8/node8_explore/map_scale: 20.0
+ * /robot_8/8/node8_explore/max_common_coverage: 0.8
+ * /robot_8/8/node8_explore/max_coverage: 0.8
+ * /robot_8/8/node8_explore/max_exploration_time: 20
+ * /robot_8/8/node8_explore/max_target_info_ratio: 0.5
+ * /robot_8/8/node8_explore/max_wait_time: 120
+ * /robot_8/8/node8_explore/method: gvg
+ * /robot_8/8/node8_explore/min_edge_length: 1
+ * /robot_8/8/node8_explore/min_hallway_width: 0.5
+ * /robot_8/8/node8_explore/opposite_vector_bias: 0.25
+ * /robot_8/8/node8_explore/point_precision: 2
+ * /robot_8/8/node8_explore/relay_robots: 
+ * /robot_8/8/node8_explore/robot_count: 1
+ * /robot_8/8/node8_explore/robot_id: 8
+ * /robot_8/8/node8_explore/robot_type: 2
+ * /robot_8/8/node8_explore/run: 0
+ * /robot_8/8/node8_explore/separation_bias: 2
+ * /robot_8/8/node8_explore/slope_bias: 0.1
+ * /robot_8/8/node8_explore/target_angle: 1.57
+ * /robot_8/8/node8_explore/target_distance: 2.0
+ * /robot_8/8/node8_explore/termination_metric: 1
+ * /robot_8/8/node8_graph_processor/base_stations: 4,7,5
+ * /robot_8/8/node8_graph_processor/bs_pose: [4.0, 10.0]
+ * /robot_8/8/node8_graph_processor/comm_range: -70
+ * /robot_8/8/node8_graph_processor/data_share_threshold: 10
+ * /robot_8/8/node8_graph_processor/debug_mode: 1
+ * /robot_8/8/node8_graph_processor/environment: city
+ * /robot_8/8/node8_graph_processor/frontier_robots: 
+ * /robot_8/8/node8_graph_processor/frontier_threshold: 10
+ * /robot_8/8/node8_graph_processor/graph_scale: 10.0
+ * /robot_8/8/node8_graph_processor/lidar_fov: 360
+ * /robot_8/8/node8_graph_processor/lidar_scan_radius: 6
+ * /robot_8/8/node8_graph_processor/mac_id/00:0f:00:4d:b9:de: 8
+ * /robot_8/8/node8_graph_processor/mac_id/00:0f:00:4d:ba:32: 5
+ * /robot_8/8/node8_graph_processor/mac_id/00:0f:00:4e:07:64: 4
+ * /robot_8/8/node8_graph_processor/mac_id/00:0f:00:4f:0d:19: 7
+ * /robot_8/8/node8_graph_proces[WARN] [1598502157.649666]: Master_discovery node appear not to running. Wait for topic with type 'MasterState.
+... logging to /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/roslaunch-rosbot8-12947.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;/home/husarion/catkin_ws/src/gvgexploration/launch/husarion.launch
+[1mstarted roslaunch server http://10.0.0.144:43568/[0m
+
+SUMMARY
+========
+
+PARAMETERS
+ * /Mapper/AngleVariancePenalty: 0.0004
+ * /Mapper/DistanceVariancePenalty: 0.01
+ * /Mapper/LoopSearchMaximumDistance: 10.0
+ * /Mapper/MinimumTravelDistance: 1.0
+ * /Mapper/MinimumTravelHeading: 1.57
+ * /Mapper/ScanBufferSize: 2
+ * /Mapper/UseScanMatching: False
+ * /Mapper/grid_resolution: 0.05
+ * /Mapper/map_update_rate: 5
+ * /Mapper/max_covariance: 0.0
+ * /Mapper/max_particles: 10000
+ * /Mapper/min_map_size: 20
+ * /Mapper/min_particles: 2500
+ * /Mapper/publish_pose_graph: True
+ * /Mapper/range_threshold: 8.0
+ * /Mapper/transform_publish_period: 0.1
+ * /laser_frame: laser
+ * /laser_topic: scan
+ * /map_frame: map
+ * /map_inflation_radius: 1.0
+ * /map_service: static_map
+ * /map_topic: map
+ * /master_discovery/_mcast_group: 224.0.0.1
+ * /master_sync/ignore_nodes: ['/tf', '/msgs_co...
+ * /navigator/command_target_distance: 1.0
+ * /navigator/exploration_goal_distance: 3.0
+ * /navigator/frequency: 10.0
+ * /navigator/map_inflation_radius: 1.0
+ * /navigator/max_replanning_period: 1.0
+ * /navigator/min_replanning_period: 3.0
+ * /navigator/min_target_area_size: 1.0
+ * /navigator/navigation_goal_angle: 1.0
+ * /navigator/navigation_goal_distance: 1.0
+ * /navigator/navigation_homing_distance: 3.0
+ * /navigator/odometry_frame: odom
+ * /navigator/robot_frame: base_link
+ * /navigator/robot_radius: 0.2
+ * /navigator/visualize_frontiers: True
+ * /odometry_frame: odom
+ * /offset_frame: offset
+ * /operator/conformance_weight: 1
+ * /operator/continue_weight: 1
+ * /operator/escape_weight: 1
+ * /operator/frequency: 10
+ * /operator/local_map/cost_scaling_factor: 2.0
+ * /operator/local_map/global_frame: odom
+ * /operator/local_map/height: 6.0
+ * /operator/local_map/inflation_radius: 0.5
+ * /operator/local_map/lethal_cost_threshold: 100
+ * /operator/local_map/map_type: costmap
+ * /operator/local_map/max_obstacle_height: 2.0
+ * /operator/local_map/min_obstacle_height: 0.0
+ * /operator/local_map/observation_sources: scan
+ * /operator/local_map/obstacle_range: 4.0
+ * /operator/local_map/publish_frequency: 1.0
+ * /operator/local_map/publish_voxel_map: True
+ * /operator/local_map/raytrace_range: 4.5
+ * /operator/local_map/resolution: 0.05
+ * /operator/local_map/robot_base_frame: base_link
+ * /operator/local_map/robot_radius: 0.2
+ * /operator/local_map/rolling_window: True
+ * /operator/local_map/scan/clearing: True
+ * /operator/local_map/scan/data_type: LaserScan
+ * /operator/local_map/scan/expected_update_rate: 0.4
+ * /operator/local_map/scan/marking: True
+ * /operator/local_map/scan/max_obstacle_height: 0.4
+ * /operator/local_map/scan/min_obstacle_height: 0.08
+ * /operator/local_map/scan/observation_persistence: 0.0
+ * /operator/local_map/scan/topic: scan
+ * /operator/local_map/static_map: False
+ * /operator/local_map/track_unknown_space: False
+ * /operator/local_map/transform_tolerance: 0.3
+ * /operator/local_map/update_frequency: 5.0
+ * /operator/local_map/width: 6.0
+ * /operator/max_free_space: 3.0
+ * /operator/max_velocity: 1.0
+ * /operator/odometry_frame: odom
+ * /operator/publish_route: True
+ * /operator/robot_frame: base_link
+ * /operator/safety_decay: 0.99
+ * /operator/safety_weight: 1
+ * /robot_8/8/node8/base_stations: 4,7,5
+ * /robot_8/8/node8/bs_pose: [4.0, 10.0]
+ * /robot_8/8/node8/comm_range: -70
+ * /robot_8/8/node8/data_share_threshold: 10
+ * /robot_8/8/node8/debug_mode: 1
+ * /robot_8/8/node8/environment: city
+ * /robot_8/8/node8/frontier_robots: 
+ * /robot_8/8/node8/frontier_threshold: 10
+ * /robot_8/8/node8/graph_scale: 10.0
+ * /robot_8/8/node8/lidar_fov: 360
+ * /robot_8/8/node8/lidar_scan_radius: 6
+ * /robot_8/8/node8/mac_id/00:0f:00:4d:b9:de: 8
+ * /robot_8/8/node8/mac_id/00:0f:00:4d:ba:32: 5
+ * /robot_8/8/node8/mac_id/00:0f:00:4e:07:64: 4
+ * /robot_8/8/node8/mac_id/00:0f:00:4f:0d:19: 7
+ * /robot_8/8/node8/mac_id/d0:c5:d3:81:41:89: 4
+ * /robot_8/8/node8/mac_id/d0:c5:d3:81:41:8b: 7
+ * /robot_8/8/node8/mac_id/d0:c5:d3:81:44:1f: 8
+ * /robot_8/8/node8/mac_id/d0:c5:d3:81:4e:57: 5
+ * /robot_8/8/node8/map_file: /home/husarion/ca...
+ * /robot_8/8/node8/map_inflation_radius: 1
+ * /robot_8/8/node8/map_scale: 20.0
+ * /robot_8/8/node8/max_common_coverage: 0.8
+ * /robot_8/8/node8/max_coverage: 0.8
+ * /robot_8/8/node8/max_exploration_time: 20
+ * /robot_8/8/node8/max_target_info_ratio: 0.5
+ * /robot_8/8/node8/max_wait_time: 120
+ * /robot_8/8/node8/method: gvg
+ * /robot_8/8/node8/min_edge_length: 1
+ * /robot_8/8/node8/min_hallway_width: 0.5
+ * /robot_8/8/node8/opposite_vector_bias: 0.25
+ * /robot_8/8/node8/point_precision: 2
+ * /robot_8/8/node8/relay_robots: 
+ * /robot_8/8/node8/robot_count: 1
+ * /robot_8/8/node8/robot_id: 8
+ * /robot_8/8/node8/robot_type: 2
+ * /robot_8/8/node8/run: 0
+ * /robot_8/8/node8/separation_bias: 2
+ * /robot_8/8/node8/slope_bias: 0.1
+ * /robot_8/8/node8/target_angle: 1.57
+ * /robot_8/8/node8/target_distance: 2.0
+ * /robot_8/8/node8/termination_metric: 1
+ * /robot_8/8/node8_explore/base_stations: 4,7,5
+ * /robot_8/8/node8_explore/bs_pose: [4.0, 10.0]
+ * /robot_8/8/node8_explore/comm_range: -70
+ * /robot_8/8/node8_explore/data_share_threshold: 10
+ * /robot_8/8/node8_explore/debug_mode: 1
+ * /robot_8/8/node8_explore/environment: city
+ * /robot_8/8/node8_explore/frontier_robots: 
+ * /robot_8/8/node8_explore/frontier_threshold: 10
+ * /robot_8/8/node8_explore/graph_scale: 10.0
+ * /robot_8/8/node8_explore/lidar_fov: 360
+ * /robot_8/8/node8_explore/lidar_scan_radius: 6
+ * /robot_8/8/node8_explore/mac_id/00:0f:00:4d:b9:de: 8
+ * /robot_8/8/node8_explore/mac_id/00:0f:00:4d:ba:32: 5
+ * /robot_8/8/node8_explore/mac_id/00:0f:00:4e:07:64: 4
+ * /robot_8/8/node8_explore/mac_id/00:0f:00:4f:0d:19: 7
+ * /robot_8/8/node8_explore/mac_id/d0:c5:d3:81:41:89: 4
+ * /robot_8/8/node8_explore/mac_id/d0:c5:d3:81:41:8b: 7
+ * /robot_8/8/node8_explore/mac_id/d0:c5:d3:81:44:1f: 8
+ * /robot_8/8/node8_explore/mac_id/d0:c5:d3:81:4e:57: 5
+ * /robot_8/8/node8_explore/map_file: /home/husarion/ca...
+ * /robot_8/8/node8_explore/map_inflation_radius: 1
+ * /robot_8/8/node8_explore/map_scale: 20.0
+ * /robot_8/8/node8_explore/max_common_coverage: 0.8
+ * /robot_8/8/node8_explore/max_coverage: 0.8
+ * /robot_8/8/node8_explore/max_exploration_time: 20
+ * /robot_8/8/node8_explore/max_target_info_ratio: 0.5
+ * /robot_8/8/node8_explore/max_wait_time: 120
+ * /robot_8/8/node8_explore/method: gvg
+ * /robot_8/8/node8_explore/min_edge_length: 1
+ * /robot_8/8/node8_explore/min_hallway_width: 0.5
+ * /robot_8/8/node8_explore/opposite_vector_bias: 0.25
+ * /robot_8/8/node8_explore/point_precision: 2
+ * /robot_8/8/node8_explore/relay_robots: 
+ * /robot_8/8/node8_explore/robot_count: 1
+ * /robot_8/8/node8_explore/robot_id: 8
+ * /robot_8/8/node8_explore/robot_type: 2
+ * /robot_8/8/node8_explore/run: 0
+ * /robot_8/8/node8_explore/separation_bias: 2
+ * /robot_8/8/node8_explore/slope_bias: 0.1
+ * /robot_8/8/node8_explore/target_angle: 1.57
+ * /robot_8/8/node8_explore/target_distance: 2.0
+ * /robot_8/8/node8_explore/termination_metric: 1
+ * /robot_8/8/node8_graph_processor/base_stations: 4,7,5
+ * /robot_8/8/node8_graph_processor/bs_pose: [4.0, 10.0]
+ * /robot_8/8/node8_graph_processor/comm_range: -70
+ * /robot_8/8/node8_graph_processor/data_share_threshold: 10
+ * /robot_8/8/node8_graph_processor/debug_mode: 1
+ * /robot_8/8/node8_graph_processor/environment: city
+ * /robot_8/8/node8_graph_processor/frontier_robots: 
+ * /robot_8/8/node8_graph_processor/frontier_threshold: 10
+ * /robot_8/8/node8_graph_processor/graph_scale: 10.0
+ * /robot_8/8/node8_graph_processor/lidar_fov: 360
+ * /robot_8/8/node8_graph_processor/lidar_scan_radius: 6
+ * /robot_8/8/node8_graph_processor/mac_id/00:0f:00:4d:b9:de: 8
+ * /robot_8/8/node8_graph_processor/mac_id/00:0f:00:4d:ba:32: 5
+ * /robot_8/8/node8_graph_processor/mac_id/00:0f:00:4e:07:64: 4
+ * /robot_8/8/node8_graph_processor/mac_id/00:0f:00:4f:0d:19: 7
+ * /robot_8/8/node8_graph_proces[WARN] [1598502161.671751]: MasterMonitor[/start_motor]: can't get contact information. ROS master responds with: no provider
+[WARN] [1598502161.683906]: MasterMonitor[/Mapper/set_logger_level]: can't get contact information. ROS master responds with: no provider
+[WARN] [1598502161.693398]: MasterMonitor[/static_map]: can't get contact information. ROS master responds with: no provider
+[WARN] [1598502161.697164]: MasterMonitor[/rplidarNode/set_logger_level]: can't get contact information. ROS master responds with: no provider
+[WARN] [1598502161.713068]: MasterMonitor[/stop_motor]: can't get contact information. ROS master responds with: no provider
+[0m[ INFO] [1598502155.793931431]: RPLIDAR running on ROS package rplidar_ros. SDK Version:1.7.0[0m
+RPLIDAR S/N: D4B39AF2C1EA9FC0BEEB9CF35B603200
+[0m[ INFO] [1598502156.302168998]: Firmware Ver: 1.25[0m
+[0m[ INFO] [1598502156.302258832]: Hardware Rev: 5[0m
+[0m[ INFO] [1598502156.304222622]: RPLidar health status : 0[0m
+[0m[ INFO] [1598502156.935854355]: current scan mode: Express, max_distance: 12.0 m, Point number: 4.0K , angle_compensate: 1[0m
+[33m[ WARN] [1598502161.356881887]: Shutdown request received.[0m
+[33m[ WARN] [1598502161.356978137]: Reason given for shutdown: [new node registered with same name][0m
+[ERROR] [1598502164.601827]: {'00:0f:00:4d:b9:de': 8, '00:0f:00:4e:07:64': 4, 'd0:c5:d3:81:41:89': 4, '00:0f:00:4f:0d:19': 7, 'd0:c5:d3:81:41:8b': 7, 'd0:c5:d3:81:44:1f': 8, 'd0:c5:d3:81:4e:57': 5, '00:0f:00:4d:ba:32': 5}
+sor/mac_id/d0:c5:d3:81:41:89: 4
+ * /robot_8/8/node8_graph_processor/mac_id/d0:c5:d3:81:41:8b: 7
+ * /robot_8/8/node8_graph_processor/mac_id/d0:c5:d3:81:44:1f: 8
+ * /robot_8/8/node8_graph_processor/mac_id/d0:c5:d3:81:4e:57: 5
+ * /robot_8/8/node8_graph_processor/map_file: /home/husarion/ca...
+ * /robot_8/8/node8_graph_processor/map_inflation_radius: 1
+ * /robot_8/8/node8_graph_processor/map_scale: 20.0
+ * /robot_8/8/node8_graph_processor/max_common_coverage: 0.8
+ * /robot_8/8/node8_graph_processor/max_coverage: 0.8
+ * /robot_8/8/node8_graph_processor/max_exploration_time: 20
+ * /robot_8/8/node8_graph_processor/max_target_info_ratio: 0.5
+ * /robot_8/8/node8_graph_processor/max_wait_time: 120
+ * /robot_8/8/node8_graph_processor/method: gvg
+ * /robot_8/8/node8_graph_processor/min_edge_length: 1
+ * /robot_8/8/node8_graph_processor/min_hallway_width: 0.5
+ * /robot_8/8/node8_graph_processor/opposite_vector_bias: 0.25
+ * /robot_8/8/node8_graph_processor/point_precision: 2
+ * /robot_8/8/node8_graph_processor/relay_robots: 
+ * /robot_8/8/node8_graph_processor/robot_count: 1
+ * /robot_8/8/node8_graph_processor/robot_id: 8
+ * /robot_8/8/node8_graph_processor/robot_type: 2
+ * /robot_8/8/node8_graph_processor/run: 0
+ * /robot_8/8/node8_graph_processor/separation_bias: 2
+ * /robot_8/8/node8_graph_processor/slope_bias: 0.1
+ * /robot_8/8/node8_graph_processor/target_angle: 1.57
+ * /robot_8/8/node8_graph_processor/target_distance: 2.0
+ * /robot_8/8/node8_graph_processor/termination_metric: 1
+ * /robot_frame: base_link
+ * /robot_radius: 0.4
+ * /rosdistro: kinetic
+ * /rosversion: 1.12.14
+ * /rplidarNode/angle_compensate: True
+ * /rplidarNode/frame_id: laser
+ * /rplidarNode/inverted: False
+ * /rplidarNode/serial_baudrate: 115200
+ * /rplidarNode/serial_port: /dev/ttyUSB0
+ * /scan_subscriber_status: scan_status
+
+NODES
+  /robot_8/8/
+    node8 (gvgexploration/robot.py)
+    node8_explore (gvgexploration/gvg_explore.py)
+    node8_graph_processor (gvgexploration/graph.py)
+  /
+    BaseAlign (tf/static_transform_publisher)
+    GetMap (nav2d_navigator/get_map_client)
+    Mapper (nav2d_karto/mapper)
+    SetGoal (nav2d_navigator/set_goal_client)
+    master_discovery (master_discovery_fkie/master_discovery)
+    master_sync (master_sync_fkie/master_sync)
+    navigator (nav2d_navigator/navigator)
+    operator (nav2d_operator/operator)
+    rplidarNode (rplidar_ros/rplidarNode)
+    serial_bridge (rosbot_webui/serial_bridge.sh)
+
+[1mROS_MASTER_URI=http://10.0.0.144:11311[0m
+]2;/home/husarion/catkin_ws/src/gvgexploration/launch/husarion.launch http://10.0.0.144:11311
+[1mprocess[BaseAlign-1]: started with pid [13149][0m
+[1mprocess[operator-2]: started with pid [13152][0m
+[1mprocess[navigator-3]: started with pid [13162][0m
+[1mprocess[GetMap-4]: started with pid [13175][0m
+[1mprocess[SetGoal-5]: started with pid [13186][0m
+[1mprocess[robot_8/8/node8-6]: started with pid [13188][0m
+[1mprocess[robot_8/8/node8_graph_processor-7]: started with pid [13205][0m
+[1mprocess[robot_8/8/node8_explore-8]: started with pid [13221][0m
+[1mprocess[Mapper-9]: started with pid [13233][0m
+[1mprocess[rplidarNode-10]: started with pid [13240][0m
+[1mprocess[serial_bridge-11]: started with pid [13248][0m
+[1mprocess[master_discovery-12]: started with pid [13258][0m
+[1mprocess[master_sync-13]: started with pid [13264][0m
+[1m[BaseAlign-1] process has finished cleanly
+log file: /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/BaseAlign-1*.log[0m
+[1m[GetMap-4] process has finished cleanly
+log file: /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/GetMap-4*.log[0m
+[1m[SetGoal-5] process has finished cleanly
+log file: /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/SetGoal-5*.log[0m
+[1m[rplidarNode-10] process has finished cleanly
+log file: /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/rplidarNode-10*.log[0m
+[1m[Mapper-9] process has finished cleanly
+log file: /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/Mapper-9*.log[0m
+[1m[navigator-3] process has finished cleanly
+log file: /home/husari[INFO] [1598502156.936150]: ROS Serial Python Node
+[INFO] [1598502157.125709]: Connecting to /dev/ttyCORE2 at 500000 baud
+[INFO] [1598502159.394040]: Note: publish buffer size is 512 bytes
+[INFO] [1598502159.398357]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502159.412317]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502159.441829]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502159.470908]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502159.499513]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502159.518003]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502159.562530]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502159.591108]: Setup publisher on /joint_states [sensor_msgs/JointState]
+shutdown request: new node registered with same name
+[INFO] [1598502165.511695]: Setup publisher on /tf [tf/tfMessage]
+[WARN] [1598502166.316634]: Master_discovery node appear not to running. Wait for topic with type 'MasterState.
+[ERROR] [1598502166.744604]: Robot 8: Is exploring: False, Session ID: None
+]2;master_sync[INFO] [1598502157.352253]: ignore_hosts: []
+[INFO] [1598502157.392049]: sync_hosts: []
+[INFO] [1598502157.428818]: sync_topics_on_demand: False
+[INFO] [1598502157.481644]: resync_on_reconnect: True
+[INFO] [1598502157.529163]: resync_on_reconnect_timeout: 0
+[INFO] [1598502158.836007]: listen for updates on /master_discovery/changes
+[INFO] [1598502159.107921]: ROS masters obtained from '/master_discovery/list_masters': ['10.0.0.144']
+[INFO] [1598502159.405345]: [10.0.0.13] ignore_nodes: ['/rplidarNode', '/node_manager', '/BaseAlign', '/rosbot_ekf', '/master_sync', '/operator', '/rosout', '/GetMap', '/tf', '/Mapper', '/navigator', '/master_discovery', '/SetGoal', '/zeroconf', '/msgs_conversion', '/OdomAlign', '/serial_node', '/MapAlign']
+[INFO] [1598502159.460589]: [10.0.0.13] sync_nodes: []
+[INFO] [1598502159.512860]: [10.0.0.13] ignore_topics: ['/rosout', '/rosout_agg']
+[INFO] [1598502159.566416]: [10.0.0.13] sync_topics: []
+[INFO] [1598502159.616344]: [10.0.0.13] ignore_services: ['/*get_loggers', '/*set_logger_level']
+[INFO] [1598502159.655805]: [10.0.0.13] sync_services: []
+[INFO] [1598502159.693449]: [10.0.0.13] ignore_type: ['bond/Status']
+[INFO] [1598502159.729936]: [10.0.0.13] ignore_publishers: []
+[INFO] [1598502159.765534]: [10.0.0.13] ignore_subscribers: []
+[INFO] [1598502161.040961]: SyncThread[10.0.0.13] Requesting remote state from 'http://10.0.0.13:11611'
+[INFO] [1598502161.168898]: SyncThread[10.0.0.13] Applying remote state...
+[INFO] [1598502161.816410]: SyncThread[10.0.0.13] Create and delete publisher to trigger publisherUpdate for /robot_4/gvgexplore/feedback
+[INFO] [1598502162.269413]: SyncThread[10.0.0.13] Create and delete publisher to trigger publisherUpdate for /robot_4/gvgexplore/goal
+[INFO] [1598502162.586200]: SyncThread[10.0.0.13] Create and delete publisher to trigger publisherUpdate for /master_discovery/linkstats
+[INFO] [1598502162.885518]: SyncThread[10.0.0.13] Create and delete publisher to trigger publisherUpdate for /tf
+[INFO] [1598502163.164138]: SyncThread[10.0.0.13] remote state applied.
+[INFO] [1598502163.994897]: SyncThread[10.0.0.13] Requesting remote state from 'http://10.0.0.13:11611'
+[INFO] [1598502164.087301]: SyncThread[10.0.0.13] Applying remote state...
+[INFO] [1598502164.258597]: SyncThread[10.0.0.13] remote state applied.
+[INFO] [1598502164.563667]: SyncThread[10.0.0.13] Requesting remote state from 'http://10.0.0.13:11611'
+[INFO] [1598502164.674121]: SyncThread[10.0.0.13] Applying remote state...
+[INFO] [1598502164.805370]: SyncThread[10.0.0.13] remote state applied.
+[INFO] [1598502165.355999]:   Stop synchronization to `10.0.0.13`
+shutdown request: new node registered with same name
+[INFO] [1598502165.363336]: Stop synchronization...
+[INFO] [1598502165.376062]:   Stop timers...
+[INFO] [1598502165.378200]:   Unregister from master discovery...
+[INFO] [1598502165.531903]:   Wait for ending of 1 threads ...
+[INFO] [1598502165.617211]:   Finished synchronization to `10.0.0.13`
+[INFO] [1598502166.536165]: Synchronization is now off
+[ERROR] [1598502167.544560]: Tried to publish before configured, topic id 128
+[ERROR] [1598502167.549860]: Tried to publish before configured, topic id 129
+[ERROR] [1598502167.558103]: Tried to publish before configured, topic id 130
+[ERROR] [1598502167.563940]: Tried to publish before configured, topic id 131
+[ERROR] [1598502167.569288]: Tried to publish before configured, topic id 127
+[ERROR] [1598502167.585076]: Tried to publish before configured, topic id 132
+[ERROR] [1598502167.591577]: Tried to publish before configured, topic id 125
+Exception in thread Thread-71 (most likely raised during interpreter shutdown):
+Traceback (most recent call last):
+  File "/usr/lib/python2.7/threading.py", line 801, in __bootstrap_inner
+  File "/usr/lib/python2.7/threading.py", line 1073, in run
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_discovery_fkie/master_discovery.py", line 677, in _killme
+<type 'exceptions.TypeError'>: 'NoneType' object is not callable
+[ERROR] [1598502168.813904]: {'00:0f:00:4d:b9:de': 8, '00:0f:00:4e:07:64': 4, 'd0:c5:d3:81:41:89': 4, '00:0f:00:4f:0d:19': 7, 'd0:c5:d3:81:41:8b': 7, 'd0:c5:d3:81:44:1f': 8, 'd0:c5:d3:81:4e:57': 5, '00:0f:00:4d:ba:32': 5}
+[ERROR] [1598502170.443585]: Robot 8: Is exploring: False, Session ID: None
+[WARN] [1598502171.729176]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+]2;master_sync[INFO] [1598502165.879914]: ignore_hosts: []
+[INFO] [1598502165.935962]: sync_hosts: []
+[INFO] [1598502165.994668]: sync_topics_on_demand: False
+[INFO] [1598502166.078189]: resync_on_reconnect: True
+[INFO] [1598502166.152286]: resync_on_reconnect_timeout: 0
+[INFO] [1598502167.729207]: listen for updates on /master_discovery/changes
+[INFO] [1598502168.193116]: ROS masters obtained from '/master_discovery/list_masters': ['10.0.0.144']
+[INFO] [1598502168.447920]: [10.0.0.234] ignore_nodes: ['/rplidarNode', '/node_manager', '/BaseAlign', '/rosbot_ekf', '/master_sync', '/operator', '/rosout', '/GetMap', '/tf', '/Mapper', '/navigator', '/master_discovery', '/SetGoal', '/zeroconf', '/msgs_conversion', '/OdomAlign', '/serial_node', '/MapAlign']
+[INFO] [1598502168.583434]: [10.0.0.234] sync_nodes: []
+[INFO] [1598502168.739013]: [10.0.0.234] ignore_topics: ['/rosout', '/rosout_agg']
+[INFO] [1598502168.836594]: [10.0.0.234] sync_topics: []
+[INFO] [1598502168.936040]: [10.0.0.234] ignore_services: ['/*get_loggers', '/*set_logger_level']
+[INFO] [1598502169.043490]: [10.0.0.234] sync_services: []
+[INFO] [1598502169.198858]: [10.0.0.234] ignore_type: ['bond/Status']
+[INFO] [1598502169.305723]: [10.0.0.234] ignore_publishers: []
+[INFO] [1598502169.418168]: [10.0.0.234] ignore_subscribers: []
+[INFO] [1598502169.752960]: [10.0.0.15] ignore_nodes: ['/rplidarNode', '/node_manager', '/BaseAlign', '/rosbot_ekf', '/master_sync', '/operator', '/rosout', '/GetMap', '/tf', '/Mapper', '/navigator', '/master_discovery', '/SetGoal', '/zeroconf', '/msgs_conversion', '/OdomAlign', '/serial_node', '/MapAlign']
+[INFO] [1598502169.890413]: [10.0.0.15] sync_nodes: []
+[INFO] [1598502170.033646]: [10.0.0.15] ignore_topics: ['/rosout', '/rosout_agg']
+[INFO] [1598502170.124600]: [10.0.0.15] sync_topics: []
+[INFO] [1598502170.206579]: [10.0.0.15] ignore_services: ['/*get_loggers', '/*set_logger_level']
+[INFO] [1598502170.298351]: [10.0.0.15] sync_services: []
+[INFO] [1598502170.318305]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502170.396586]: [10.0.0.15] ignore_type: ['bond/Status']
+[INFO] [1598502170.413305]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502170.532548]: [10.0.0.15] ignore_publishers: []
+[INFO] [1598502170.637027]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /karto_out
+[INFO] [1598502170.697912]: [10.0.0.15] ignore_subscribers: []
+[INFO] [1598502170.789511]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /tf
+[INFO] [1598502170.909152]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /robot_5/gvgexplore/feedback
+[INFO] [1598502171.042462]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /robot_5/initial_data
+[INFO] [1598502171.185735]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /map
+[INFO] [1598502171.324699]: [10.0.0.13] ignore_nodes: ['/rplidarNode', '/node_manager', '/BaseAlign', '/rosbot_ekf', '/master_sync', '/operator', '/rosout', '/GetMap', '/tf', '/Mapper', '/navigator', '/master_discovery', '/SetGoal', '/zeroconf', '/msgs_conversion', '/OdomAlign', '/serial_node', '/MapAlign']
+[INFO] [1598502171.342402]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /robot_5/gvgexplore/goal
+[INFO] [1598502171.496158]: [10.0.0.13] sync_nodes: []
+[INFO] [1598502171.526695]: SyncThread[10.0.0.234] Create and delete publisher to trigger publisherUpdate for /master_discovery/linkstats
+[INFO] [1598502171.584520]: [10.0.0.13] ignore_topics: ['/rosout', '/rosout_agg']
+[INFO] [1598502171.615882]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502171.662222]: [10.0.0.13] sync_topics: []
+[INFO] [1598502171.718359]: [10.0.0.13] ignore_services: ['/*get_loggers', '/*set_logger_level']
+[INFO] [1598502171.772278]: [10.0.0.13] sync_services: []
+[INFO] [1598502171.840808]: [10.0.0.13] ignore_type: ['bond/Status']
+[INFO] [1598502171.880545]: [10.0.0.13] ignore_publishers[33m[ WARN] [1598502160.224221987]: Shutdown request received.[0m
+[33m[ WARN] [1598502160.224388237]: Reason given for shutdown: [new node registered with same name][0m
+[INFO] [1598502164.894949]: ROS Serial Python Node
+[INFO] [1598502165.329444]: Connecting to /dev/ttyCORE2 at 500000 baud
+[INFO] [1598502167.805135]: Note: publish buffer size is 512 bytes
+[INFO] [1598502167.806419]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502167.891105]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502167.954210]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502168.016741]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502168.090608]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502168.135514]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502168.193103]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502168.250538]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502172.779652]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502172.813832]: Note: subscribe buffer size is 512 bytes
+[INFO] [1598502172.815115]: Setup subscriber on /cmd_vel [geometry_msgs/Twist]
+[INFO] [1598502172.850655]: Setup subscriber on /reset_odom [std_msgs/Bool]
+[INFO] [1598502172.857401]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502172.862190]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502172.867316]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502172.872537]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502172.881397]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502172.886217]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502172.904791]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502172.911676]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502172.930673]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502172.949008]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502172.956589]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502172.959620]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502172.964632]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502172.973444]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502172.979210]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502172.987170]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502172.997121]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502173.003155]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502173.024031]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502173.027821]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502173.036370]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502173.053632]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502173.056709]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502173.060848]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502173.075290]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502173.078148]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502173.080925]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502173.089998]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502173.092847]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502173.098311]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502173.101808]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502173.107194]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502173.110983]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502173.115648]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502173.125774]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502173.128748]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502173.137683]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502173.141164]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502173.[ERROR] [1598502173.599088]: Counts: 1
+Exception in thread /tf (most likely raised during interpreter shutdown):
+Traceback (most recent call last):
+  File "/usr/lib/python2.7/threading.py", line 801, in __bootstrap_inner
+  File "/usr/lib/python2.7/threading.py", line 754, in run
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/impl/tcpros_pubsub.py", line 185, in robust_connect_subscriber
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/impl/tcpros_base.py", line 823, in receive_loop
+<type 'exceptions.TypeError'>: 'NoneType' object is not callable
+on/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/navigator-3*.log[0m
+[1m[serial_bridge-11] process has finished cleanly
+log file: /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/serial_bridge-11*.log[0m
+[1m[master_sync-13] process has finished cleanly
+log file: /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/master_sync-13*.log[0m
+[1m[master_discovery-12] process has finished cleanly
+log file: /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/master_discovery-12*.log[0m
+[1m[operator-2] process has finished cleanly
+log file: /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/operator-2*.log[0m
+[1m[robot_8/8/node8_explore-8] process has finished cleanly
+log file: /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/robot_8-8-node8_explore-8*.log[0m
+[1m[robot_8/8/node8-6] process has finished cleanly
+log file: /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/robot_8-8-node8-6*.log[0m
+[1m[robot_8/8/node8_graph_processor-7] process has finished cleanly
+log file: /home/husarion/.ros/log/e91989b4-e81c-11ea-832a-d0c5d381441f/robot_8-8-node8_graph_processor-7*.log[0m
+all processes on machine have died, roslaunch will exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m
+[ERROR] [1598502185.453206]: Sending initial data to all robots...
+[ERROR] [1598502185.462903]: Robot 8: Is exploring: False, Session ID: None
+[ERROR] [1598502189.672835]: Error processing request: Invalid number of arguments, args should be ['nodes', 'obstacles', 'scale'] args are(None,)
+['Traceback (most recent call last):\n', '  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/impl/tcpros_service.py", line 625, in _handle_request\n    response = convert_return_to_response(self.handler(request), self.response_class)\n', '  File "/home/husarion/catkin_ws/src/gvgexploration/scripts/robot.py", line 531, in shared_point_handler\n    self.start_exploration_action(self.frontier_ridge)\n', '  File "/home/husarion/catkin_ws/src/gvgexploration/scripts/robot.py", line 587, in start_exploration_action\n    self.gvgexplore_goal_pub.publish(frontier_ridge)\n', '  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/topics.py", line 879, in publish\n    data = args_kwds_to_message(self.data_class, args, kwds)\n', '  File "/opt/ros/kinetic/lib/python2.7/dist-packages/rospy/msg.py", line 122, in args_kwds_to_message\n    return data_class(*args)\n', '  File "/home/husarion/catkin_ws/devel/lib/python2.7/dist-packages/gvgexploration/msg/_Ridge.py", line 57, in __init__\n    super(Ridge, self).__init__(*args, **kwds)\n', '  File "/opt/ros/kinetic/lib/python2.7/dist-packages/genpy/message.py", line 294, in __init__\n    raise TypeError("Invalid number of arguments, args should be %s"%str(self.__slots__)+" args are"+str(args))\n', "TypeError: Invalid number of arguments, args should be ['nodes', 'obstacles', 'scale'] args are(None,)\n"]
+[ERROR] [1598502190.446979]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502200.450253]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502210.456774]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502220.454075]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+
+Session terminated, terminating shell...
+Session terminated, terminating shell... ...terminated.
+ ...terminated.
+Unhandled exception in thread started by 
+sys.excepthook is missing
+lost sys.stderr
+[ERROR] [1598502224.957243]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -854,7 +1463,11 @@ error: [Errno 111] Connection refused
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 Exception in thread Thread-216:
+=======
+Exception in thread Thread-120:
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
 Traceback (most recent call last):
   File "/usr/lib/python2.7/threading.py", line 801, in __bootstrap_inner
     self.run()
@@ -888,7 +1501,11 @@ Traceback (most recent call last):
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 [ERROR] [1598502235.815749]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+=======
+[ERROR] [1598502229.091622]: SyncThread[10.0.0.15] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -915,6 +1532,7 @@ error: [Errno 111] Connection refused
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 [ERROR] [1598502236.999013]: Robot 7: Is exploring: False, Session ID: 4_1598502185.46
 [33m[ WARN] [1598502147.233068555]: Timed out waiting for transform from base_link to odom to become available before running costmap, tf error: Could not find a connection between 'odom' and 'base_link' because they are not part of the same tree.Tf has two or more unconnected trees.. canTransform returned after 0.100816 timeout was 0.1.[0m
 [0m[ INFO] [1598502147.965128119]: Loading from pre-hydro parameter style[0m
@@ -946,6 +1564,10 @@ error: [Errno 111] Connection refused
 [33m[ WARN] [1598502236.998854332]: The scan observation buffer has not been updated for 2.90 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502237.198278958]: The scan observation buffer has not been updated for 3.10 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [159850[ERROR] [1598502239.356455]: SyncThread[10.0.0.13] ERROR: Traceback (most recent call last):
+=======
+[ERROR] [1598502230.449269]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502232.591697]: SyncThread[10.0.0.13] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -972,6 +1594,7 @@ error: [Errno 111] Connection refused
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 e and delete publisher to trigger publisherUpdate for /map
 [INFO] [1598502168.580205]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /master_discovery/linkstats
 [INFO] [1598502168.611239]: SyncThread[10.0.0.144] Create and delete publisher to trigger publisherUpdate for /tf
@@ -1015,6 +1638,9 @@ e and delete publisher to trigger publisherUpdate for /map
 [INFO] [1598502239.354208]: SyncThread[10.0.0.13] Applying remote state...
 [INFO] [1598502239.363813]: SyncThread[10.0.0.13] remote state applied.
 [INFO] [1598502240.298212]: SyncThread[ERROR] [1598502240.406133]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+=======
+[ERROR] [1598502233.024221]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -1041,6 +1667,7 @@ e and delete publisher to trigger publisherUpdate for /map
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 2237.398403865]: The scan observation buffer has not been updated for 3.30 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502237.598305651]: The scan observation buffer has not been updated for 3.50 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502237.798245353]: The scan observation buffer has not been updated for 3.70 seconds, and it should be updated every 0.40 seconds.[0m
@@ -1068,6 +1695,50 @@ error: [Errno 111] Connection refused
 [33m[ WARN] [1598502242.198902136]: The scan observation buffer has not been updated for 8.10 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502242.398396763]: The scan observation buffer has not been updated for 8.30 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502242.604947294]: The scan observation buffer has not been updated for 8.51 seconds, and it should be updated every 0.4[ERROR] [1598502246.004941]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+=======
+: []
+[INFO] [1598502171.922510]: [10.0.0.13] ignore_subscribers: []
+[INFO] [1598502172.444766]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502172.529580]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502172.824680]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /robot_7/gvgexplore/goal
+[INFO] [1598502172.887715]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /karto_out
+[INFO] [1598502172.916443]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /robot_7/gvgexplore/feedback
+[INFO] [1598502172.939560]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /tf
+[INFO] [1598502172.968647]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /robot_7/initial_data
+[INFO] [1598502172.992641]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /map
+[INFO] [1598502173.019151]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /master_discovery/linkstats
+[INFO] [1598502173.044040]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502173.091626]: SyncThread[10.0.0.13] Requesting remote state from 'http://10.0.0.13:11611'
+[INFO] [1598502173.269264]: SyncThread[10.0.0.13] Applying remote state...
+[INFO] [1598502173.450148]: SyncThread[10.0.0.13] Create and delete publisher to trigger publisherUpdate for /robot_4/gvgexplore/feedback
+[INFO] [1598502173.479064]: SyncThread[10.0.0.13] Create and delete publisher to trigger publisherUpdate for /karto_out
+[INFO] [1598502173.512939]: SyncThread[10.0.0.13] Create and delete publisher to trigger publisherUpdate for /robot_4/initial_data
+[INFO] [1598502173.553430]: SyncThread[10.0.0.13] Create and delete publisher to trigger publisherUpdate for /tf
+[INFO] [1598502173.572299]: SyncThread[10.0.0.13] Create and delete publisher to trigger publisherUpdate for /robot_4/gvgexplore/goal
+[INFO] [1598502173.656785]: SyncThread[10.0.0.13] Create and delete publisher to trigger publisherUpdate for /map
+[INFO] [1598502173.748889]: SyncThread[10.0.0.13] Create and delete publisher to trigger publisherUpdate for /master_discovery/linkstats
+[INFO] [1598502173.806070]: SyncThread[10.0.0.13] remote state applied.
+[INFO] [1598502198.383081]: ROS masters obtained from '/master_discovery/list_masters': ['10.0.0.15', '10.0.0.234', '10.0.0.13', '10.0.0.144']
+[INFO] [1598502216.333729]: SyncThread[10.0.0.13] Requesting remote state from 'http://10.0.0.13:11611'
+[INFO] [1598502216.377362]: SyncThread[10.0.0.13] Applying remote state...
+[INFO] [1598502216.433885]: SyncThread[10.0.0.13] remote state applied.
+[INFO] [1598502224.399787]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502224.459372]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502224.515873]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502224.845445]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502224.941026]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502224.959909]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502229.018912]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502229.088456]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502229.094290]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502232.455123]: SyncThread[10.0.0.13] Requesting remote state from 'http://10.0.0.13:11611'
+[INFO] [1598502232.589525]: SyncThread[10.0.0.13] Applying remote state...
+[INFO] [1598502232.592602]: SyncThread[10.0.0.13] remote state applied.
+[INFO] [1598502232.833716]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502233.020510]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502233.025493]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502233.212788]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.1[ERROR] [1598502233.362012]: SyncThread[10.0.0.15] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -1094,7 +1765,263 @@ error: [Errno 111] Connection refused
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 [ERROR] [1598502246.597839]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+=======
+[ERROR] [1598502240.451531]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502250.399703]: Mismatched protocol version in packet: lost sync or rosserial_python is from different ros release than the rosserial client
+[ERROR] [1598502250.452036]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+[WARN] [1598502250.702830]: Serial Port read failure: device reports readiness to read but returned no data (device disconnected or multiple access on port?)
+146038]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502173.153939]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502173.158682]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502173.166458]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502173.169398]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502173.172532]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502173.178533]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502173.188143]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502173.191645]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502173.196685]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502173.202791]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502173.210347]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502173.214501]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502173.223923]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502173.230167]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502173.235709]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502173.249172]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502173.260782]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502173.264187]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502173.270259]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502173.278749]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502173.283488]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502173.288950]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502173.293973]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502173.300357]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502173.662132]: wrong checksum for topic id and msg
+[INFO] [1598502250.060075]: wrong checksum for topic id and msg
+[INFO] [1598502250.091587]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502250.104989]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502250.111716]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502250.126612]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502250.130739]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502250.135365]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502250.390730]: wrong checksum for msg length, length -19712
+[INFO] [1598502250.391480]: chk is 126
+[INFO] [1598502250.403177]: Protocol version of client is unrecognized, expected Rev 1 (rosserial 0.5+)
+[INFO] [1598502250.469710]: wrong checksum for msg length, length -257
+[INFO] [1598502250.470553]: chk is 82
+[INFO] [1598502250.511825]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502250.518749]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502250.524178]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502250.531658]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502250.534325]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502250.550236]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502250.561555]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502250.587894]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502250.593682]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502250.609266]: wrong checksum for topic id and msg
+[INFO] [1598502250.638811]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502250.645054]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502250.652381]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502250.659539]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502250.677376]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502250.730143]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502250.735682[ERROR] [1598502252.708738]: Mismatched protocol version in packet: lost sync or rosserial_python is from different ros release than the rosserial client
+[33m[ WARN] [1598502168.874311029]: Timed out waiting for transform from base_link to odom to become available before running costmap, tf error: canTransform: target_frame odom does not exist.. canTransform returned after 0.10097 timeout was 0.1.[0m
+[0m[ INFO] [1598502173.435651537]: Using plugin "obstacle_layer"[0m
+[0m[ INFO] [1598502173.543816634]:     Subscribed to Topics: scan[0m
+[0m[ INFO] [1598502174.633450508]: Using plugin "inflation_layer"[0m
+[33m[ WARN] [1598502175.054915277]: The scan observation buffer has not been updated for 0.97 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502175.255864147]: The scan observation buffer has not been updated for 1.17 seconds, and it should be updated every 0.40 seconds.[0m
+[0m[ INFO] [1598502175.263719600]: Will publish desired direction on 'route' and control direction on 'desired'.[0m
+[0m[ INFO] [1598502175.334688471]: Initializing LUT...[0m
+[0m[ INFO] [1598502175.351572460]: ...done![0m
+[33m[ WARN] [1598502245.056072793]: The scan observation buffer has not been updated for 0.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502245.257227606]: The scan observation buffer has not been updated for 0.69 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502245.456121128]: The scan observation buffer has not been updated for 0.89 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502245.661806689]: The scan observation buffer has not been updated for 1.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502245.859367878]: The scan observation buffer has not been updated for 1.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502246.060972441]: The scan observation buffer has not been updated for 1.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502250.556178229]: Costmap2DROS transform timeout. Current time: 1598502250.5561, global_pose stamp: 1598502250.2063, tolerance: 0.3000[0m
+[33m[ WARN] [1598502250.558916686]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502251.056786766]: The scan observation buffer has not been updated for 0.80 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502252.560632467]: Costmap2DROS transform timeout. Current time: 1598502252.5601, global_pose stamp: 1598502252.2451, tolerance: 0.3000[0m
+[33m[ WARN] [1598502252.560731634]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502253.456023309]: The scan observation buffer has not been updated for 0.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502253.666902286]: The scan observation buffer has not been updated for 0.71 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502253.861637814]: The scan observation buffer has not been updated for 0.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502254.061933963]: The scan observation buffer has not been updated for 1.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502254.257914324]: The scan observation buffer has not been updated for 1.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502254.459338640]: The scan observation buffer has not been updated for 1.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502254.658399582]: The scan observation buffer has not been updated for 1.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502254.856757024]: The scan observation buffer has not been updated for 1.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502255.056345591]: The scan observation buffer has not been updated for 2.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502255.263854071]: The scan observation buffer has not been updated for 2.30 seconds, and it should be updated every 0.40 seconds[ERROR] [1598502260.449103]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+.[0m
+[33m[ WARN] [1598502255.457744641]: The scan observation buffer has not been updated for 2.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502255.659328790]: The scan observation buffer has not been updated for 2.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502255.859136982]: The scan observation buffer has not been updated for 2.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502256.058459258]: The scan observation buffer has not been updated for 3.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502256.256725993]: The scan observation buffer has not been updated for 3.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502256.462894557]: The scan observation buffer has not been updated for 3.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502256.662199917]: The scan observation buffer has not been updated for 3.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502256.856446321]: The scan observation buffer has not been updated for 3.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502257.057222554]: The scan observation buffer has not been updated for 4.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502257.256912622]: The scan observation buffer has not been updated for 4.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502257.456715857]: The scan observation buffer has not been updated for 4.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502257.655892008]: The scan observation buffer has not been updated for 4.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502257.856938617]: The scan observation buffer has not been updated for 4.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502258.055810561]: The scan observation buffer has not been updated for 5.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502258.259642585]: The scan observation buffer has not been updated for 5.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502258.459601570]: The scan observation buffer has not been updated for 5.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502258.655964598]: The scan observation buffer has not been updated for 5.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502258.856563499]: The scan observation buffer has not been updated for 5.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502259.058503775]: The scan observation buffer has not been updated for 6.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502259.255787594]: The scan observation buffer has not been updated for 6.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502259.458112578]: The scan observation buffer has not been updated for 6.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502259.657297772]: The scan observation buffer has not been updated for 6.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502259.859425589]: The scan observation buffer has not been updated for 6.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502260.062364531]: The scan observation buffer has not been updated for 7.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502260.259115185]: The scan observation buffer has not been updated for 7.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502260.459064545]: The scan observation buffer has not been updated for 7.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502260.657085990]: The scan observation buffer has not been updated for 7.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502260.856825642]: The scan observation buffer has not been updated for 7.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502261.056863377]: The scan observation buffer has not been updated for 8.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502261.256811863]: The scan observation buffer has not been updated for 8.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502261.458130599]: The scan observation buffer has not been updated for 8.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502261.657317251]: The scan observation buffer has not been updated for 8.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502261.862054027]: The scan observation buffer has not been updated for 8.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502262.062400346]: The scan observation buffer has not been updated for 9.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502262.277926158]: The scan observation buffer has not been updated for 9.32 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502262.457993195]: The scan observation buffer has not been updated for 9.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502262.660816638]: The scan observation buffer has not been updated for 9.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502262.859184875]: The scan observation buffer has not been updated for 9.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502263.057542029]: The scan observation buffer has not been updated for 10.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502263.255841141]: The scan observation buffer has not been updated for 10.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502263.456223628]: The scan observation buffer has not been updated for 10.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502263.657962946]: The scan observation buffer has not been updated for 10.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502263.867610803]: The scan observation buffer has not been updated for 10.91 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502264.056180504]: The scan observation buffer has not been updated for 11.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502264.255827699]: The scan observation buffer has not been updated for 11.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502264.458977226]: The scan observation buffer has not been updated for 11.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502264.671379581]: The scan observation buffer has not been updated for 11.71 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502264.861740990]: The scan observation buffer has not been updated for 11.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502265.057509312]: The scan observation buffer has not been updated for 12.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502265.256326716]: The scan observation buffer has not been updated for 12.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502265.457551244]: The scan observation buffer has not been updated for 12.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502265.656079898]: The scan observation buffer has not been updated for 12.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502265.855842886]: The scan observation buffer has not been updated for 12.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502266.056506247]: The scan observation buff[ERROR] [1598502270.446736]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+er has not been updated for 13.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502266.258955192]: The scan observation buffer has not been updated for 13.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502266.457119263]: The scan observation buffer has not been updated for 13.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502266.659045833]: The scan observation buffer has not been updated for 13.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502266.855917238]: The scan observation buffer has not been updated for 13.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502267.056168476]: The scan observation buffer has not been updated for 14.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502267.255339964]: The scan observation buffer has not been updated for 14.29 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502267.456577618]: The scan observation buffer has not been updated for 14.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502267.656760022]: The scan observation buffer has not been updated for 14.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502267.857545593]: The scan observation buffer has not been updated for 14.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502268.057603456]: The scan observation buffer has not been updated for 15.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502268.257292945]: The scan observation buffer has not been updated for 15.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502268.457612433]: The scan observation buffer has not been updated for 15.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502268.658161754]: The scan observation buffer has not been updated for 15.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502268.860666991]: The scan observation buffer has not been updated for 15.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502269.056030773]: The scan observation buffer has not been updated for 16.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502269.256647178]: The scan observation buffer has not been updated for 16.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502269.456553374]: The scan observation buffer has not been updated for 16.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502269.657149363]: The scan observation buffer has not been updated for 16.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502269.856875601]: The scan observation buffer has not been updated for 16.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502270.056560423]: The scan observation buffer has not been updated for 17.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502270.257307203]: The scan observation buffer has not been updated for 17.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502270.459628983]: The scan observation buffer has not been updated for 17.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502270.658699263]: The scan observation buffer has not been updated for 17.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502270.859815877]: The scan observation buffer has not been updated for 17.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502271.054861451]: The scan observation buffer has not been updated for 18.09 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502271.256508314]: The scan observation buffer has not been updated for 18.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502271.456979470]: The scan observation buffer has not been updated for 18.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502271.656724084]: The scan observation buffer has not been updated for 18.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502271.856993114]: The scan observation buffer has not been updated for 18.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502272.057027354]: The scan observation buffer has not been updated for 19.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502272.257906551]: The scan observation buffer has not been updated for 19.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502272.461345122]: The scan observation buffer has not been updated for 19.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502272.657879363]: The scan observation buffer has not been updated for 19.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502272.860293309]: The scan observation buffer has not been updated for 19.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502273.060959590]: The scan observation buffer has not been updated for 20.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502273.258921539]: The scan observation buffer has not been updated for 20.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502273.460538653]: The scan observation buffer has not been updated for 20.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502273.661283101]: The scan observation buffer has not been updated for 20.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502273.858617967]: The scan observation buffer has not been updated for 20.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502274.059496582]: The scan observation buffer has not been updated for 21.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502274.257777906]: The scan observation buffer has not been updated for 21.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502274.458166229]: The scan observation buffer has not been updated for 21.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502274.658245095]: The scan observation buffer has not been updated for 21.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502274.861842916]: The scan observation buffer has not been updated for 21.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502275.059278116]: The scan observation buffer has not been updated for 22.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502275.258251857]: The scan observation buffer has not been updated for 22.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502275.458306223]: The scan observation buffer has not been updated for 22.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502275.658877421]: The scan observation buffer has not been updated for 22.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502275.857954120]: The scan observation buffer has not been updated for 22.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502276.056665945]: The scan observation buffer has not been updated for 23.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502276.256097019]: The scan observation buffer has not been updated for 23.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502276.458240009]: The scan observation buffer has not been updated for 23.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502276.656130501]: The scan observation buffer has not been updated for 23[ERROR] [1598502280.449677]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502276.858507698]: The scan observation buffer has not been updated for 23.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502277.060381480]: The scan observation buffer has not been updated for 24.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502277.267261718]: The scan observation buffer has not been updated for 24.31 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502277.460472420]: The scan observation buffer has not been updated for 24.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502277.661178369]: The scan observation buffer has not been updated for 24.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502277.860112444]: The scan observation buffer has not been updated for 24.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502278.063740600]: The scan observation buffer has not been updated for 25.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502278.259181094]: The scan observation buffer has not been updated for 25.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502278.466363207]: The scan observation buffer has not been updated for 25.51 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502278.665597115]: The scan observation buffer has not been updated for 25.71 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502278.863456691]: The scan observation buffer has not been updated for 25.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502279.059164934]: The scan observation buffer has not been updated for 26.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502279.258622843]: The scan observation buffer has not been updated for 26.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502279.458776668]: The scan observation buffer has not been updated for 26.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502279.660428784]: The scan observation buffer has not been updated for 26.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502279.859765943]: The scan observation buffer has not been updated for 26.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502280.056707061]: The scan observation buffer has not been updated for 27.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502280.257910886]: The scan observation buffer has not been updated for 27.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502280.456925754]: The scan observation buffer has not been updated for 27.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502280.656628663]: The scan observation buffer has not been updated for 27.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502280.859155779]: The scan observation buffer has not been updated for 27.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502281.061609103]: The scan observation buffer has not been updated for 28.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502281.259362222]: The scan observation buffer has not been updated for 28.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502281.477348831]: The scan observation buffer has not been updated for 28.52 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502281.684042987]: The scan observation buffer has not been updated for 28.72 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502281.862920323]: The scan observation buffer has not been updated for 28.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502282.062671940]: The scan observation buffer has not been updated for 29.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502282.257816977]: The scan observation buffer has not been updated for 29.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502282.457791136]: The scan observation buffer has not been updated for 29.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502282.656039505]: The scan observation buffer has not been updated for 29.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502282.859032996]: The scan observation buffer has not been updated for 29.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502283.055770532]: The scan observation buffer has not been updated for 30.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502283.255963150]: The scan observation buffer has not been updated for 30.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502283.455694643]: The scan observation buffer has not been updated for 30.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502283.656088219]: The scan observation buffer has not been updated for 30.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502283.858516461]: The scan observation buffer has not been updated for 30.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502284.061073328]: The scan observation buffer has not been updated for 31.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502284.259915239]: The scan observation buffer has not been updated for 31.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502284.457817108]: The scan observation buffer has not been updated for 31.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502284.656623144]: The scan observation buffer has not been updated for 31.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502284.855754679]: The scan observation buffer has not been updated for 31.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502285.055485881]: The scan observation buffer has not been updated for 32.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502285.256874040]: The scan observation buffer has not been updated for 32.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502285.460915782]: The scan observation buffer has not been updated for 32.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502285.656417528]: The scan observation buffer has not been updated for 32.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502285.864259685]: The scan observation buffer has not been updated for 32.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502286.058924639]: The scan observation buffer has not been updated for 33.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502286.261298632]: The scan observation buffer has not been updated for 33.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502286.458989919]: The scan observation buffer has not been updated for 33.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502286.658539705]: The scan observation buffer has not been updated for 33.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502286.857988574]: The scan observation buffer has not been updated for 33.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502287.058466152]: The scan observation buffer has not been updated for 34.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502287.257368147]: The scan observation buffer has not been updated for 34.30 seconds, and it should be [ERROR] [1598502290.448568]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502291.854331]: SyncThread[10.0.0.13] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -1121,6 +2048,7 @@ error: [Errno 111] Connection refused
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 [ERROR] [1598502246.998872]: Robot 7: Is exploring: False, Session ID: 4_1598502185.46
 0 seconds.[0m
 [33m[ WARN] [1598502242.798306507]: The scan observation buffer has not been updated for 8.70 seconds, and it should be updated every 0.40 seconds.[0m
@@ -1150,6 +2078,48 @@ error: [Errno 111] Connection refused
 [33m[ WARN] [1598502247.600378973]: The scan observation buffer has not been updated for 13.50 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502247.799774440]: The scan observation buffer has not been updated for 13.70 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502248.005069075]: The scan observation buffer has not been update[ERROR] [1598502249.422873]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+=======
+updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502287.457267641]: The scan observation buffer has not been updated for 34.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502287.658394177]: The scan observation buffer has not been updated for 34.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502287.856613380]: The scan observation buffer has not been updated for 34.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502288.062283789]: The scan observation buffer has not been updated for 35.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502288.258073994]: The scan observation buffer has not been updated for 35.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502288.459886238]: The scan observation buffer has not been updated for 35.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502288.658919192]: The scan observation buffer has not been updated for 35.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502288.858613645]: The scan observation buffer has not been updated for 35.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502289.068306135]: The scan observation buffer has not been updated for 36.11 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502289.259433468]: The scan observation buffer has not been updated for 36.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502289.460230421]: The scan observation buffer has not been updated for 36.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502289.660018499]: The scan observation buffer has not been updated for 36.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502289.862717701]: The scan observation buffer has not been updated for 36.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502290.060756072]: The scan observation buffer has not been updated for 37.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502290.263707566]: The scan observation buffer has not been updated for 37.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502290.466972893]: The scan observation buffer has not been updated for 37.51 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502290.663511807]: The scan observation buffer has not been updated for 37.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502290.865430218]: The scan observation buffer has not been updated for 37.91 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502291.058556050]: The scan observation buffer has not been updated for 38.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502291.258100296]: The scan observation buffer has not been updated for 38.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502291.457627625]: The scan observation buffer has not been updated for 38.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502291.656954287]: The scan observation buffer has not been updated for 38.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502291.857526658]: The scan observation buffer has not been updated for 38.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502292.056988070]: The scan observation buffer has not been updated for 39.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502292.257400024]: The scan observation buffer has not been updated for 39.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502292.458519270]: The scan observation buffer has not been updated for 39.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502292.657309558]: The scan observation buTraceback (most recent call last):
+  File "/home/husarion/catkin_ws/src/wifi_node/scripts/wifi_talker.py", line 68, in <module>
+Traceback (most recent call last):
+  File "/home/husarion/catkin_ws/src/wifi_node/scripts/wifi_talker.py", line 68, in <module>
+    sniff(iface='mon0', prn=PacketHandler, store=0)#"ether src 98:de:d0:14:de:61")#"ether src c4:d9:87:c5:71:c8")
+      File "/usr/lib/python2.7/dist-packages/scapy/sendrecv.py", line 575, in sniff
+sniff(iface='mon0', prn=PacketHandler, store=0)#"ether src 98:de:d0:14:de:61")#"ether src c4:d9:87:c5:71:c8")
+  File "/usr/lib/python2.7/dist-packages/scapy/sendrecv.py", line 575, in sniff
+    sel = select([s],[],[],remain)
+select.error    : sel = select([s],[],[],remain)
+(4, 'Interrupted system call')
+select.error: (4, 'Interrupted system call')
+[ERROR] [1598502296.276863]: SyncThread[10.0.0.13] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -1176,7 +2146,38 @@ error: [Errno 111] Connection refused
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 [ERROR] [1598502251.982306]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+=======
+ffer has not been updated for 39.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502292.858170970]: The scan observation buffer has not been updated for 39.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502293.061245256]: The scan observation buffer has not been updated for 40.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502293.259123212]: The scan observation buffer has not been updated for 40.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502293.465770122]: The scan observation buffer has not been updated for 40.51 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502293.655864372]: The scan observation buffer has not been updated for 40.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502293.860943283]: The scan observation buffer has not been updated for 40.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502294.057704155]: The scan observation buffer has not been updated for 41.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502294.257463361]: The scan observation buffer has not been updated for 41.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502294.456375566]: The scan observation buffer has not been updated for 41.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502294.655763188]: The scan observation buffer has not been updated for 41.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502294.857025351]: The scan observation buffer has not been updated for 41.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502295.057754347]: The scan observation buffer has not been updated for 42.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502295.265954674]: The scan observation buffer has not been updated for 42.31 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502295.462421548]: The scan observation buffer has not been updated for 42.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502295.664917752]: The scan observation buffer has not been updated for 42.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502295.866227457]: The scan observation buffer has not been updated for 42.91 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502296.059163707]: The scan observation buffer has not been updated for 43.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502296.259125621]: The scan observation buffer has not been updated for 43.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502296.455385120]: The scan observation buffer has not been updated for 43.49 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502296.657591408]: The scan observation buffer has not been updated for 43.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502296.861886028]: The scan observation buffer has not been updated for 43.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502297.056025987]: The scan observation buffer has not been updated for 44.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502297.262977690]: The scan observation buffer has not been updated for 44.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502297.477319056]: The scan observation buffer has not been updated for 44.52 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502297.673095847]: The scan observation buffer has not been updated for 44.71 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502297.869303138]: The scan observation buffer has not been updated for 44.91 seconds, and it should be updated every 0.40 seconds.[0[ERROR] [1598502300.447272]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502300.804178]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -1203,6 +2204,7 @@ error: [Errno 111] Connection refused
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 d for 13.91 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502248.198279252]: The scan observation buffer has not been updated for 14.10 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502248.398950160]: The scan observation buffer has not been updated for 14.30 seconds, and it should be updated every 0.40 seconds.[0m
@@ -1421,6 +2423,9 @@ should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502290.198455278]: The scan observation buffer has not been updated for 56.10 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502290.403920274]: The scan observation buffer has not been updated for 56.31 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502290.599791026]: The scan obse[ERROR] [1598502292.256429]: SyncThread[10.0.0.13] ERROR: Traceback (most recent call last):
+=======
+[ERROR] [1598502301.084560]: SyncThread[10.0.0.15] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -1447,6 +2452,7 @@ should be updated every 0.40 seconds.[0m
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 rvation buffer has not been updated for 56.50 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502290.798358199]: The scan observation buffer has not been updated for 56.70 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502291.003089955]: The scan observation buffer has not been updated for 56.91 seconds, and it should be updated every 0.40 seconds.[0m
@@ -1474,6 +2480,9 @@ rvation buffer has not been updated for 56.50 seconds, and it should be updated 
 [33m[ WARN] [1598502295.402360681]: The scan observation buffer has not been updated for 61.31 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502295.598336143]: The scan observation buffer has not been updated for 61.50 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502295.798263051]: The scan observation buffer has not been updated for 61.70 seconds, and it should be updated every 0.40 s[ERROR] [1598502296.190254]: SyncThread[10.0.0.13] ERROR: Traceback (most recent call last):
+=======
+[ERROR] [1598502301.895765]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -1500,6 +2509,7 @@ rvation buffer has not been updated for 56.50 seconds, and it should be updated 
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 [ERROR] [1598502296.998342]: Robot 7: Is exploring: False, Session ID: 4_1598502185.46
 econds.[0m
 [33m[ WARN] [1598502295.998301083]: The scan observation buffer has not been updated for 61.90 seconds, and it should be updated every 0.40 seconds.[0m
@@ -1828,6 +2838,299 @@ length, length 0
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
     return MultiCallIterator(self.__server.system.multicall(marshalled_list))
+=======
+m
+[33m[ WARN] [1598502298.074889258]: The scan observation buffer has not been updated for 45.11 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502298.267678801]: The scan observation buffer has not been updated for 45.31 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502298.466095758]: The scan observation buffer has not been updated for 45.51 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502298.667355005]: The scan observation buffer has not been updated for 45.71 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502298.871365835]: The scan observation buffer has not been updated for 45.91 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502299.065072960]: The scan observation buffer has not been updated for 46.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502299.278268078]: The scan observation buffer has not been updated for 46.32 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502299.458509835]: The scan observation buffer has not been updated for 46.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502299.658678541]: The scan observation buffer has not been updated for 46.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502299.866045286]: The scan observation buffer has not been updated for 46.91 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502300.083549194]: The scan observation buffer has not been updated for 47.12 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502300.263123326]: The scan observation buffer has not been updated for 47.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502300.480423942]: The scan observation buffer has not been updated for 47.52 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502300.665750613]: The scan observation buffer has not been updated for 47.71 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502300.867924236]: The scan observation buffer has not been updated for 47.91 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502301.055730364]: The scan observation buffer has not been updated for 48.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502301.293550306]: The scan observation buffer has not been updated for 48.33 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502301.463797817]: The scan observation buffer has not been updated for 48.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502301.672781853]: The scan observation buffer has not been updated for 48.71 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502301.862368023]: The scan observation buffer has not been updated for 48.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502302.058037774]: The scan observation buffer has not been updated for 49.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502302.257346940]: The scan observation buffer has not been updated for 49.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502302.456489564]: The scan observation buffer has not been updated for 49.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502302.656107022]: The scan observation buffer has not been updated for 49.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502302.859368853]: The scan observation buffer has not been updated for 49.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502303.061284059]: The scan observation buffer has not been updated for 50.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502303.259312518]: The scan observation buffer has not been updated for 50.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502303.460048517]: The scan observation buffer has not been updated for 50.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502303.657205767]: The scan observation buffer has not been updated for 50.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502303.857182558]: The scan observation buffer has not been updated for 50.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502304.057827266]: The scan observation buffer has not been updated for 51.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502304.256106267]: The scan observation buffer has not been updated for 51.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502304.455996142]: The scan observation buffer has not been updated for 51.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502304.659633932]: The scan observation buffer has not been updated for 51.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502304.860740348]: The scan observation buffer has not been updated for 51.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502305.059987681]: The scan observation buffer has not been updated for 52.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502305.259966806]: The scan observation buffer has not been updated for 52.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502305.464234888]: The scan observation buffer has not been updated for 52.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502305.663030431]: The scan observation buffer has not been updated for 52.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502305.867626345]: The scan observation buffer has not been updated for 52.91 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502306.059364432]: The scan observation buffer has not been updated for 53.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502306.265563639]: The scan observation buffer has not been updated for 53.31 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502306.466200764]: The scan observation buffer has not been updated for 53.51 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502306.660530892]: The scan observation buffer has not been updated for 53.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502306.864736849]: The scan observation buffer has not been updated for 53.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502307.056510519]: The scan observation buffer has not been updated for 54.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502307.259719269]: The scan observation buffer has not been updated for 54.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502307.460686269]: The scan observation buffer has not been updated for 54.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502307.659081937]: The scan observation buffer has not been updated for 54.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502307.859240146]: The scan observation buffer has not been updated for 54.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502308.058126981]: The scan observation buffer has not been updated for 55.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502308.261676105]: The scan observation buffer has not been updated for 55.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502308.460714899]: The scan observation buffer has not been updated for 55.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502308.659[ERROR] [1598502310.456231]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+965442]: The scan observation buffer has not been updated for 55.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502308.861807733]: The scan observation buffer has not been updated for 55.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502309.062164276]: The scan observation buffer has not been updated for 56.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502309.258573404]: The scan observation buffer has not been updated for 56.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502309.460232821]: The scan observation buffer has not been updated for 56.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502309.657313365]: The scan observation buffer has not been updated for 56.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502309.858981533]: The scan observation buffer has not been updated for 56.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502310.059728325]: The scan observation buffer has not been updated for 57.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502310.258440744]: The scan observation buffer has not been updated for 57.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502310.459091579]: The scan observation buffer has not been updated for 57.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502310.658960747]: The scan observation buffer has not been updated for 57.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502310.858357999]: The scan observation buffer has not been updated for 57.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502311.070182871]: The scan observation buffer has not been updated for 58.11 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502311.268305249]: The scan observation buffer has not been updated for 58.31 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502311.464736252]: The scan observation buffer has not been updated for 58.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502311.666448753]: The scan observation buffer has not been updated for 58.71 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502311.862102173]: The scan observation buffer has not been updated for 58.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502312.059951551]: The scan observation buffer has not been updated for 59.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502312.257450638]: The scan observation buffer has not been updated for 59.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502312.457733098]: The scan observation buffer has not been updated for 59.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502312.658934600]: The scan observation buffer has not been updated for 59.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502312.861660059]: The scan observation buffer has not been updated for 59.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502313.059047146]: The scan observation buffer has not been updated for 60.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502313.270239102]: The scan observation buffer has not been updated for 60.31 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502313.458970984]: The scan observation buffer has not been updated for 60.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502313.659829195]: The scan observation buffer has not been updated for 60.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502313.860530780]: The scan observation buffer has not been updated for 60.90 seconds, and it should b[ERROR] [1598502320.446747]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502320.624875]: Mismatched protocol version in packet: lost sync or rosserial_python is from different ros release than the rosserial client
+]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502250.740916]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502250.750348]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502250.759107]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502250.772367]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502250.775451]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502250.783512]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502250.791260]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502250.818226]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502250.828929]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502250.834846]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502250.841254]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502250.846003]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502250.853150]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502250.861064]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502250.871876]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502250.882408]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502252.338666]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502252.344656]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502252.472785]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502252.480488]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502252.485290]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502252.629768]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502252.635965]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502252.640551]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502252.646969]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502252.672582]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502252.689983]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502252.709579]: Protocol version of client is unrecognized, expected Rev 1 (rosserial 0.5+)
+[INFO] [1598502252.722584]: wrong checksum for topic id and msg
+[INFO] [1598502252.748190]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502252.756495]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502252.768249]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502252.772664]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502252.776215]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502252.784666]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502252.788067]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502252.793844]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502252.798398]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502320.625700]: Protocol version of client is Rev 0 (rosserial 0.4 and earlier), expected Rev 1 (rosserial 0.5+)
+[INFO] [1598502320.658246]: wrong checksum for msg length, length -14592
+[INFO] [1598502320.659228]: chk is 125
+[INFO] [1598502320.676937]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502320.679939]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502320.682928]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502320.693386]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502320.697138]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502320.700881]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502320.705072]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502320.709433]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502320.736818]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502320.748391]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502320.751940]: Setup publisher on /rpy [geome[WARN] [1598502320.992446]: Serial Port read failure: device reports readiness to read but returned no data (device disconnected or multiple access on port?)
+[ERROR] [1598502321.717475]: Mismatched protocol version in packet: lost sync or rosserial_python is from different ros release than the rosserial client
+[ERROR] [1598502321.724415]: Mismatched protocol version in packet: lost sync or rosserial_python is from different ros release than the rosserial client
+[ERROR] [1598502321.757850]: Mismatched protocol version in packet: lost sync or rosserial_python is from different ros release than the rosserial client
+5:11611'
+[INFO] [1598502233.356403]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502233.363140]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502238.464653]: SyncThread[10.0.0.13] Requesting remote state from 'http://10.0.0.13:11611'
+[INFO] [1598502238.704973]: SyncThread[10.0.0.13] Applying remote state...
+[INFO] [1598502238.733751]: SyncThread[10.0.0.13] remote state applied.
+[INFO] [1598502291.720581]: SyncThread[10.0.0.13] Requesting remote state from 'http://10.0.0.13:11611'
+[INFO] [1598502291.852117]: SyncThread[10.0.0.13] Applying remote state...
+[INFO] [1598502291.856179]: SyncThread[10.0.0.13] remote state applied.
+[INFO] [1598502296.192853]: SyncThread[10.0.0.13] Requesting remote state from 'http://10.0.0.13:11611'
+[INFO] [1598502296.274587]: SyncThread[10.0.0.13] Applying remote state...
+[INFO] [1598502296.277894]: SyncThread[10.0.0.13] remote state applied.
+[INFO] [1598502300.665977]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502300.797416]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502300.807245]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502300.954700]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502301.082193]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502301.085522]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502301.797482]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502301.891846]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502301.897229]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502307.441213]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502307.524626]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502307.540837]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502307.763656]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502307.877400]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502307.886152]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502312.488797]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502312.644677]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502312.672668]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502316.071817]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502316.126852]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502316.225661]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502317.926449]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502318.014707]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502318.080699]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502319.860209]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502320.008792]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502320.234527]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /karto_out
+[INFO] [1598502320.294126]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /master_discovery/linkstats
+[INFO] [1598502320.348943]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /tf
+[INFO] [1598502320.409215]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /map
+[INFO] [1598502320.485919]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502323.299327]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502323.630143]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502323.650563]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502324.013416]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502324.288935]: SyncThread[10.0.0.15] Applying remote state..[WARN] [1598502326.437214]: Serial Port read failure: device reports readiness to read but returned no data (device disconnected or multiple access on port?)
+try_msgs/Vector3]
+[INFO] [1598502320.763548]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502320.769123]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502320.778725]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502320.807351]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502320.816947]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502320.829712]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502320.838603]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502320.844111]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502320.863111]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502320.872496]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502320.876129]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502320.882478]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502320.887130]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502321.016709]: wrong checksum for msg length, length -10752
+[INFO] [1598502321.018805]: chk is 130
+[INFO] [1598502321.048302]: wrong checksum for topic id and msg
+[INFO] [1598502321.056974]: wrong checksum for msg length, length 8
+[INFO] [1598502321.058906]: chk is 10
+[INFO] [1598502321.065196]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502321.075778]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502321.133228]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502321.136611]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502321.142250]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502321.152824]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502321.170430]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502321.179737]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502321.188779]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502321.203134]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502321.209976]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502321.367466]: wrong checksum for topic id and msg
+[INFO] [1598502321.519357]: wrong checksum for topic id and msg
+[INFO] [1598502321.567252]: wrong checksum for msg length, length 0
+[INFO] [1598502321.568161]: chk is 177
+[INFO] [1598502321.718336]: Protocol version of client is unrecognized, expected Rev 1 (rosserial 0.5+)
+[INFO] [1598502321.725836]: Protocol version of client is unrecognized, expected Rev 1 (rosserial 0.5+)
+[INFO] [1598502321.746415]: wrong checksum for msg length, length -10752
+[INFO] [1598502321.747575]: chk is 131
+[INFO] [1598502321.764712]: Protocol version of client is unrecognized, expected Rev 1 (rosserial 0.5+)
+[INFO] [1598502321.788380]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502321.791436]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502321.798818]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502321.809605]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502321.821373]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502321.828831]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502321.837734]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502326.294185]: wrong checksum for msg length, length 126
+[INFO] [1598502326.296645]: chk is 111
+[INFO] [1598502326.369892]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502326.396193]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502326.459160]: wrong checksum for msg length, length 241
+[INFO] [1598502326.460669]: chk is 132
+[INFO] [1598502326.508590]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502326.531480]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502326.551384]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502326.558876]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502326.947480]: Setup publisher on e updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502314.058865492]: The scan observation buffer has not been updated for 61.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502314.268225491]: The scan observation buffer has not been updated for 61.31 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502314.468132285]: The scan observation buffer has not been updated for 61.51 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502314.667236122]: The scan observation buffer has not been updated for 61.71 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502314.874160413]: The scan observation buffer has not been updated for 61.91 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502315.063370337]: The scan observation buffer has not been updated for 62.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502315.263814382]: The scan observation buffer has not been updated for 62.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502315.466887800]: The scan observation buffer has not been updated for 62.51 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502315.660503639]: The scan observation buffer has not been updated for 62.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502315.862385891]: The scan observation buffer has not been updated for 62.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502316.067989226]: The scan observation buffer has not been updated for 63.11 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502316.257907317]: The scan observation buffer has not been updated for 63.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502316.459030945]: The scan observation buffer has not been updated for 63.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502316.659567157]: The scan observation buffer has not been updated for 63.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502316.860535910]: The scan observation buffer has not been updated for 63.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502317.058942372]: The scan observation buffer has not been updated for 64.10 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502317.257037919]: The scan observation buffer has not been updated for 64.30 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502317.460123296]: The scan observation buffer has not been updated for 64.50 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502317.663913340]: The scan observation buffer has not been updated for 64.70 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502317.862143345]: The scan observation buffer has not been updated for 64.90 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502320.657730200]: Costmap2DROS transform timeout. Current time: 1598502320.6576, global_pose stamp: 1598502320.3433, tolerance: 0.3000[0m
+[33m[ WARN] [1598502320.662745990]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502321.658791349]: Costmap2DROS transform timeout. Current time: 1598502321.6587, global_pose stamp: 1598502320.3433, tolerance: 0.3000[0m
+[33m[ WARN] [1598502321.758113144]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502322.058458818]: The scan observation buffer has not been updated for 1.68 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502326.067909971]: Costmap2DROS transform timeout. Current time: 1598502326.0677, global_pose stamp: 1598502325.7675, tolerance: 0.3000[0m
+[33m[ WARN] [1598502326.068033055]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502327.162832634]: Costmap2DROS transform timeout. Curr[WARN] [1598502327.675942]: Serial Port read failure: device reports readiness to read but returned no data (device disconnected or multiple access on port?)
+[WARN] [1598502327.710341]: Serial Port read failure: device reports readiness to read but returned no data (device disconnected or multiple access on port?)
+[ERROR] [1598502328.840582]: Mismatched protocol version in packet: lost sync or rosserial_python is from different ros release than the rosserial client
+[ERROR] [1598502328.853040]: Mismatched protocol version in packet: lost sync or rosserial_python is from different ros release than the rosserial client
+[ERROR] [1598502329.064075]: Mismatched protocol version in packet: lost sync or rosserial_python is from different ros release than the rosserial client
+[ERROR] [1598502329.210706]: Mismatched protocol version in packet: lost sync or rosserial_python is from different ros release than the rosserial client
+[ERROR] [1598502329.499438]: Mismatched protocol version in packet: lost sync or rosserial_python is from different ros release than the rosserial client
+[WARN] [1598502330.052716]: MasterMonitor[/rosbot8/wifi_talker/get_loggers]: can't get contact information. ROS master responds with: no provider
+[WARN] [1598502330.204871]: MasterMonitor[/rosbot8/wifi_talker]: can't get contact information. ROS master responds with: unknown node [/rosbot8/wifi_talker]
+[WARN] [1598502330.213798]: MasterMonitor[/master_discovery]: can't get contact information. ROS master responds with: unknown node [/master_discovery]
+[WARN] [1598502330.222023]: MasterMonitor[/serial_node]: can't get contact information. ROS master responds with: unknown node [/serial_node]
+[ERROR] [1598502330.454353]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+Exception in thread Thread-466:
+Traceback (most recent call last):
+  File "/usr/lib/python2.7/threading.py", line 801, in __bootstrap_inner
+    self.run()
+  File "/usr/lib/python2.7/threading.py", line 754, in run
+    self.__target(*self.__args, **self.__kwargs)
+  File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_discovery_fkie/master_monitor.py", line 290, in _getNodePid
+    code, message, new_uri = master.lookupNode(self.ros_node_name, nodename)
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/usr/lib/python2.7/xmlrpclib.py", line 1243, in __call__
     return self.__send(self.__name, args)
   File "/usr/lib/python2.7/xmlrpclib.py", line 1602, in __request
@@ -1850,7 +3153,11 @@ length, length 0
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 [ERROR] [1598502332.160049]: SyncThread[10.0.0.144] ERROR: Traceback (most recent call last):
+=======
+[ERROR] [1598502331.865085]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -1877,7 +3184,11 @@ error: [Errno 111] Connection refused
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 [ERROR] [1598502332.541555]: SyncThread[10.0.0.13] ERROR: Traceback (most recent call last):
+=======
+[ERROR] [1598502332.396925]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -1904,7 +3215,11 @@ error: [Errno 111] Connection refused
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 [ERROR] [1598502334.748492]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+=======
+[ERROR] [1598502332.453747]: SyncThread[10.0.0.13] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -1931,6 +3246,7 @@ error: [Errno 111] Connection refused
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 t should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502317.096395440]: Costmap2DROS transform timeout. Current time: 1598502317.0963, global_pose stamp: 1598502316.7827, tolerance: 0.3000[0m
 [33m[ WARN] [1598502317.096485855]: Could not get robot pose, cancelling reconfiguration[0m
@@ -2023,6 +3339,9 @@ dated for 16.60 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502350.598290051]: The scan observation buffer has not been updated for 21.60 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502350.798446239]: The scan observation buffer has not been updated for 21.80 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598[ERROR] [1598502351.170211]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+=======
+[ERROR] [1598502336.188230]: SyncThread[10.0.0.234] ERROR: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 382, in _apply_remote_state
     result = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -2049,6 +3368,7 @@ dated for 16.60 seconds, and it should be updated every 0.40 seconds.[0m
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 502350.998400889]: The scan observation buffer has not been updated for 22.00 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502351.201508121]: The scan observation buffer has not been updated for 22.20 seconds, and it should be updated every 0.40 seconds.[0m
 [33m[ WARN] [1598502351.398340813]: The scan observation buffer has not been updated for 22.40 seconds, and it should be updated every 0.40 seconds.[0m
@@ -2136,6 +3456,109 @@ her on /range/rr [sensor_msgs/Range]
 [INFO] [1598502342.074229]: Setup publisher on /tf [tf/tfMessage]
 [INFO] [1598502359.658265]: Send tx stop request
 [ERROR] [1598502359.674029]: SyncThread[10.0.0.234] ERROR while ending: Traceback (most recent call last):
+=======
+[ERROR] [1598502340.452223]: Robot 8: Is exploring: False, Session ID: 4_1598502185.46
+[ERROR] [1598502342.804059]: Lost sync with device, restarting...
+/pose [geometry_msgs/PoseStamped]
+[INFO] [1598502326.959943]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502326.978152]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502327.002628]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502327.006742]: wrong checksum for msg length, length 65
+[INFO] [1598502327.007753]: chk is 0
+[INFO] [1598502327.014914]: wrong checksum for msg length, length 77
+[INFO] [1598502327.028619]: chk is 1
+[INFO] [1598502327.034571]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502327.042131]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502327.061822]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502327.081619]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502327.090569]: wrong checksum for msg length, length -22016
+[INFO] [1598502327.092789]: chk is 0
+[INFO] [1598502327.697569]: wrong checksum for msg length, length 56
+[INFO] [1598502327.698647]: chk is 125
+[INFO] [1598502327.728581]: wrong checksum for topic id and msg
+[INFO] [1598502327.780939]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502327.786585]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502327.825533]: wrong checksum for msg length, length -20736
+[INFO] [1598502327.829091]: chk is 0
+[INFO] [1598502327.834738]: wrong checksum for msg length, length -19456
+[INFO] [1598502327.838818]: chk is 0
+[INFO] [1598502327.885658]: wrong checksum for topic id and msg
+[INFO] [1598502327.990949]: wrong checksum for topic id and msg
+[INFO] [1598502328.206533]: wrong checksum for topic id and msg
+[INFO] [1598502328.255975]: wrong checksum for topic id and msg
+[INFO] [1598502328.294490]: wrong checksum for msg length, length 75
+[INFO] [1598502328.299727]: chk is 0
+[INFO] [1598502328.327352]: wrong checksum for topic id and msg
+[INFO] [1598502328.353965]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502328.360969]: Setup publisher on /joint_states [sensor_msgs/JointState]
+[INFO] [1598502328.369987]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502328.501111]: wrong checksum for topic id and msg
+[INFO] [1598502328.831557]: wrong checksum for topic id and msg
+[INFO] [1598502328.841404]: Protocol version of client is unrecognized, expected Rev 1 (rosserial 0.5+)
+[INFO] [1598502328.846780]: wrong checksum for msg length, length 41
+[INFO] [1598502328.847640]: chk is 131
+[INFO] [1598502328.853793]: Protocol version of client is unrecognized, expected Rev 1 (rosserial 0.5+)
+[INFO] [1598502329.020531]: wrong checksum for topic id and msg
+[INFO] [1598502329.029458]: wrong checksum for msg length, length 41
+[INFO] [1598502329.030313]: chk is 129
+[INFO] [1598502329.041674]: wrong checksum for msg length, length -10752
+[INFO] [1598502329.042527]: chk is 131
+[INFO] [1598502329.064929]: Protocol version of client is unrecognized, expected Rev 1 (rosserial 0.5+)
+[INFO] [1598502329.211562]: Protocol version of client is unrecognized, expected Rev 1 (rosserial 0.5+)
+[INFO] [1598502329.394142]: wrong checksum for topic id and msg
+[INFO] [1598502329.422299]: wrong checksum for topic id and msg
+[INFO] [1598502329.430810]: wrong checksum for msg length, length -10752
+[INFO] [1598502329.441173]: chk is 130
+[INFO] [1598502329.500393]: Protocol version of client is unrecognized, expected Rev 1 (rosserial 0.5+)
+[INFO] [1598502329.888348]: wrong checksum for msg length, length 56
+[INFO] [1598502329.889097]: chk is 125
+[INFO] [1598502342.820418]: Setup publisher on /battery [sensor_msgs/BatteryState]
+[INFO] [1598502342.826891]: Setup publisher on /pose [geometry_msgs/PoseStamped]
+[INFO] [1598502342.832222]: Setup publisher on /rpy [geometry_msgs/Vector3]
+[INFO] [1598502342.840397]: Setup publisher on /range/fl [sensor_msgs/Range]
+[INFO] [1598502342.843637]: Setup publisher on /range/fr [sensor_msgs/Range]
+[INFO] [1598502342.849402]: Setup publisher on /range/rl [sensor_msgs/Range]
+[INFO] [1598502342.860246]: Setup publisher on /range/rr [sensor_msgs/Range]
+[INFO] [1598502342.872799]: Setup publisher on /joint_staent time: 1598502327.1627, global_pose stamp: 1598502326.4175, tolerance: 0.3000[0m
+[33m[ WARN] [1598502327.163105051]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502328.165700375]: Costmap2DROS transform timeout. Current time: 1598502328.1654, global_pose stamp: 1598502327.6224, tolerance: 0.3000[0m
+[33m[ WARN] [1598502328.165890834]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502328.909022509]: The scan observation buffer has not been updated for 0.64 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502329.573236214]: Costmap2DROS transform timeout. Current time: 1598502329.5731, global_pose stamp: 1598502329.1943, tolerance: 0.3000[0m
+[33m[ WARN] [1598502329.573707839]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502330.654841971]: Costmap2DROS transform timeout. Current time: 1598502330.6547, global_pose stamp: 1598502329.6053, tolerance: 0.3000[0m
+[33m[ WARN] [1598502330.656406762]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502331.657755800]: Costmap2DROS transform timeout. Current time: 1598502331.6577, global_pose stamp: 1598502329.6053, tolerance: 0.3000[0m
+[33m[ WARN] [1598502331.657841259]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502332.663491214]: Costmap2DROS transform timeout. Current time: 1598502332.6634, global_pose stamp: 1598502329.6053, tolerance: 0.3000[0m
+[33m[ WARN] [1598502332.663796005]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502333.761321219]: Costmap2DROS transform timeout. Current time: 1598502333.7612, global_pose stamp: 1598502329.6053, tolerance: 0.3000[0m
+[33m[ WARN] [1598502333.761818802]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502334.855404186]: Costmap2DROS transform timeout. Current time: 1598502334.8548, global_pose stamp: 1598502329.6053, tolerance: 0.3000[0m
+[33m[ WARN] [1598502334.859734559]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502335.857823063]: Costmap2DROS transform timeout. Current time: 1598502335.8577, global_pose stamp: 1598502329.6053, tolerance: 0.3000[0m
+[33m[ WARN] [1598502335.959433859]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502336.859832442]: Costmap2DROS transform timeout. Current time: 1598502336.8597, global_pose stamp: 1598502329.6053, tolerance: 0.3000[0m
+[33m[ WARN] [1598502336.963910154]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502337.860045740]: Costmap2DROS transform timeout. Current time: 1598502337.8599, global_pose stamp: 1598502329.6053, tolerance: 0.3000[0m
+[33m[ WARN] [1598502338.061847791]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502338.860507249]: Costmap2DROS transform timeout. Current time: 1598502338.8604, global_pose stamp: 1598502329.6053, tolerance: 0.3000[0m
+[33m[ WARN] [1598502339.062127883]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502339.958565932]: Costmap2DROS transform timeout. Current time: 1598502339.9585, global_pose stamp: 1598502329.6053, tolerance: 0.3000[0m
+[33m[ WARN] [1598502340.068652558]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502340.970385231]: Costmap2DROS transform timeout. Current time: 1598502340.9695, global_pose stamp: 1598502329.6053, tolerance: 0.3000[0m
+[33m[ WARN] [1598502341.162186620]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502342.054819298]: Costmap2DROS transform timeout. Current time: 1598502342.0547, global_pose stamp: 1598502329.6053, tolerance: 0.3000[0m
+[33m[ WARN] [1598502342.162817884]: Could not get robot pose, cancelling reconfiguration[0m
+[33m[ WARN] [1598502343.058692436]: The scan observation buffer has not been updated for 13.38 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502343.268257778]: The scan observation buffer has not been upda[WARN] [1598502345.441897]: Error while unsubscribe from `/roslaunch/uris`: [Errno 111] Connection refused
+[WARN] [1598502345.454447]: Inbound TCP/IP connection failed: connection from sender terminated before handshake header received. 0 bytes were received. Please check sender for additional details.
+[WARN] [1598502345.474326]: unable to communicate with ROS Master, registrations are now out of sync
+tes [sensor_msgs/JointState]
+[INFO] [1598502342.877912]: Setup publisher on /tf [tf/tfMessage]
+[INFO] [1598502345.478593]: Send tx stop request
+[ERROR] [1598502345.498526]: SyncThread[10.0.0.234] ERROR while ending: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 460, in _unreg_on_finish
     _ = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -2162,7 +3585,11 @@ her on /range/rr [sensor_msgs/Range]
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 [ERROR] [1598502359.688052]: SyncThread[10.0.0.144] ERROR while ending: Traceback (most recent call last):
+=======
+[ERROR] [1598502345.510900]: SyncThread[10.0.0.13] ERROR while ending: Traceback (most recent call last):
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 460, in _unreg_on_finish
     _ = own_master_multi()
   File "/usr/lib/python2.7/xmlrpclib.py", line 1006, in __call__
@@ -2189,6 +3616,7 @@ error: [Errno 111] Connection refused
     raise err
 error: [Errno 111] Connection refused
 
+<<<<<<< HEAD
 [ERROR] [1598502359.700142]: SyncThread[10.0.0.13] ERROR while ending: Traceback (most recent call last):
   File "/opt/ros/kinetic/lib/python2.7/dist-packages/master_sync_fkie/sync_thread.py", line 460, in _unreg_on_finish
     _ = own_master_multi()
@@ -2316,6 +3744,103 @@ or/mac_id/d0:c5:d3:81:41:89: 4
  * /robot_7/7/node7_graph_processor/target_angle: 1.57
  * /robot_7/7/node7_graph_processor/target_distance: 2.0
  * /robot_7/7/node7_graph_processor/termination_metric: 1
+=======
+Unhandled exception in thread started by 
+sys.excepthook is missing
+lost sys.stderr
+Unhandled exception in thread started by 
+sys.excepthook is missing
+lost sys.stderr
+ted for 13.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502343.458465501]: The scan observation buffer has not been updated for 13.78 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502343.656431264]: The scan observation buffer has not been updated for 13.98 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502343.862692898]: The scan observation buffer has not been updated for 14.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502344.060510786]: The scan observation buffer has not been updated for 14.38 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502344.260531631]: The scan observation buffer has not been updated for 14.58 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502344.458722268]: The scan observation buffer has not been updated for 14.78 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502344.663156029]: The scan observation buffer has not been updated for 14.99 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502344.862771166]: The scan observation buffer has not been updated for 15.19 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502345.059290846]: The scan observation buffer has not been updated for 15.38 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502345.262029732]: The scan observation buffer has not been updated for 15.59 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502345.457691037]: The scan observation buffer has not been updated for 15.78 seconds, and it should be updated every 0.40 seconds.[0m
+[33m[ WARN] [1598502345.659739840]: Costmap2DROS transform timeout. Current time: 1598502345.6595, global_pose stamp: 1598502345.3159, tolerance: 0.3000[0m
+[33m[ WARN] [1598502345.661301131]: Could not get robot pose, cancelling reconfiguration[0m
+Unhandled exception in thread started by 
+sys.excepthook is missing
+lost sys.stderr
+.
+[INFO] [1598502324.426069]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /robot_7/gvgexplore/goal
+[INFO] [1598502324.544618]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /tf
+[INFO] [1598502324.697381]: SyncThread[10.0.0.15] Create and delete publisher to trigger publisherUpdate for /map
+[INFO] [1598502324.719472]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502325.300917]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502325.493230]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502325.519592]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502326.663111]: SyncThread[10.0.0.15] Requesting remote state from 'http://10.0.0.15:11611'
+[INFO] [1598502327.064002]: SyncThread[10.0.0.15] Applying remote state...
+[INFO] [1598502327.097291]: SyncThread[10.0.0.15] remote state applied.
+[INFO] [1598502328.921645]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502329.162253]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502329.171627]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502330.055177]:   Stop synchronization to `10.0.0.15`
+[INFO] [1598502330.479069]:   Finished synchronization to `10.0.0.15`
+[INFO] [1598502331.744674]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502331.862443]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502331.866218]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502332.059174]: SyncThread[10.0.0.13] Requesting remote state from 'http://10.0.0.13:11611'
+[INFO] [1598502332.322199]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502332.394916]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502332.397978]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502332.451402]: SyncThread[10.0.0.13] Applying remote state...
+[INFO] [1598502332.455091]: SyncThread[10.0.0.13] remote state applied.
+[INFO] [1598502336.109529]: SyncThread[10.0.0.234] Requesting remote state from 'http://10.0.0.234:11611'
+[INFO] [1598502336.185840]: SyncThread[10.0.0.234] Applying remote state...
+[INFO] [1598502336.189102]: SyncThread[10.0.0.234] remote state applied.
+[INFO] [1598502345.461559]: Stop synchronization...
+[INFO] [1598502345.462244]:   Stop timers...
+[INFO] [1598502345.463019]:   Unregister from master discovery...
+[INFO] [1598502345.482676]:   Remove master: 10.0.0.234
+[INFO] [1598502345.489419]:   Stop synchronization to `10.0.0.234`
+[INFO] [1598502345.493733]:   Remove master: 10.0.0.13
+[INFO] [1598502345.500014]:   Wait for ending of 2 threads ...
+[INFO] [1598502345.500265]:   Stop synchronization to `10.0.0.13`
+[INFO] [1598502345.504309]:   Finished synchronization to `10.0.0.234`
+[INFO] [1598502345.514924]:   Finished synchronization to `10.0.0.13`
+[INFO] [1598502346.506738]: Synchronization is now off
+[0m[ INFO] [1598502164.116495571]: RPLIDAR running on ROS package rplidar_ros. SDK Version:1.7.0[0m
+RPLIDAR S/N: D4B39AF2C1EA9FC0BEEB9CF35B603200
+[0m[ INFO] [1598502164.626062855]: Firmware Ver: 1.25[0m
+[0m[ INFO] [1598502164.626201396]: Hardware Rev: 5[0m
+[0m[ INFO] [1598502164.628698645]: RPLidar health status : 0[0m
+[0m[ INFO] [1598502165.453691552]: current scan mode: Express, max_distance: 12.0 m, Point number: 4.0K , angle_compensate: 1[0m
+sor/mac_id/d0:c5:d3:81:41:89: 4
+ * /robot_8/8/node8_graph_processor/mac_id/d0:c5:d3:81:41:8b: 7
+ * /robot_8/8/node8_graph_processor/mac_id/d0:c5:d3:81:44:1f: 8
+ * /robot_8/8/node8_graph_processor/mac_id/d0:c5:d3:81:4e:57: 5
+ * /robot_8/8/node8_graph_processor/map_file: /home/husarion/ca...
+ * /robot_8/8/node8_graph_processor/map_inflation_radius: 1
+ * /robot_8/8/node8_graph_processor/map_scale: 20.0
+ * /robot_8/8/node8_graph_processor/max_common_coverage: 0.8
+ * /robot_8/8/node8_graph_processor/max_coverage: 0.8
+ * /robot_8/8/node8_graph_processor/max_exploration_time: 20
+ * /robot_8/8/node8_graph_processor/max_target_info_ratio: 0.5
+ * /robot_8/8/node8_graph_processor/max_wait_time: 120
+ * /robot_8/8/node8_graph_processor/method: gvg
+ * /robot_8/8/node8_graph_processor/min_edge_length: 1
+ * /robot_8/8/node8_graph_processor/min_hallway_width: 0.5
+ * /robot_8/8/node8_graph_processor/opposite_vector_bias: 0.25
+ * /robot_8/8/node8_graph_processor/point_precision: 2
+ * /robot_8/8/node8_graph_processor/relay_robots: 
+ * /robot_8/8/node8_graph_processor/robot_count: 1
+ * /robot_8/8/node8_graph_processor/robot_id: 8
+ * /robot_8/8/node8_graph_processor/robot_type: 2
+ * /robot_8/8/node8_graph_processor/run: 0
+ * /robot_8/8/node8_graph_processor/separation_bias: 2
+ * /robot_8/8/node8_graph_processor/slope_bias: 0.1
+ * /robot_8/8/node8_graph_processor/target_angle: 1.57
+ * /robot_8/8/node8_graph_processor/target_distance: 2.0
+ * /robot_8/8/node8_graph_processor/termination_metric: 1
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
  * /robot_frame: base_link
  * /robot_radius: 0.4
  * /rosdistro: kinetic
@@ -2328,6 +3853,13 @@ or/mac_id/d0:c5:d3:81:41:89: 4
  * /scan_subscriber_status: scan_status
 
 NODES
+<<<<<<< HEAD
+=======
+  /robot_8/8/
+    node8 (gvgexploration/robot.py)
+    node8_explore (gvgexploration/gvg_explore.py)
+    node8_graph_processor (gvgexploration/graph.py)
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
   /
     BaseAlign (tf/static_transform_publisher)
     GetMap (nav2d_navigator/get_map_client)
@@ -2339,6 +3871,7 @@ NODES
     operator (nav2d_operator/operator)
     rplidarNode (rplidar_ros/rplidarNode)
     serial_bridge (rosbot_webui/serial_bridge.sh)
+<<<<<<< HEAD
   /robot_7/7/
     node7 (gvgexploration/robot.py)
     node7_explore (gvgexploration/gvg_explore.py)
@@ -2367,6 +3900,32 @@ NODES
 [robot_7/7/node7_explore-8] killing on exit
 [robot_7/7/node7-6] killing on exit
 [robot_7/7/node7_graph_processor-7] killing on exit
+=======
+
+[1mROS_MASTER_URI=http://10.0.0.144:11311[0m
+]2;/home/husarion/catkin_ws/src/gvgexploration/launch/husarion.launch http://10.0.0.144:11311
+[1mprocess[BaseAlign-1]: started with pid [14232][0m
+[1mprocess[operator-2]: started with pid [14235][0m
+[1mprocess[navigator-3]: started with pid [14244][0m
+[1mprocess[GetMap-4]: started with pid [14262][0m
+[1mprocess[SetGoal-5]: started with pid [14275][0m
+[1mprocess[robot_8/8/node8-6]: started with pid [14304][0m
+[1mprocess[robot_8/8/node8_graph_processor-7]: started with pid [14323][0m
+[1mprocess[robot_8/8/node8_explore-8]: started with pid [14351][0m
+[1mprocess[Mapper-9]: started with pid [14364][0m
+[1mprocess[rplidarNode-10]: started with pid [14380][0m
+[1mprocess[serial_bridge-11]: started with pid [14396][0m
+[1mprocess[master_discovery-12]: started with pid [14408][0m
+[1mprocess[master_sync-13]: started with pid [14428][0m
+[master_discovery-12] killing on exit
+[master_sync-13] killing on exit
+[serial_bridge-11] killing on exit
+[rplidarNode-10] killing on exit
+[Mapper-9] killing on exit
+[robot_8/8/node8_explore-8] killing on exit
+[robot_8/8/node8_graph_processor-7] killing on exit
+[robot_8/8/node8-6] killing on exit
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e
 [SetGoal-5] killing on exit
 [GetMap-4] killing on exit
 [navigator-3] killing on exit
@@ -2375,9 +3934,15 @@ NODES
 shutting down processing monitor...
 ... shutting down processing monitor complete
 [1mdone[0m
+<<<<<<< HEAD
 Traceback (most recent call last):
   File "/home/husarion/catkin_ws/src/wifi_node/scripts/wifi_talker.py", line 68, in <module>
     sniff(iface='mon0', prn=PacketHandler, store=0)#"ether src 98:de:d0:14:de:61")#"ether src c4:d9:87:c5:71:c8")
   File "/usr/lib/python2.7/dist-packages/scapy/sendrecv.py", line 575, in sniff
     sel = select([s],[],[],remain)
 select.error: (4, 'Interrupted system call')
+=======
+Unhandled exception in thread started by 
+sys.excepthook is missing
+lost sys.stderr
+>>>>>>> 46dff0352949177b17a4ebb2c83bf3ea26defa9e

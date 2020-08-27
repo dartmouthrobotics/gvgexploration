@@ -263,6 +263,7 @@ class Robot:
         self.process_data(buff_data, session_id=self.session_id, sent_data=local_data_size)
         frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(current_devices) + 1))
         frontier_points = self.parse_frontier_response(frontier_point_response)
+        pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)
         taken_poses = []
         pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)
         if frontier_points:
@@ -438,7 +439,7 @@ class Robot:
             message_data = self.load_data_for_id(receiver_id)
             buffered_data = self.create_buffered_data_msg(message_data, session_id, receiver_id)
             self.publisher_map[str(receiver_id)].publish(buffered_data)
-            #self.delete_data_for_id(receiver_id)
+           # self.delete_data_for_id(receiver_id)
 
     def create_buffered_data_msg(self, message_data, session_id, receiver_id):
         buffered_data = BufferedData()
@@ -523,6 +524,7 @@ class Robot:
         session_id = data.session_id
         if self.is_sender or not self.session_id or session_id != self.session_id:
             return SharedPointResponse(auction_accepted=0)
+        rospy.logerr("creating auction response")
         sender_id = data.msg_header.header.frame_id
         poses = data.poses
         if not poses:
@@ -531,7 +533,9 @@ class Robot:
             return SharedPointResponse(auction_accepted=1, res_data=None)
         received_points = []
         distances = []
+        rospy.logerr("Getting robot pose")
         robot_pose = self.get_robot_pose()
+        rospy.logerr("Received robot pose: {}".format(robot_pose))
         for p in poses:
             received_points.append(p)
             point = (p.position.x, p.position.y,
@@ -578,7 +582,7 @@ class Robot:
                         self.handle_intersection(close_devices)
                 else:
                     pu.log_msg(self.robot_id, "Waiting for frontier points...", self.debug_mode)
-
+    
     def start_exploration_action(self, frontier_ridge):
         while self.map_updating:  # wait for map to update
             sleep(1)
