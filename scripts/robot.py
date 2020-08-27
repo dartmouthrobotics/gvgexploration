@@ -585,7 +585,11 @@ class Robot:
                         self.handle_intersection(close_devices)
                 else:
                     pu.log_msg(self.robot_id, "Waiting for frontier points...", self.debug_mode)
+<<<<<<< Updated upstream
     
+=======
+
+>>>>>>> Stashed changes
     def start_exploration_action(self, frontier_ridge):
         while self.map_updating:  # wait for map to update
             sleep(1)
