@@ -20,7 +20,7 @@ max_exploration_time: 20
 termination_metric: 1 # 1: TOTAL COVERAGE, 2: MAXIMUM_EXPLORATION_TIME 3: COMMON_COVERAGE, 4: FULL_COVERAGE
 map_scale: 20.0     # scale of the map
 graph_scale: 10.0     # scale of the map
-mac_id: {'00:0f:00:4e:07:64':4,'d0:c5:d3:81:41:89':4,'00:0f:00:4f:0d:19':7,'d0:c5:d3:81:41:8b':7,'00:0f:00:4d:b9:de':8,'d0:c5:d3:81:44:1f':8,'00:0f:00:4d:ba:32':5,'d0:c5:d3:81:4e:57':5}
+mac_id: {'d0:c5:d3:81:3a:67':1,'00:0f:00:4e:07:f7':1,'00:0f:00:4e:07:64':4,'d0:c5:d3:81:41:89':4,'00:0f:00:4f:0d:19':7,'d0:c5:d3:81:41:8b':7,'00:0f:00:4d:b9:de':8,'d0:c5:d3:81:44:1f':8,'00:0f:00:4d:ba:32':5,'d0:c5:d3:81:4e:57':5}
 bs_pose: [4.0,10.0]  # cave
 map_inflation_radius: 1   # inflation radius of the robot
 map_file: '$(find gvgexploration)/world/basic.png'    # environment file
