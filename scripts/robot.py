@@ -40,6 +40,8 @@ LOST = 9  # An action client can determine that a goal is LOST. This should not 
 TURNING_ANGLE = np.deg2rad(45)
 from wifi_node.msg import WifiStrength
 from multimaster_msgs_fkie.msg import LinkStatesStamped
+
+
 class Robot:
     def __init__(self, robot_id, robot_type=0, base_stations=[], relay_robots=[], frontier_robots=[]):
         self.lock = Lock()
@@ -112,8 +114,8 @@ class Robot:
         self.debug_mode = rospy.get_param("~debug_mode")
         self.method = rospy.get_param("~method")
         self.mac_id = rospy.get_param("~mac_id")
-        self.comm_range=rospy.get_param("~comm_range")
-        rospy.logerr(self.mac_id)
+        self.comm_range = rospy.get_param("~comm_range")
+
         self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,
                                            self.shared_data_handler)
         self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,
@@ -131,7 +133,8 @@ class Robot:
         rospy.Subscriber('/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         rospy.Subscriber('/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
         rospy.Subscriber('/rosbot{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
-        rospy.Subscriber('/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped, self.discovery_callback)
+        rospy.Subscriber('/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped,
+                         self.discovery_callback)
 
         rospy.Subscriber('/robot_{}/gvgexplore/feedback'.format(self.robot_id), Pose, self.explore_feedback_callback)
         self.data_size_pub = rospy.Publisher('/shared_data_size', DataSize, queue_size=10)
@@ -165,15 +168,14 @@ class Robot:
         self.first_message_sent = False
         self.sent_messages = []
         self.received_messages = []
-        self.master_links=set()
-
+        self.master_links = set()
 
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             try:
                 if self.is_initial_data_sharing:
-                    if len(self.master_links)==len(self.candidate_robots)+1:
+                    if len(self.master_links) == len(self.candidate_robots) + 1:
                         sleep(5)
                         rospy.logerr("Sending initial data to all robots...")
                         self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
@@ -188,10 +190,10 @@ class Robot:
             r.sleep()
 
     def wifi_strength_callback(self, data):
-        src_mac=data.src
-        dst_mac=data.dst
-        if src_mac in self.mac_id and dst_mac in self.mac_id and self.mac_id[dst_mac]==self.robot_id:
-            self.signal_strength[self.mac_id[src_mac]]=data.signal
+        src_mac = data.src
+        dst_mac = data.dst
+        if src_mac in self.mac_id and dst_mac in self.mac_id and self.mac_id[dst_mac] == self.robot_id:
+            self.signal_strength[self.mac_id[src_mac]] = data.signal
 
     def discovery_callback(self, data):
         for d in data.links:
@@ -429,7 +431,7 @@ class Robot:
         return auction
 
     def robots_karto_out_callback(self, data):
-        data.robot_id=self.robot_id
+        data.robot_id = self.robot_id
         for rid in self.candidate_robots:
             self.add_to_file(rid, [data])
         # if self.is_initial_data_sharing:
@@ -441,7 +443,7 @@ class Robot:
             message_data = self.load_data_for_id(receiver_id)
             buffered_data = self.create_buffered_data_msg(message_data, session_id, receiver_id)
             self.publisher_map[str(receiver_id)].publish(buffered_data)
-           # self.delete_data_for_id(receiver_id)
+        # self.delete_data_for_id(receiver_id)
 
     def create_buffered_data_msg(self, message_data, session_id, receiver_id):
         buffered_data = BufferedData()
@@ -471,9 +473,9 @@ class Robot:
 
     def get_close_devices(self):
         devices = []
-        hotspots=list(self.signal_strength)
+        hotspots = list(self.signal_strength)
         for h in hotspots:
-            if self.signal_strength[h] >=self.comm_range:
+            if self.signal_strength[h] >= self.comm_range:
                 devices.append(str(h))
         return set(devices)
 
@@ -585,11 +587,7 @@ class Robot:
                         self.handle_intersection(close_devices)
                 else:
                     pu.log_msg(self.robot_id, "Waiting for frontier points...", self.debug_mode)
-<<<<<<< Updated upstream
-    
-=======
 
->>>>>>> Stashed changes
     def start_exploration_action(self, frontier_ridge):
         while self.map_updating:  # wait for map to update
             sleep(1)
@@ -710,11 +708,6 @@ class Robot:
         msg = String()
         msg.data = '{}'.format(self.robot_id)
         self.is_shutdown_caller = True
-        # self.shutdown_pub.publish(msg)
-
-    # def shutdown_callback(self, data):
-    #     if not self.is_shutdown_caller:
-    #         rospy.signal_shutdown('Robot {}: Received Shutdown Exploration complete!'.format(self.robot_id))
 
 
 if __name__ == "__main__":
