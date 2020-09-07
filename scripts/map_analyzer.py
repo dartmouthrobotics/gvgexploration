@@ -74,7 +74,7 @@ class MapAnalyzer:
         common_points = []
         # for rid in range(self.robot_count):
         self.get_explored_region(self.robot_id)
-        common_points.append(self.all_maps[rid])
+        common_points.append(self.all_maps[self.robot_id])
         common_area = set.intersection(*common_points)
         common_area_size = len(common_area)  # / self.map_area
         explored_area = len(self.all_explored_points)  # / self.map_area
