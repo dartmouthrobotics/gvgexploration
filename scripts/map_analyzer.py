@@ -56,7 +56,8 @@ class MapAnalyzer:
         while not rospy.is_shutdown():
             try:
                 current_time = rospy.Time.now().to_sec()
-                elapsed_time = current_time - self.start_time
+                elapsed_time = current_time - start_time
+                pu.log_msg(self.robot_id,"Elapsed Time: {}".format(elapsed_time),1)
                 if elapsed_time > self.exploration_time * 60:
                     tstr = String()
                     tstr.data = "shutdown"
