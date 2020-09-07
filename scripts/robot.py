@@ -130,7 +130,7 @@ class Robot:
                                                         FrontierPoint)
         self.check_intersections = rospy.ServiceProxy('/robot_{}/check_intersections'.format(self.robot_id),
                                                       Intersections)
-        rospy.Subscriber('/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
+        rospy.Subscriber('/robot_{}/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         rospy.Subscriber('/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
         rospy.Subscriber('/rosbot{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
         rospy.Subscriber('/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped,
