@@ -149,7 +149,6 @@ class Robot:
             self.shared_point_srv_map[rid] = action_points_clt
         rospy.Subscriber('/karto_out', LocalizedScan, self.robots_karto_out_callback,
                          queue_size=10)
-        self.shutdown_pub = rospy.Publisher("/shutdown".format(self.robot_id), String, queue_size=10)
         self.is_shutdown_caller = False
 
         self.trans_matrices = {}

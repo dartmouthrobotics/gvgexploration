@@ -32,5 +32,11 @@
             <param name="relay_robots" value="$(arg relay_robots)"/>
             <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
         </node>
+
+        <node pkg="gvgexploration" type="map_analyzer.py" name="map_analyzer_$(arg robot_name)" >
+            <param name="robot_id" value="$(arg robot_name)"/>
+            <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
+        </node>
+
     </group>
 </launch>

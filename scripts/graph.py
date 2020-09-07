@@ -100,7 +100,7 @@ class Graph:
         rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
         rospy.Subscriber('/map', OccupancyGrid, self.map_callback)
         rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_edge_handler)
-
+        rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         self.already_shutdown = False
         self.robot_pose = None
         self.listener = tf.TransformListener()
@@ -1247,6 +1247,9 @@ class Graph:
                 pass
 
         return robot_pose
+
+    def shutdown_callback(self, msg):
+        rospy.signal_shutdown('MapAnalyzer: Shutdown command received!')
 
     def save_all_data(self):
         save_data(self.performance_data,
