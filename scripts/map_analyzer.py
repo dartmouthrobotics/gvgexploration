@@ -5,11 +5,10 @@ matplotlib.use('Agg')
 from PIL import Image
 import numpy as np
 import rospy
-from project_utils import INDEX_FOR_X, INDEX_FOR_Y, pixel2pose, FREE, OCCUPIED, save_data, get_point, scale_down
+from project_utils import INDEX_FOR_X, INDEX_FOR_Y, pixel2pose, FREE, OCCUPIED, save_data, get_point, scale_down,log_msg
 from gvgexploration.msg import Coverage
 from gvgexploration.srv import ExploredRegion, ExploredRegionRequest
 from std_msgs.msg import String
-
 
 class MapAnalyzer:
     def __init__(self):
@@ -57,7 +56,7 @@ class MapAnalyzer:
             try:
                 current_time = rospy.Time.now().to_sec()
                 elapsed_time = current_time - start_time
-                pu.log_msg(self.robot_id,"Elapsed Time: {}".format(elapsed_time),1)
+                log_msg(self.robot_id,"Elapsed Time: {}".format(elapsed_time),1)
                 if elapsed_time > self.exploration_time * 60:
                     tstr = String()
                     tstr.data = "shutdown"
