@@ -44,7 +44,7 @@ class MapAnalyzer:
         #     self.all_maps[i] = set()
 
         self.shutdown_pub = rospy.Publisher("/shutdown".format(self.robot_id), String, queue_size=10)
-        self.coverage_pub = rospy.Publisher("robot_{}/coverage".format(self.robot_id), Coverage, queue_size=10)
+        self.coverage_pub = rospy.Publisher("/robot_{}/coverage".format(self.robot_id), Coverage, queue_size=10)
         # rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         rospy.on_shutdown(self.save_all_data)
 
