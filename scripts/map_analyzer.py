@@ -34,11 +34,15 @@ class MapAnalyzer:
         self.all_maps = {}
         self.explored_region = {}
         self.pixel_desc = {}
-        for i in range(self.robot_count):
-            p = rospy.ServiceProxy('/robot_{}/explored_region'.format(i), ExploredRegion)
-            p.wait_for_service()
-            self.explored_region[i] = p
-            self.all_maps[i] = set()
+        p = rospy.ServiceProxy('/robot_{}/explored_region'.format(self.robot_id), ExploredRegion)
+        p.wait_for_service()
+        self.explored_region[self.robot_id] = p
+        self.all_maps[self.robot_id] = set()
+        # for i in range(self.robot_count):
+        #     p = rospy.ServiceProxy('/robot_{}/explored_region'.format(i), ExploredRegion)
+        #     p.wait_for_service()
+        #     self.explored_region[i] = p
+        #     self.all_maps[i] = set()
 
         self.shutdown_pub = rospy.Publisher("/shutdown".format(self.robot_id), String, queue_size=10)
         self.coverage_pub = rospy.Publisher("/coverage", Coverage, queue_size=10)
