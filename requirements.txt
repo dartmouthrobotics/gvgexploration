@@ -1,0 +1,4 @@
+python-scipy
+ros-kinetic-multimaster-fkie
+python-matplotlib
+python-shapely
