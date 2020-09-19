@@ -37,4 +37,5 @@
 <node name="master_sync" pkg="master_sync_fkie" type="master_sync" output="screen">
     <rosparam param="ignore_nodes"> ['/tf','/msgs_conversion','/rosbot_ekf','/rplidarNode','/serial_node','/Mapper','/GetMap','/OdomAlign','/BaseAlign','/MapAlign','/SetGoal','/navigator','/operator'] </rosparam>
 </node>
+
 </launch>
