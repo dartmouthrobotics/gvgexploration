@@ -2,7 +2,7 @@
 frequency: 10
 
 # Maximum velocity command the operator will send to the robot (in m/s)
-max_velocity: 1.0
+max_velocity: 0.1
 
 # If set to true, the selected best direction is published as a GridCells-Message
 publish_route: true

@@ -31,11 +31,11 @@
 <include file="$(find rplidar_ros)/launch/rplidar.launch"/>
 <node pkg="rosbot_webui" type="serial_bridge.sh" name="serial_bridge" output="screen"/>
 
-<node name="master_discovery" pkg="master_discovery_fkie" type="master_discovery" >
-    <param name="_mcast_group" value="224.0.0.1"/>
-</node>
-<node name="master_sync" pkg="master_sync_fkie" type="master_sync" output="screen">
-    <rosparam param="ignore_nodes"> ['/tf','/msgs_conversion','/rosbot_ekf','/rplidarNode','/serial_node','/Mapper','/GetMap','/OdomAlign','/BaseAlign','/MapAlign','/SetGoal','/navigator','/operator'] </rosparam>
-</node>
+<!--<node name="master_discovery" pkg="master_discovery_fkie" type="master_discovery" >-->
+<!--    <param name="_mcast_group" value="224.0.0.1"/>-->
+<!--</node>-->
+<!--<node name="master_sync" pkg="master_sync_fkie" type="master_sync" output="screen">-->
+<!--    <rosparam param="ignore_nodes"> ['/tf','/msgs_conversion','/rosbot_ekf','/rplidarNode','/serial_node','/Mapper','/GetMap','/OdomAlign','/BaseAlign','/MapAlign','/SetGoal','/navigator','/operator'] </rosparam>-->
+<!--</node>-->
 
 </launch>
