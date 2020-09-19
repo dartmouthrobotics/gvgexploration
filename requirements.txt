@@ -2,3 +2,4 @@ python-scipy
 ros-kinetic-multimaster-fkie
 python-matplotlib
 python-shapely
+ros-kinetic-nav2d
