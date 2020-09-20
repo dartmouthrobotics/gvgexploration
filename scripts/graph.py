@@ -201,7 +201,7 @@ class Graph:
         self.lock.acquire()
         map_msg = self.latest_map
         if not map_msg:
-            map_msg = rospy.wait_for_message("/map", OccupancyGrid)
+            map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
         self.compute_graph(map_msg)
         self.last_graph_update_time = rospy.Time.now().to_sec()
         self.lock.release()
