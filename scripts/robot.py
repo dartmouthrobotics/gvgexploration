@@ -124,16 +124,16 @@ class Robot:
                                              self.shared_frontier_handler)
         rospy.Subscriber('/robot_{}/initial_data'.format(self.robot_id), BufferedData,
                          self.initial_data_callback)  # just for initial data *
-        self.karto_pub = rospy.Publisher("/karto_in".format(self.robot_id), LocalizedScan, queue_size=10)
+        self.karto_pub = rospy.Publisher("/robot_{}/karto_in".format(self.robot_id), LocalizedScan, queue_size=10)
         self.signal_strength_srv = rospy.ServiceProxy("/signal_strength".format(self.robot_id), HotSpot)
         self.fetch_frontier_points = rospy.ServiceProxy('/robot_{}/frontier_points'.format(self.robot_id),
                                                         FrontierPoint)
         self.check_intersections = rospy.ServiceProxy('/robot_{}/check_intersections'.format(self.robot_id),
                                                       Intersections)
         rospy.Subscriber('/robot_{}/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
-        rospy.Subscriber('/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
+        rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
         rospy.Subscriber('/rosbot{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
-        rospy.Subscriber('/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped,
+        rospy.Subscriber('/robot_{}/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped,
                          self.discovery_callback)
 
         rospy.Subscriber('/robot_{}/gvgexplore/feedback'.format(self.robot_id), Pose, self.explore_feedback_callback)
@@ -147,7 +147,7 @@ class Robot:
             self.allocation_pub[rid] = alloc_point_clt
             self.shared_data_srv_map[rid] = received_data_clt
             self.shared_point_srv_map[rid] = action_points_clt
-        rospy.Subscriber('/karto_out', LocalizedScan, self.robots_karto_out_callback,
+        rospy.Subscriber('/robot_{}/karto_out'.format(self.robot_id), LocalizedScan, self.robots_karto_out_callback,
                          queue_size=10)
         self.is_shutdown_caller = False
 

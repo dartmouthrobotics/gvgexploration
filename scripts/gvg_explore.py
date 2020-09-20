@@ -99,12 +99,12 @@ class GVGExplore:
         self.environment = rospy.get_param("~environment")
         self.max_coverage_ratio = rospy.get_param("~max_coverage")
         self.method = rospy.get_param("~method")
-        rospy.Subscriber("/MoveTo/status".format(self.robot_id), GoalStatusArray, self.move_status_callback)
-        rospy.Subscriber("/MoveTo/result".format(self.robot_id), MoveToPosition2DActionResult,
+        rospy.Subscriber("/robot_{}/MoveTo/status".format(self.robot_id), GoalStatusArray, self.move_status_callback)
+        rospy.Subscriber("/robot_{}/MoveTo/result".format(self.robot_id), MoveToPosition2DActionResult,
                          self.move_result_callback)
-        rospy.Subscriber("/navigator/plan".format(self.robot_id), GridCells, self.navigation_plan_callback)
-        self.move_to_stop = rospy.ServiceProxy('/Stop'.format(self.robot_id), Trigger)
-        self.moveTo_pub = rospy.Publisher("/MoveTo/goal".format(self.robot_id), MoveToPosition2DActionGoal,
+        rospy.Subscriber("/robot_{}/navigator/plan".format(self.robot_id), GridCells, self.navigation_plan_callback)
+        self.move_to_stop = rospy.ServiceProxy('/robot_{}/Stop'.format(self.robot_id), Trigger)
+        self.moveTo_pub = rospy.Publisher("/robot_{}/MoveTo/goal".format(self.robot_id), MoveToPosition2DActionGoal,
                                           queue_size=10)
         self.vertex_publisher = rospy.Publisher("/robot_{}/explore/vertices".format(self.robot_id), Marker,
                                                 queue_size=10)
@@ -113,7 +113,7 @@ class GVGExplore:
                                               queue_size=10)
         self.edge_publisher = rospy.Publisher("/robot_{}/explore/edges".format(self.robot_id), Marker, queue_size=10)
         self.fetch_graph = rospy.ServiceProxy('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph)
-        self.pose_publisher = rospy.Publisher("/cmd_vel".format(self.robot_id), Twist, queue_size=1)
+        self.pose_publisher = rospy.Publisher("/robot_{}/cmd_vel".format(self.robot_id), Twist, queue_size=1)
         rospy.Subscriber("/odom".format(self.robot_id), Odometry, callback=self.pose_callback)
         rospy.Subscriber('/robot_{}/gvgexplore/goal'.format(self.robot_id), Ridge, self.initial_action_handler)
         rospy.Service('/robot_{}/gvgexplore/cancel'.format(self.robot_id), CancelExploration,
