@@ -3,7 +3,7 @@ robot_base_frame: base_link
 update_frequency: 2.5
 publish_frequency: 2.5
 always_send_full_costmap: true
-map_topic: /map
+map_topic: map
 subscribe_to_updates: true
 
 #set if you want the voxel map published
