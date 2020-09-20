@@ -9,7 +9,7 @@ offset_frame: offset
 map_frame: map
 
 ### ROS topics ############################################
-map_topic: /map
+map_topic: map
 #laser_topic: filtered_scan
 laser_topic: scan
 
