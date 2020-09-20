@@ -4,38 +4,40 @@
 <arg name="robot_type"/>
 <arg name="relay_robots" default="[]"/>
 <node name="BaseAlign" pkg="tf" type="static_transform_publisher" args="0 0 0 3.14 0 0 /base_link /laser 10"/>
-<rosparam file="$(find gvgexploration)/param/ros.yaml"/>
-<node pkg="nav2d_operator" type="operator" name="operator" output="screen">
-    <rosparam file="$(find gvgexploration)/param/operator.yaml"/>
-    <rosparam file="$(find gvgexploration)/param/costmap1.yaml" ns="local_map" />
-    <param name="robot_frame" value="base_link"/>
-    <param name="odometry_frame" value="odom"/>
-</node>
-<node pkg="nav2d_navigator" type="navigator" name="navigator">
-    <rosparam file="$(find gvgexploration)/param/navigator.yaml"/>
-</node>
-<node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
-<node name="SetGoal" pkg="nav2d_navigator" type="set_goal_client" />
 
 <group ns="robot_$(arg robot_id)">
+    <rosparam file="$(find gvgexploration)/param/ros.yaml"/>
+
     <include file="$(find gvgexploration)/launch/robot.launch">
         <arg name="robot_name" value="$(arg robot_id)" />
         <arg name="robot_type" value="$(arg robot_type)" />
         <arg name="base_stations" value="$(arg base_station)" />
     </include>
+    <node pkg="nav2d_operator" type="operator" name="operator" output="screen">
+        <rosparam file="$(find gvgexploration)/param/operator.yaml"/>
+        <rosparam file="$(find gvgexploration)/param/costmap1.yaml" ns="local_map" />
+        <param name="robot_frame" value="base_link"/>
+        <param name="odometry_frame" value="odom"/>
+    </node>
+    <node pkg="nav2d_navigator" type="navigator" name="navigator">
+        <rosparam file="$(find gvgexploration)/param/navigator.yaml"/>
+    </node>
+    <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
+    <node name="SetGoal" pkg="nav2d_navigator" type="set_goal_client" />
+
+    <node pkg="rosbot_webui" type="serial_bridge.sh" name="serial_bridge" output="screen"/>
+
+    <include file="$(find rplidar_ros)/launch/rplidar.launch"/>
+
+    <node pkg="nav2d_karto" name="Mapper" type="mapper">
+        <rosparam command="load" file="$(find gvgexploration)/param/mapper.yaml" subst_value="true"/>
+    </node>
+
+    <!--<node name="master_discovery" pkg="master_discovery_fkie" type="master_discovery" >-->
+    <!--    <param name="_mcast_group" value="224.0.0.1"/>-->
+    <!--</node>-->
+    <!--<node name="master_sync" pkg="master_sync_fkie" type="master_sync" output="screen">-->
+    <!--    <rosparam param="ignore_nodes"> ['/tf','/msgs_conversion','/rosbot_ekf','/rplidarNode','/serial_node','/Mapper','/GetMap','/OdomAlign','/BaseAlign','/MapAlign','/SetGoal','/navigator','/operator'] </rosparam>-->
+    <!--</node>-->
 </group>
-<node pkg="nav2d_karto" name="Mapper" type="mapper">
-    <rosparam command="load" file="$(find gvgexploration)/param/mapper.yaml" subst_value="true"/>
-</node>
-
-<include file="$(find rplidar_ros)/launch/rplidar.launch"/>
-<node pkg="rosbot_webui" type="serial_bridge.sh" name="serial_bridge" output="screen"/>
-
-<!--<node name="master_discovery" pkg="master_discovery_fkie" type="master_discovery" >-->
-<!--    <param name="_mcast_group" value="224.0.0.1"/>-->
-<!--</node>-->
-<!--<node name="master_sync" pkg="master_sync_fkie" type="master_sync" output="screen">-->
-<!--    <rosparam param="ignore_nodes"> ['/tf','/msgs_conversion','/rosbot_ekf','/rplidarNode','/serial_node','/Mapper','/GetMap','/OdomAlign','/BaseAlign','/MapAlign','/SetGoal','/navigator','/operator'] </rosparam>-->
-<!--</node>-->
-
 </launch>
