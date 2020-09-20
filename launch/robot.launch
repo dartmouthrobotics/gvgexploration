@@ -5,7 +5,7 @@
     <arg name="base_stations" default=''/>
     <arg name="frontier_robots" default=''/>
     <arg name="relay_robots" default=''/>
-    <group ns="$(arg robot_name)">
+<!--    <group ns="$(arg robot_name)">-->
         <node pkg="gvgexploration" type="robot.py" name="node$(arg robot_name)" >
             <param name="robot_id" value="$(arg robot_name)"/>
             <param name="robot_type" value="$(arg robot_type)"/>
@@ -32,7 +32,7 @@
             <param name="relay_robots" value="$(arg relay_robots)"/>
             <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
         </node>
-    </group>
+<!--    </group>-->
     <node pkg="gvgexploration" type="map_analyzer.py" name="map_analyzer_$(arg robot_name)" >
         <param name="robot_id" value="$(arg robot_name)"/>
         <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
