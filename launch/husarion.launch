@@ -33,12 +33,13 @@
         <rosparam command="load" file="$(find gvgexploration)/param/mapper.yaml" subst_value="true"/>
     </node>
 
-    <node name="master_discovery" pkg="master_discovery_fkie" type="master_discovery" >
+   <node name="master_discovery" pkg="master_discovery_fkie" type="master_discovery" >
         <param name="_mcast_group" value="224.0.0.1"/>
     </node>
     <node name="master_sync" pkg="master_sync_fkie" type="master_sync" output="screen">
         <rosparam param="ignore_topics">['/rosout','/rosout_agg','/shared_data_size','/shutdown','/tf','/tf_static']</rosparam>
         <rosparam param="ignore_nodes"> ['/*msgs_conversion*','/*rosbot_ekf*','/*rplidarNode*','/*serial_node*','/*Mapper*','/*GetMap*','/*OdomAlign*','/BaseAlign','/MapAlign','/*SetGoal*','/*navigator*','/*operator*'] </rosparam>
     </node>
+
 </group>
 </launch>
