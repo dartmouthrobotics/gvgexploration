@@ -3,8 +3,8 @@ frequency: 10.0
 
 # Inflation params used for path planning
 map_inflation_radius: 1.0
-#robot_radius: 0.15
-footprint: [[0.12, 0.14], [0.12, -0.14], [-0.12, -0.14], [-0.12, 0.14]]
+robot_radius: 0.185
+#footprint: [[0.12, 0.14], [0.12, -0.14], [-0.12, -0.14], [-0.12, 0.14]]
 
 # Distance to set the command target in front of the robot
 command_target_distance: 0.4

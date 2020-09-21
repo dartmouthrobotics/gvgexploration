@@ -79,8 +79,7 @@ class Graph:
         self.debug_mode = rospy.get_param("~debug_mode")
         self.method = rospy.get_param("~method")
         self.bs_pose = rospy.get_param('~bs_pose')
-        self.map_scale = rospy.get_param('~map_scale')
-        self.graph_scale = rospy.get_param("~graph_scale")
+        self.graph_scale = rospy.get_param("~map_scale")
         self.termination_metric = rospy.get_param("~termination_metric")
         self.frontier_threshold = rospy.get_param("~frontier_threshold")
         self.min_hallway_width = rospy.get_param("~min_hallway_width".format(self.robot_id)) * self.graph_scale

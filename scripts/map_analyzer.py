@@ -14,7 +14,7 @@ class MapAnalyzer:
     def __init__(self):
         rospy.init_node('map_analyzer', anonymous=True)
         self.robot_count = rospy.get_param("~robot_count")
-        self.scale = rospy.get_param("~map_scale")
+        self.scale = rospy.get_param("~graph_scale")
         self.map_file_name = rospy.get_param("~map_file")
         self.run = rospy.get_param("~run")
         self.debug_mode = rospy.get_param("~debug_mode")
