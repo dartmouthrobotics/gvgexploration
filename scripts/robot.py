@@ -132,7 +132,7 @@ class Robot:
                                                       Intersections)
         rospy.Subscriber('/robot_{}/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
-        rospy.Subscriber('/rosbot{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
+        rospy.Subscriber('/robot_{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
         rospy.Subscriber('/robot_{}/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped,
                          self.discovery_callback)
 
@@ -174,7 +174,7 @@ class Robot:
         while not rospy.is_shutdown():
             try:
                 if self.is_initial_data_sharing:
-                    if len(self.master_links) == len(self.candidate_robots) + 1:
+                   if len(self.master_links) == len(self.candidate_robots) + 1:
                         sleep(5)
                         rospy.logerr("Sending initial data to all robots...")
                         self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
