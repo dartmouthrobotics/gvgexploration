@@ -4,3 +4,5 @@ python-matplotlib
 python-shapely
 ros-kinetic-nav2d
 ros-kinetic-nav2d-msgs
+aircrack-ng
+python-scapy
