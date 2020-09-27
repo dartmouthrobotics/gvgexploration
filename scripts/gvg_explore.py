@@ -82,7 +82,7 @@ class GVGExplore:
         self.run = rospy.get_param("~run")
         self.debug_mode = rospy.get_param("~debug_mode")
         self.termination_metric = rospy.get_param("~termination_metric")
-        self.graph_scale = rospy.get_param('~graph_scale')
+        self.graph_scale = rospy.get_param('~map_scale')
         self.frontier_threshold = rospy.get_param('~frontier_threshold')
         self.min_edge_length = rospy.get_param("~min_edge_length".format(self.robot_id)) * self.graph_scale
         self.min_hallway_width = rospy.get_param("~min_hallway_width".format(self.robot_id)) * self.graph_scale

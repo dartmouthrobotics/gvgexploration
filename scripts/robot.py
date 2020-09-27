@@ -132,7 +132,7 @@ class Robot:
                                                       Intersections)
         rospy.Subscriber('/robot_{}/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
-        rospy.Subscriber('/rosbot{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
+        rospy.Subscriber('/robot_{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
         rospy.Subscriber('/robot_{}/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped,
                          self.discovery_callback)
 
@@ -473,8 +473,9 @@ class Robot:
     def get_close_devices(self):
         devices = []
         hotspots = list(self.signal_strength)
+        rospy.logerr("Candidate robtos: {}, hotspots: {}".format(self.candidate_robots,hotspots))
         for h in hotspots:
-            if self.signal_strength[h] >= self.comm_range:
+            if str(h) in self.candidate_robots and self.signal_strength[h] >= self.comm_range:
                 devices.append(str(h))
         return set(devices)
 
@@ -581,6 +582,7 @@ class Robot:
                     self.comm_session_time = rospy.Time.now().to_sec()
                     self.waiting_for_response = True
                     close_devices = self.get_close_devices()
+                    rospy.logerr(self.shared_data_srv_map)
                     rospy.logerr("Close devices {}:".format(close_devices))
                     if close_devices:
                         self.handle_intersection(close_devices)
@@ -642,6 +644,7 @@ class Robot:
                                                                      "base_link".format(self.robot_id),
                                                                      rospy.Time(0))
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
+                rospy.logerr("Robot pose: {}".format(robot_pose))
                 sleep(1)
             except:
                 pass
