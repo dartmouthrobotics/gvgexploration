@@ -7,7 +7,7 @@ robot_frame: base_link
 odometry_frame: odom
 offset_frame: offset
 map_frame: map
-robot_id: 8
+robot_id: 1
 ### ROS topics ############################################
 map_topic: map
 #laser_topic: filtered_scan

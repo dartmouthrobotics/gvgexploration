@@ -3,7 +3,7 @@ method: 'gvg' # method that is running
 #method: 'recurrent' # method that is running
 #method: 'continuous' # method that is running
 data_share_threshold: 10
-max_target_info_ratio: 0.5
+max_target_info_ratio: 0.2
 frontier_threshold: 10
 robot_count: 3    # number of robots on the team
 min_hallway_width: 0.5   # allowed minimum separation between two pixels on the graph
