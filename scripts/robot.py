@@ -643,6 +643,7 @@ class Robot:
                                                                      rospy.Time(0))
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
                 sleep(1)
+                rospy.logerr("Robot pose: {}".format(robot_pose))     
             except:
                 pass
         return robot_pose

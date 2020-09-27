@@ -1,4 +1,4 @@
-rostopic pub -1 /robot_1/initialpose geometry_msgs/PoseWithCovarianceStamped "header:
+rostopic pub -1 /robot_8/initialpose geometry_msgs/PoseWithCovarianceStamped "header:
   seq: 0
   stamp:
     secs: 0
