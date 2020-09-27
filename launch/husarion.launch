@@ -42,4 +42,6 @@
     </node>
 
 </group>
+    <node pkg="rosbag" type="record" name="gvg_rosbag" output="screen" args="--all"/>
+
 </launch>
