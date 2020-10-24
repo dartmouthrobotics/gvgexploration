@@ -472,7 +472,8 @@ class Graph:
                 p2[INDEX_FOR_Y] = vertices[ridge_vertex[1]][INDEX_FOR_Y]
                 p1 = pu.get_point(tuple(p1))
                 p2 = pu.get_point(tuple(p2))
-                if self.is_free(p1) and self.is_free(p2):
+                # if self.is_free(p1) and self.is_free(p2):
+                if not self.has_unknown_points(p1,p2):
                     e = (p1, p2)
                     q1 = obstacles[ridge_point[0]]
                     q2 = obstacles[ridge_point[1]]
@@ -482,6 +483,52 @@ class Graph:
             self.get_adjacency_list(self.edges)
             self.connect_subtrees()
             self.merge_similar_edges()
+
+
+    def has_unknown_points(self, p1,p2):
+        line_points= self.get_line(p1[INDEX_FOR_X],p1[INDEX_FOR_Y],p2[INDEX_FOR_X],p2[INDEX_FOR_Y])
+        for p in line_points:
+            if not self.is_free(p):
+                return True
+        return False
+
+    def get_line(self,x1, y1, x2, y2):
+        x1=int(round(x1))
+        y1=int(round(y1))
+        x2=int(round(x2))
+        y2=int(round(y2))
+        points = []
+        issteep = abs(y2-y1) > abs(x2-x1)
+        if issteep:
+            x1, y1 = y1, x1
+            x2, y2 = y2, x2
+        rev = False
+        if x1 > x2:
+            x1, x2 = x2, x1
+            y1, y2 = y2, y1
+            rev = True
+        deltax = x2 - x1
+        deltay = abs(y2-y1)
+        error = int(deltax / 2)
+        y = y1
+        ystep = None
+        if y1 < y2:
+            ystep = 1
+        else:
+            ystep = -1
+        for x in range(x1, x2 + 1):
+            if issteep:
+                points.append((y, x))
+            else:
+                points.append((x, y))
+            error -= deltay
+            if error < 0:
+                y += ystep
+                error += deltax
+        if rev:
+            points.reverse()
+        return points
+
 
     def merge_similar_edges(self):
         parents = {self.longest: None}
