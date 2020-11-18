@@ -1,17 +1,14 @@
-debug_mode: 1
-method: 'gvg' # method that is running
-#method: 'recurrent' # method that is running
-#method: 'continuous' # method that is running
+debug_mode: 0
+#method: 'gvg' # method that is running
 data_share_threshold: 10
-max_target_info_ratio: 0.2
+max_target_info_ratio: 0.5
 frontier_threshold: 10
-robot_count: 2    # number of robots on the team
-min_hallway_width: 0.5   # allowed minimum separation between two pixels on the graph
-#comm_range: 10  # communication range
-comm_range: -300  # communication range
-point_precision: 2   # allowed precision of the poses
-min_edge_length: 0.1   #  allowed edge length
-lidar_scan_radius: 8  # radius of the range finder
+#robot_count: 2    # number of robots on the team
+min_hallway_width: 1.0 # allowed minimum separation between two pixels on the graph
+comm_range: 10  # communication range
+point_precision: 1   # allowed precision of the poses
+min_edge_length: 1.0   #  allowed edge length
+lidar_scan_radius: 6  # radius of the range finder
 lidar_fov: 360   # range scanner field of view
 slope_bias: 0.1   # allowed error margin in slope comparisons
 opposite_vector_bias: 0.25  # allowed error margin in vector comparisons (direction)
@@ -20,31 +17,13 @@ max_coverage: 0.8   # allowed maximum coverage
 max_common_coverage: 0.8
 max_exploration_time: 20
 termination_metric: 1 # 1: TOTAL COVERAGE, 2: MAXIMUM_EXPLORATION_TIME 3: COMMON_COVERAGE, 4: FULL_COVERAGE
-<<<<<<< HEAD
-<<<<<<< HEAD
 map_scale: 20.0     # scale of the map
 graph_scale: 10.0     # scale of the map
 #bs_pose: [4.0,10.0]  # basic
-#bs_pose: [18.0,8.0]  # cave
-#bs_pose: [12.0,3.0]  # city
-bs_pose: [18.0,12.0] # office
 map_inflation_radius: 1   # inflation radius of the robot
-map_file: '$(find gvgexploration)/world/office.png'    # environment file
-target_distance: 2.5 #2.5
-=======
-map_scale: 1.0     # scale of the map
-=======
-map_scale: 20.0     # scale of the map
-graph_scale: 10.0     # scale of the map
->>>>>>> local changes
-mac_id: {'00:0f:00:4e:07:64':1,'d0:c5:d3:81:41:89':1,'00:0f:00:4f:0d:19':7,'d0:c5:d3:81:41:8b':7,'00:0f:00:4d:b9:de':8,'d0:c5:d3:81:44:1f':8,'00:0f:00:4d:ba:32':5,'d0:c5:d3:81:4e:57':5}
-#mac_id: {'d0:c5:d3:81:3a:67':1,'00:0f:00:4e:07:f7':1,'00:0f:00:4e:07:64':4,'d0:c5:d3:81:41:89':4,'00:0f:00:4f:0d:19':7,'d0:c5:d3:81:41:8b':7,'00:0f:00:4d:b9:de':8,'d0:c5:d3:81:44:1f':8,'00:0f:00:4d:ba:32':5,'d0:c5:d3:81:4e:57':5}
-bs_pose: [0.0,0.0]  # cave
-map_inflation_radius: 1   # inflation radius of the robot
-map_file: '$(find gvgexploration)/world/basic.png'    # environment file
-target_distance: 0.4
->>>>>>> dadaec087566c060fdb048cb4d4739132c3c10a3
+map_file: '$(find gvgexplore)/world/basic.png'    # environment file
+target_distance: 2.0
 target_angle: 1.57
-environment: 'sudikoff'
+#environment: 'basic'
 max_wait_time: 120 # secs
-run: 0
+#run: 0

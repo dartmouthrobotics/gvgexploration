@@ -6,7 +6,7 @@
 <node name="BaseAlign" pkg="tf" type="static_transform_publisher" args="0 0 0 3.14 0 0  base_link  laser 10"/>
 
 <group ns="robot_$(arg robot_id)">
-    <rosparam file="$(find gvgexploration)/param/ros.yaml"/>
+    <rosparam file="ros_robot.yaml"/>
 
     <include file="$(find gvgexploration)/launch/robot.launch">
         <arg name="robot_name" value="$(arg robot_id)" />
@@ -14,13 +14,13 @@
         <arg name="base_stations" value="$(arg base_station)" />
     </include>
     <node pkg="nav2d_operator" type="operator" name="operator" output="screen">
-        <rosparam file="$(find gvgexploration)/param/operator.yaml"/>
-        <rosparam file="$(find gvgexploration)/param/costmap1.yaml" ns="local_map" />
+        <rosparam file="operator_robot.yaml"/>
+        <rosparam file="costmap1_robot.yaml" ns="local_map" />
         <param name="robot_frame" value="base_link"/>
         <param name="odometry_frame" value="odom"/>
     </node>
     <node pkg="nav2d_navigator" type="navigator" name="navigator">
-        <rosparam file="$(find gvgexploration)/param/navigator.yaml"/>
+        <rosparam file="navigator_robot.yaml"/>
     </node>
     <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
     <node name="SetGoal" pkg="nav2d_navigator" type="set_goal_client" />
@@ -30,7 +30,7 @@
     <include file="$(find rplidar_ros)/launch/rplidar.launch"/>
 
     <node pkg="nav2d_karto" name="Mapper" type="mapper">
-        <rosparam command="load" file="$(find gvgexploration)/param/mapper.yaml" subst_value="true"/>
+        <rosparam command="load" file="mapper_robot.yaml" subst_value="true"/>
     </node>
 
    <node name="master_discovery" pkg="master_discovery_fkie" type="master_discovery" >

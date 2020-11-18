@@ -13,15 +13,15 @@
     <group ns="robot_0">
         <param name="robot_id" value="1" />
         <param name="tf_prefix" type="string" value="robot_0"/>
-        <rosparam command="load" file="$(find gvgexploration)/param/ros.yaml" subst_value="true"/>
+        <rosparam command="load" file="ros_robot.yaml" subst_value="true"/>
         <node pkg="nav2d_operator" type="operator" name="operator" output="screen">
-            <rosparam command="load" file="$(find gvgexploration)/param/operator.yaml" subst_value="true"/>
-            <rosparam command="load" file="$(find gvgexploration)/param/costmap1.yaml" ns="local_map" subst_value="true"/>
+            <rosparam command="load" file="operator_robot.yaml" subst_value="true"/>
+            <rosparam command="load" file="costmap1_robot.yaml" ns="local_map" subst_value="true"/>
             <param name="robot_frame" value="base_link"/>
             <param name="odometry_frame" value="odom"/>
         </node>
         <node pkg="nav2d_navigator" type="navigator" name="navigator">
-            <rosparam command="load" file="$(find gvgexploration)/param/navigator.yaml" subst_value="true"/>
+            <rosparam command="load" file="navigator_robot.yaml" subst_value="true"/>
             <param name="robot_id" value="1"/>
         </node>
         <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
@@ -41,15 +41,15 @@
     <group ns="robot_1">
         <param name="robot_id" value="2" />
         <param name="tf_prefix" type="string" value="robot_1"/>
-        <rosparam command="load" file="$(find gvgexploration)/param/ros.yaml" subst_value="true"/>
+        <rosparam command="load" file="ros_robot.yaml" subst_value="true"/>
         <node pkg="nav2d_operator" type="operator" name="operator" output="screen">
-            <rosparam command="load" file="$(find gvgexploration)/param/operator.yaml" subst_value="true"/>
-            <rosparam command="load" file="$(find gvgexploration)/param/costmap2.yaml" ns="local_map" subst_value="true"/>
+            <rosparam command="load" file="operator_robot.yaml" subst_value="true"/>
+            <rosparam command="load" file="costmap2_robot.yaml" ns="local_map" subst_value="true"/>
             <param name="robot_frame" value="base_link"/>
             <param name="odometry_frame" value="odom"/>
         </node>
         <node pkg="nav2d_navigator" type="navigator" name="navigator">
-            <rosparam command="load" file="$(find gvgexploration)/param/navigator.yaml" subst_value="true"/>
+            <rosparam command="load" file="navigator_robot.yaml" subst_value="true"/>
             <param name="robot_id" value="2"/>
         </node>
         <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
@@ -69,15 +69,15 @@
     <group ns="robot_2">
         <param name="robot_id" value="3" />
         <param name="tf_prefix" type="string" value="robot_2"/>
-        <rosparam command="load" file="$(find gvgexploration)/param/ros.yaml" subst_value="true"/>
+        <rosparam command="load" file="ros_robot.yaml" subst_value="true"/>
         <node pkg="nav2d_operator" type="operator" name="operator" output="screen">
-            <rosparam command="load" file="$(find gvgexploration)/param/operator.yaml" subst_value="true"/>
+            <rosparam command="load" file="operator_robot.yaml" subst_value="true"/>
             <rosparam command="load" file="$(find gvgexploration)/param/costmap3.yaml" ns="local_map" subst_value="true"/>
             <param name="robot_frame" value="base_link"/>
             <param name="odometry_frame" value="odom"/>
         </node>
         <node pkg="nav2d_navigator" type="navigator" name="navigator">
-            <rosparam command="load" file="$(find gvgexploration)/param/navigator.yaml" subst_value="true"/>
+            <rosparam command="load" file="navigator_robot.yaml" subst_value="true"/>
             <param name="robot_id" value="3"/>
         </node>
         <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
@@ -96,15 +96,15 @@
     <group ns="robot_3">
         <param name="robot_id" value="4" />
         <param name="tf_prefix" type="string" value="robot_3"/>
-        <rosparam command="load" file="$(find gvgexploration)/param/ros.yaml" subst_value="true"/>
+        <rosparam command="load" file="ros_robot.yaml" subst_value="true"/>
         <node pkg="nav2d_operator" type="operator" name="operator" output="screen">
-            <rosparam command="load" file="$(find gvgexploration)/param/operator.yaml" subst_value="true"/>
+            <rosparam command="load" file="operator_robot.yaml" subst_value="true"/>
             <rosparam command="load" file="$(find gvgexploration)/param/costmap4.yaml" ns="local_map" subst_value="true"/>
             <param name="robot_frame" value="base_link"/>
             <param name="odometry_frame" value="odom"/>
         </node>
         <node pkg="nav2d_navigator" type="navigator" name="navigator">
-            <rosparam command="load" file="$(find gvgexploration)/param/navigator.yaml" subst_value="true"/>
+            <rosparam command="load" file="navigator_robot.yaml" subst_value="true"/>
             <param name="robot_id" value="4"/>
         </node>
         <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
@@ -123,15 +123,15 @@
     <group ns="robot_4">
         <param name="robot_id" value="5" />
         <param name="tf_prefix" type="string" value="robot_4"/>
-        <rosparam command="load" file="$(find gvgexploration)/param/ros.yaml" subst_value="true"/>
+        <rosparam command="load" file="ros_robot.yaml" subst_value="true"/>
         <node pkg="nav2d_operator" type="operator" name="operator" output="screen">
-            <rosparam command="load" file="$(find gvgexploration)/param/operator.yaml" subst_value="true"/>
+            <rosparam command="load" file="operator_robot.yaml" subst_value="true"/>
             <rosparam command="load" file="$(find gvgexploration)/param/costmap5.yaml" ns="local_map" subst_value="true"/>
             <param name="robot_frame" value="base_link"/>
             <param name="odometry_frame" value="odom"/>
         </node>
         <node pkg="nav2d_navigator" type="navigator" name="navigator">
-            <rosparam command="load" file="$(find gvgexploration)/param/navigator.yaml" subst_value="true"/>
+            <rosparam command="load" file="navigator_robot.yaml" subst_value="true"/>
             <param name="robot_id" value="5"/>
         </node>
         <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
@@ -150,15 +150,15 @@
     <group ns="robot_5">
         <param name="robot_id" value="6" />
         <param name="tf_prefix" type="string" value="robot_5"/>
-        <rosparam command="load" file="$(find gvgexploration)/param/ros.yaml" subst_value="true"/>
+        <rosparam command="load" file="ros_robot.yaml" subst_value="true"/>
         <node pkg="nav2d_operator" type="operator" name="operator" output="screen">
-            <rosparam command="load" file="$(find gvgexploration)/param/operator.yaml" subst_value="true"/>
+            <rosparam command="load" file="operator_robot.yaml" subst_value="true"/>
             <rosparam command="load" file="$(find gvgexploration)/param/costmap6.yaml" ns="local_map" subst_value="true"/>
             <param name="robot_frame" value="base_link"/>
             <param name="odometry_frame" value="odom"/>
         </node>
         <node pkg="nav2d_navigator" type="navigator" name="navigator">
-            <rosparam command="load" file="$(find gvgexploration)/param/navigator.yaml" subst_value="true"/>
+            <rosparam command="load" file="navigator_robot.yaml" subst_value="true"/>
             <param name="robot_id" value="6"/>
         </node>
         <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />

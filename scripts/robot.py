@@ -113,7 +113,7 @@ class Robot:
         self.robot_count = rospy.get_param("~robot_count")
         self.debug_mode = rospy.get_param("~debug_mode")
         self.method = rospy.get_param("~method")
-        self.mac_id = rospy.get_param("~mac_id")
+        # self.mac_id = rospy.get_param("~mac_id")
         self.comm_range = rospy.get_param("~comm_range")
 
         self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,
@@ -132,9 +132,9 @@ class Robot:
                                                       Intersections)
         rospy.Subscriber('/robot_{}/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
-        rospy.Subscriber('/robot_{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
-        rospy.Subscriber('/robot_{}/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped,
-                         self.discovery_callback)
+        # rospy.Subscriber('/robot_{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
+        # rospy.Subscriber('/robot_{}/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped,
+        #                  self.discovery_callback)
 
         rospy.Subscriber('/robot_{}/gvgexplore/feedback'.format(self.robot_id), Pose, self.explore_feedback_callback)
         self.data_size_pub = rospy.Publisher('/shared_data_size', DataSize, queue_size=10)
@@ -188,15 +188,15 @@ class Robot:
                 pu.log_msg(self.robot_id, "Throwing error: {}".format(e), self.debug_mode)
             r.sleep()
 
-    def wifi_strength_callback(self, data):
-        src_mac = data.src
-        dst_mac = data.dst
-        if src_mac in self.mac_id and dst_mac in self.mac_id and self.mac_id[dst_mac] == self.robot_id:
-            self.signal_strength[self.mac_id[src_mac]] = data.signal
+    # def wifi_strength_callback(self, data):
+    #     src_mac = data.src
+    #     dst_mac = data.dst
+    #     if src_mac in self.mac_id and dst_mac in self.mac_id and self.mac_id[dst_mac] == self.robot_id:
+    #         self.signal_strength[self.mac_id[src_mac]] = data.signal
 
-    def discovery_callback(self, data):
-        for d in data.links:
-            self.master_links.add(d.destination)
+    # def discovery_callback(self, data):
+    #     for d in data.links:
+    #         self.master_links.add(d.destination)
 
     def evaluate_exploration(self):
         # lapsed_time = rospy.Time.now().to_sec() - self.last_evaluation_time
@@ -459,25 +459,25 @@ class Robot:
         buffered_data.data = message_data
         return buffered_data
 
-    # def get_close_devices(self):
-    #     ss_data = self.signal_strength_srv(HotSpotRequest(robot_id=str(self.robot_id)))
-    #     data = ss_data.hot_spots
-    #     signals = data.signals
-    #     robots = []
-    #     devices = []
-    #     for rs in signals:
-    #         robots.append([rs.robot_id, rs.rssi])
-    #         devices.append(str(rs.robot_id))
-    #     return set(devices)
-
     def get_close_devices(self):
+        ss_data = self.signal_strength_srv(HotSpotRequest(robot_id=str(self.robot_id)))
+        data = ss_data.hot_spots
+        signals = data.signals
+        robots = []
         devices = []
-        hotspots = list(self.signal_strength)
-        rospy.logerr("Candidate robtos: {}, hotspots: {}".format(self.candidate_robots,hotspots))
-        for h in hotspots:
-            if str(h) in self.candidate_robots and self.signal_strength[h] >= self.comm_range:
-                devices.append(str(h))
+        for rs in signals:
+            robots.append([rs.robot_id, rs.rssi])
+            devices.append(str(rs.robot_id))
         return set(devices)
+
+    # def get_close_devices(self):
+    #     devices = []
+    #     hotspots = list(self.signal_strength)
+    #     rospy.logerr("Candidate robtos: {}, hotspots: {}".format(self.candidate_robots,hotspots))
+    #     for h in hotspots:
+    #         if str(h) in self.candidate_robots and self.signal_strength[h] >= self.comm_range:
+    #             devices.append(str(h))
+    #     return set(devices)
 
     def process_data(self, buff_data, session_id=None, sent_data=0):
         #rospy.logerr("data to process: {}".format(buff_data))
@@ -532,11 +532,7 @@ class Robot:
         rospy.logerr("creating auction response")
         sender_id = data.msg_header.header.frame_id
         poses = data.poses
-<<<<<<< HEAD
         if not poses and self.frontier_ridge:
-=======
-        if not poses:
->>>>>>> dadaec087566c060fdb048cb4d4739132c3c10a3
             pu.log_msg(self.robot_id, "No poses received. Proceeding to my next frontier", self.debug_mode)
             self.start_exploration_action(self.frontier_ridge)
             return SharedPointResponse(auction_accepted=1, res_data=None)
