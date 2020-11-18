@@ -491,8 +491,8 @@ class Robot:
             return SharedPointResponse(auction_accepted=0)
         sender_id = data.msg_header.header.frame_id
         poses = data.poses
-        if not poses:
-            # pu.log_msg(self.robot_id, "No poses received. Proceeding to my next frontier", self.debug_mode)
+        if not poses and self.frontier_ridge:
+            pu.log_msg(self.robot_id, "No poses received. Proceeding to my next frontier", self.debug_mode)
             self.start_exploration_action(self.frontier_ridge)
             return SharedPointResponse(auction_accepted=1, res_data=None)
         received_points = []

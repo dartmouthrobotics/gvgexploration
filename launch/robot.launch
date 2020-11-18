@@ -6,7 +6,7 @@
     <arg name="frontier_robots" default=''/>
     <arg name="relay_robots" default=''/>
     <group ns="$(arg robot_name)">
-        <node pkg="gvgexploration" type="robot.py" name="node$(arg robot_name)" >
+        <node pkg="gvgexploration" type="robot.py" name="node$(arg robot_name)" respawn="true" >
             <param name="robot_id" value="$(arg robot_name)"/>
             <param name="robot_type" value="$(arg robot_type)"/>
             <param name="base_stations" value="$(arg base_stations)"/>
@@ -15,7 +15,7 @@
             <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
         </node>
 
-        <node pkg="gvgexploration" type="graph.py" name="node$(arg robot_name)_graph_processor" >
+        <node pkg="gvgexploration" type="graph.py" name="node$(arg robot_name)_graph_processor"  respawn="true" >
             <param name="robot_id" value="$(arg robot_name)"/>
             <param name="robot_type" value="$(arg robot_type)"/>
             <param name="base_stations" value="$(arg base_stations)"/>
@@ -24,13 +24,13 @@
             <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
         </node>
 
-        <node pkg="gvgexploration" type="gvg_explore.py" name="node$(arg robot_name)_explore" >
+        <node pkg="gvgexploration" type="gvg_explore.py" name="node$(arg robot_name)_explore"  respawn="true" >
             <param name="robot_id" value="$(arg robot_name)"/>
             <param name="robot_type" value="$(arg robot_type)"/>
             <param name="base_stations" value="$(arg base_stations)"/>
             <param name="frontier_robots" value="$(arg frontier_robots)"/>
             <param name="relay_robots" value="$(arg relay_robots)"/>
-            <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
+            <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true" />
         </node>
     </group>
 </launch>

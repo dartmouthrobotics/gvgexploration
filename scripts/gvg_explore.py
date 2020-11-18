@@ -182,53 +182,6 @@ class GVGExplore:
         self.goal_feedback_pub.publish(pose)  # publish to feedback
         self.start_gvg_exploration(edge)
 
-    # def start_gvg_exploration(self, edge):
-    #     parent_id = self.get_id()
-    #     leaf_id = self.get_id()
-    #     parent_ids = {leaf_id: parent_id, parent_id: parent_id}
-    #     id_pose = {parent_id: edge[0], leaf_id: edge[1]}
-    #     all_visited_poses = {edge[0]: parent_id, edge[1]: leaf_id}
-    #
-    #     # -------------------------------- DFS starts here ---------------
-    #     pivot_node = {parent_id: edge[0]}
-    #     parent = {leaf_id: parent_id}
-    #     visited = [parent_id]
-    #     pivot_id = pivot_node.keys()[0]
-    #     while not rospy.is_shutdown():
-    #         if self.cancel_request:
-    #             break
-    #         S = [pivot_id]
-    #         self.fetch_new_graph()
-    #         self.localize_nodes(id_pose, pivot_node)
-    #         while len(S) > 0:
-    #             u = S.pop()
-    #             pivot_node = {parent_ids[u]: id_pose[parent_ids[u]]}
-    #             self.move_to_frontier(id_pose[u], theta=pu.theta(id_pose[parent_ids[u]], id_pose[u]))
-    #             pu.log_msg(self.robot_id, "Size of stack: {}".format(len(S)), self.debug_mode)
-    #             start_time = rospy.Time.now().to_sec()
-    #             self.fetch_new_graph()
-    #             self.localize_nodes(id_pose, pivot_node)
-    #             leaf_pose = id_pose[u]
-    #             parent_pose = id_pose[parent_ids[u]]
-    #             leaves = self.get_leaves(leaf_pose, parent_pose)
-    #             best_leaf = self.get_best_leaf(leaves)
-    #             if best_leaf:
-    #                 leaf_parent = leaves[best_leaf]
-    #                 v_id = self.get_id()
-    #                 p_id = self.get_id()
-    #                 id_pose[v_id] = best_leaf
-    #                 id_pose[p_id] = leaf_parent
-    #                 parent_ids[v_id] = p_id
-    #                 S.append(v_id)
-    #                 parent[v_id] = u
-    #             visited.append(u)
-    #             all_visited_poses[leaf_pose] = u
-    #             end_time = rospy.Time.now().to_sec()
-    #             gvg_time = end_time - start_time
-    #             self.explore_computation.append({'time': start_time, 'gvg_compute': gvg_time})
-    #         pu.log_msg(self.robot_id, "Returned from DFS...", self.debug_mode)
-    #         sleep(1)
-
     def start_gvg_exploration(self, edge):
         parent_id = self.get_id()
         leaf_id = self.get_id()
@@ -251,24 +204,30 @@ class GVGExplore:
                 u = S.pop()
                 pivot_node = {u: id_pose[u]}
                 leaf_pose = id_pose[u]
-                self.move_to_frontier(leaf_pose, theta=pu.theta(id_pose[parent_ids[u]], leaf_pose))
+                self.move_to_frontier(leaf_pose, theta=pu.theta(id_pose[parent_ids[u]],leaf_pose))
+                pu.log_msg(self.robot_id, "Size of stack: {}".format(len(S)), self.debug_mode)
                 start_time = rospy.Time.now().to_sec()
                 self.fetch_new_graph()
                 self.localize_nodes(id_pose, pivot_node)
                 leaves = self.get_leaves(id_pose[u], id_pose[parent_ids[u]])
                 if not leaves:
-                    S.append(u)
+                    if id_pose[u] not in all_visited_poses:
+                        S.append(u)
+                    else:
+                        pivot_node = {parent_ids[u]: id_pose[parent_ids[u]]}
+                        rospy.logerr("GOT INTO THIS DEAD END!")
                 else:
                     best_leaf = self.get_best_leaf(leaves)
-                    leaf_parent = leaves[best_leaf]
-                    v_id = self.get_id()
-                    p_id = self.get_id()
-                    id_pose[v_id] = best_leaf
-                    id_pose[p_id] = leaf_parent
-                    parent_ids[v_id] = p_id
-                    S.append(v_id)
-                    parent[v_id] = u
-                    visited.append(u)
+                    if best_leaf:
+                        leaf_parent = leaves[best_leaf]
+                        v_id = self.get_id()
+                        p_id = self.get_id()
+                        id_pose[v_id] = best_leaf
+                        id_pose[p_id] = leaf_parent
+                        parent_ids[v_id] = p_id
+                        S.append(v_id)
+                        parent[v_id] = u
+                        visited.append(u)
                 all_visited_poses[leaf_pose] = u
                 end_time = rospy.Time.now().to_sec()
                 gvg_time = end_time - start_time
@@ -293,8 +252,9 @@ class GVGExplore:
         for n in all_nodes:
             n_dist = pu.D(pivot_pose, n)
             node_dist[n_dist] = n
-        new_n = node_dist[min(node_dist)]
-        pivot_node[pivot_key] = new_n
+        if node_dist:
+            new_n = node_dist[min(node_dist)]
+            pivot_node[pivot_key] = new_n
 
         parent = {new_n: None}
         visited = []
@@ -302,7 +262,7 @@ class GVGExplore:
         node_dist = {}
         while len(S) > 0:
             u = S.popleft()
-            if u != pivot_node.values()[0]:
+            if u != pivot_node[pivot_key]:
                 self.compute_distance(id_pose, node_dist, u)
             neighbors = self.adj_list[u]
             for v in neighbors:
@@ -328,6 +288,11 @@ class GVGExplore:
                 node_dist[k][d] = u
 
     def get_leaves(self, node, parent_node):
+        # leaves = {}
+        # if node in self.adj_list and len(self.adj_list[node]) > 1:
+        #     for n in self.adj_list[node]:
+        #         if len(self.adj_list[n]) == 1:
+        #             leaves[node] = n
         leaves = {}
         parent = {node: None}
         visited = [parent_node]
@@ -481,14 +446,20 @@ class GVGExplore:
 
     def get_best_leaf(self, leaves):
         polygons, start_end, points, unknown_points, marker_points = self.get_leaf_region(leaves)
+        pose=pu.scale_up(self.get_robot_pose(),self.graph_scale)
+        if not pose:
+            pose=1.0
         valid_leaves = {}
         for l, region in points.items():
             if self.is_frontier({l: leaves[l]}, region):  # self.line_has_obstacles(v[0], v[1])
-                valid_leaves[l] = unknown_points[l]
+                valid_leaves[l] = unknown_points[l]/pu.D(l,pose)
         if valid_leaves:
             best_leaf = max(valid_leaves, key=valid_leaves.get)
         else:
-            best_leaf = max(unknown_points, key=unknown_points.get)
+            if unknown_points:
+                best_leaf = max(unknown_points, key=unknown_points.get)
+            else:
+                best_leaf = list(leaves)[0]
         # -------- #DEBUG --------
         if self.debug_mode:
             marker_pose = (0, 0)
@@ -582,25 +553,29 @@ class GVGExplore:
 
     def move_status_callback(self, data):
         id_0 = "robot_{}_{}_explore".format(self.robot_id, self.goal_count - 1)
-        # if data.status_list:
-        #     goal_status = data.status_list[0]
-        #     if goal_status.goal_id.id:
-        #         if goal_status.goal_id.id == id_0:
-        #             if goal_status.status == pu.ACTIVE:
-        #                 now = rospy.Time.now().secs
-        #                 if (now - self.start_time) > 30:  # you can only spend upto 10 sec in same position
-        #                     pose = self.get_robot_pose()
-        #                     if pu.D(self.prev_pose, pose) < 0.5:
-        #                         pu.log_msg(self.robot_id, "Paused for too long", self.debug_mode)
-        #                         self.has_arrived = True
-        #                         self.moving_to_frontier = False
-        #                     self.prev_pose = pose
-        #                     self.start_time = now
-        #
-        #             else:
-        #                 if not self.has_arrived:
-        #                     self.has_arrived = True
-        #                 self.moving_to_frontier = False
+        if data.status_list:
+            goal_status = data.status_list[0]
+            if goal_status.goal_id.id:
+                if goal_status.goal_id.id == id_0:
+                    if goal_status.status == pu.ACTIVE:
+                        now = rospy.Time.now().secs
+                        # if (now - self.start_time) > 30:  # you can only spend upto 10 sec in same position
+                        #     pose = self.get_robot_pose()
+                        #     if pu.D(self.prev_pose, pose) < 0.5:
+                        #         pu.log_msg(self.robot_id, "Paused for too long", self.debug_mode)
+                        #         self.has_arrived = True
+                        #         self.moving_to_frontier = False
+                        #     self.prev_pose = pose
+                        #     self.start_time = now
+
+                    elif goal_status.status == pu.ABORTED:
+                        if self.moving_to_frontier:
+                            pu.log_msg(self.robot_id, "Failed to move..resetting frontier", 1)
+                            self.moving_to_frontier = False
+                            self.move_to_stop()
+                            if not self.has_arrived:
+                                self.has_arrived = True
+
 
     def create_marker_array(self, points, pose):
         marker = Marker()

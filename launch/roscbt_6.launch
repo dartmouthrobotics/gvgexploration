@@ -38,18 +38,6 @@
             <remap from="karto_out" to="/karto_out" />
         </node>
     </group>
-    <group ns="robot_6">
-        <node pkg="nav2d_karto" name="Mapper" type="mapper">
-            <remap from="karto_out" to="/karto_out" />
-            <rosparam command="load" file="$(find gvgexploration)/param/mapper.yaml" subst_value="true"/>
-        </node>
-    </group>
-    <group ns="robot_7">
-        <node pkg="nav2d_karto" name="Mapper" type="mapper">
-            <remap from="karto_out" to="/karto_out" />
-            <rosparam command="load" file="$(find gvgexploration)/param/mapper.yaml" subst_value="true"/>
-        </node>
-    </group>
     <node pkg="gvgexploration" type="map_analyzer.py" name="map_analyzer">
         <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
     </node>

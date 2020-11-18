@@ -23,7 +23,7 @@ interval_sim 100  # simulation timestep in milliseconds
 window
 (
   size [ 600.0 700.0 ]
-  center [ 40.0 15.0 ]
+  center [ 20.0  14.0 ]
   rotate [ 0.0 0.0 ]
   scale 10
 )
@@ -41,7 +41,7 @@ pioneer3at
 (
   name "robot1"
   color "purple"
-  pose [12.0 3.0 0.0 1.0]
+  pose [12.0 4.0 0.0 1.0]
 )
 
 # Put two robots into the world
@@ -49,46 +49,5 @@ pioneer3at
 (
   name "robot2"
   color "purple"
-  pose [12.0 5.0 0.0 0.0]
-)
-pioneer3at
-(
-  name "robot3"
-  color "purple"
-  pose [14. 5.0 0.0 0.0]
-)
-
-pioneer3at
-(
-  name "robot4"
-  color "purple"
-  pose [14.0 3.0 0.0 0.0]
-)
-
-pioneer3at
-(
-  name "robot5"
-  color "purple"
-  pose [18.0 4.0 0.0 1.0]
-)
-
-# Put two robots into the world
-pioneer3at
-(
-  name "robot6"
-  color "purple"
-  pose [18.0 6.0 0.0 0.0]
-)
-pioneer3at
-(
-  name "robot7"
-  color "purple"
-  pose [20.0 6.0 0.0 0.0]
-)
-
-pioneer3at
-(
-  name "robot8"
-  color "purple"
-  pose [20.0 4.0 0.0 0.0]
+  pose [12.0 6.0 0.0 0.0]
 )

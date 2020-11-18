@@ -27,6 +27,7 @@ from std_msgs.msg import String
 from numpy.linalg import norm
 import shapely.geometry as sg
 from shapely.geometry.polygon import Polygon
+import line_distance as line_dist
 
 INF = 100000
 SCALE = 10
@@ -70,6 +71,11 @@ class Graph:
         self.performance_data = []
         self.explored_points = set()
         self.last_intersection = None
+        self.max_x=0
+        self.max_y=0
+
+        self.min_x = 0
+        self.min_y = 0
 
         self.latest_map = None
         self.prev_ridge = None
@@ -146,7 +152,6 @@ class Graph:
         edgelist = self.create_edge_list(robot_pose)
         return FetchGraphResponse(edgelist=edgelist)
 
-
     def frontier_point_handler(self, request):
         count = request.count
         self.generate_graph()
@@ -200,13 +205,13 @@ class Graph:
         return rospy.Time.now().to_sec() - self.last_graph_update_time > 30  # updated last 20 secs
 
     def generate_graph(self):
-        self.lock.acquire()
+        # self.lock.acquire()
         map_msg = self.latest_map
         if not map_msg:
             map_msg = rospy.wait_for_message("/robot_{}/map".format(self.robot_id), OccupancyGrid)
         self.compute_graph(map_msg)
         self.last_graph_update_time = rospy.Time.now().to_sec()
-        self.lock.release()
+        # self.lock.release()
 
     def create_edge_list(self, robot_pose):
         alledges = list(self.edges)
@@ -308,6 +313,15 @@ class Graph:
                 self.pixel_desc[scaled_pose] = p
                 if p == OCCUPIED:
                     self.obstacles[scaled_pose] = OCCUPIED
+                    if scaled_pose[INDEX_FOR_X]>self.max_x:
+                        self.max_x=scaled_pose[INDEX_FOR_X]
+                    if scaled_pose[INDEX_FOR_Y] >self.max_y:
+                        self.max_y=scaled_pose[INDEX_FOR_Y]
+                    if scaled_pose[INDEX_FOR_X]<self.max_x:
+                        self.min_x=scaled_pose[INDEX_FOR_X]
+                    if scaled_pose[INDEX_FOR_Y] <self.max_y:
+                        self.min_y=scaled_pose[INDEX_FOR_Y]
+
                 if p == FREE:
                     self.all_poses.add(pu.get_point(pose))
 
@@ -338,7 +352,8 @@ class Graph:
                 v1 = pu.get_vector(p1, p2)
                 desc = (v1, width)
                 vertex_dict[e] = desc
-                d = self.distance_to_line(p1, p2, robot_pose)  # min([pu.D(robot_pose, e[0]), pu.D(robot_pose, e[1])])
+                d = line_dist.pnt2line(robot_pose, p1, p2)[0]
+                # d = self.distance_to_line(p1, p2, robot_pose)  # min([pu.D(robot_pose, e[0]), pu.D(robot_pose, e[1])])
                 if d != INF:
                     closest_ridge[e] = d
         if closest_ridge:
@@ -363,6 +378,7 @@ class Graph:
             d = norm(np.cross(p2_p1_vec, pose_p1_vec)) / norm(p2_p1_vec)
         else:
             d = INF
+
         return d
 
     def process_decision(self, vertex_descriptions, ridge, robot_pose):
@@ -477,15 +493,65 @@ class Graph:
                 p1 = pu.get_point(tuple(p1))
                 p2 = pu.get_point(tuple(p2))
                 if self.is_free(p1) and self.is_free(p2):
-                    e = (p1, p2)
-                    q1 = obstacles[ridge_point[0]]
-                    q2 = obstacles[ridge_point[1]]
-                    o = (pu.get_point(tuple(q1)), pu.get_point(tuple(q2)))
-                    if pu.D(q1, q2) > self.min_hallway_width:
-                        self.edges[e] = o
+                # if self.within_bounds(p1) and self.within_bounds(p2):
+                    if not self.has_unknown_points(p1, p2):
+                        e = (p1, p2)
+                        q1 = obstacles[ridge_point[0]]
+                        q2 = obstacles[ridge_point[1]]
+                        o = (pu.get_point(tuple(q1)), pu.get_point(tuple(q2)))
+                        if pu.D(q1, q2) > self.min_hallway_width:
+                            self.edges[e] = o
             self.get_adjacency_list(self.edges)
             self.connect_subtrees()
             self.merge_similar_edges()
+
+    def within_bounds(self,p):
+        return self.min_x-self.lidar_scan_radius<=p[INDEX_FOR_X]<=self.max_x+self.lidar_scan_radius and self.min_y-self.lidar_scan_radius<=p[INDEX_FOR_X]<=self.max_y+self.lidar_scan_radius
+
+    def has_unknown_points(self, p1, p2):
+        line_points = self.get_line(p1[INDEX_FOR_X], p1[INDEX_FOR_Y], p2[INDEX_FOR_X], p2[INDEX_FOR_Y])
+        for p in line_points:
+            if not self.is_free(p):
+                return True
+        return False
+
+    def get_line(self, x1, y1, x2, y2):
+        x1 = int(round(x1))
+        y1 = int(round(y1))
+        x2 = int(round(x2))
+        y2 = int(round(y2))
+        points = []
+        issteep = abs(y2 - y1) > abs(x2 - x1)
+        if issteep:
+            x1, y1 = y1, x1
+            x2, y2 = y2, x2
+        rev = False
+        if x1 > x2:
+            x1, x2 = x2, x1
+            y1, y2 = y2, y1
+            rev = True
+        deltax = x2 - x1
+        deltay = abs(y2 - y1)
+        error = int(deltax / 2)
+        y = y1
+        ystep = None
+        if y1 < y2:
+            ystep = 1
+        else:
+            ystep = -1
+        for x in range(x1, x2 + 1):
+            if issteep:
+                points.append((y, x))
+            else:
+                points.append((x, y))
+            error -= deltay
+            if error < 0:
+                y += ystep
+                error += deltax
+        if rev:
+            points.reverse()
+        return points
+
 
     def merge_graphs(self):
         if self.old_edges and self.edges:
@@ -954,13 +1020,15 @@ class Graph:
         self.new_information.clear()
         leaf_obstacles = copy.deepcopy(self.leaf_obstacles)
         leaf_edges = copy.deepcopy(self.leaf_edges)
-        polygons, start_end, points, unknown_points, marker_points = self.get_leaf_region(leaf_edges,
-                                                                                          leaf_obstacles)
+        polygons, start_end, points, unknown_points, marker_points = self.get_leaf_region(leaf_edges, leaf_obstacles)
+        other_leaves = {}
         for leaf, edge in leaf_edges.items():
+            obs = leaf_obstacles[leaf]
+            other_leaves[(edge, obs)] = unknown_points[leaf]
             if self.is_frontier({leaf: edge[0]}, points[leaf]):
-                edge = leaf_edges[leaf]
-                obs = leaf_obstacles[leaf]
                 self.new_information[(edge, obs)] = unknown_points[leaf]
+        if not self.new_information:
+            self.new_information = other_leaves
 
     def is_frontier(self, edge, leaf_region):
         leaf = list(edge.keys())[0]
@@ -968,7 +1036,10 @@ class Graph:
         full_cells = {pu.get_point(p): self.pixel_desc[p] for p in leaf_region}
         full_cells[leaf] = FREE
         frontiers = {}
-        self.flood_fill(full_cells, None, leaf, [], frontiers)
+        try:
+            self.flood_fill(full_cells, None, leaf, [], frontiers)
+        except:
+            pass
         return len(frontiers) > 0
 
     def flood_fill(self, cells, prev_point, new_point, visited, frontiers):
