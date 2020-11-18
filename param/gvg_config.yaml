@@ -5,7 +5,7 @@ method: 'gvg' # method that is running
 data_share_threshold: 10
 max_target_info_ratio: 0.2
 frontier_threshold: 10
-robot_count: 3    # number of robots on the team
+robot_count: 2    # number of robots on the team
 min_hallway_width: 0.5   # allowed minimum separation between two pixels on the graph
 #comm_range: 10  # communication range
 comm_range: -300  # communication range
@@ -21,6 +21,7 @@ max_common_coverage: 0.8
 max_exploration_time: 20
 termination_metric: 1 # 1: TOTAL COVERAGE, 2: MAXIMUM_EXPLORATION_TIME 3: COMMON_COVERAGE, 4: FULL_COVERAGE
 <<<<<<< HEAD
+<<<<<<< HEAD
 map_scale: 20.0     # scale of the map
 graph_scale: 10.0     # scale of the map
 #bs_pose: [4.0,10.0]  # basic
@@ -32,6 +33,10 @@ map_file: '$(find gvgexploration)/world/office.png'    # environment file
 target_distance: 2.5 #2.5
 =======
 map_scale: 1.0     # scale of the map
+=======
+map_scale: 20.0     # scale of the map
+graph_scale: 10.0     # scale of the map
+>>>>>>> local changes
 mac_id: {'00:0f:00:4e:07:64':1,'d0:c5:d3:81:41:89':1,'00:0f:00:4f:0d:19':7,'d0:c5:d3:81:41:8b':7,'00:0f:00:4d:b9:de':8,'d0:c5:d3:81:44:1f':8,'00:0f:00:4d:ba:32':5,'d0:c5:d3:81:4e:57':5}
 #mac_id: {'d0:c5:d3:81:3a:67':1,'00:0f:00:4e:07:f7':1,'00:0f:00:4e:07:64':4,'d0:c5:d3:81:41:89':4,'00:0f:00:4f:0d:19':7,'d0:c5:d3:81:41:8b':7,'00:0f:00:4d:b9:de':8,'d0:c5:d3:81:44:1f':8,'00:0f:00:4d:ba:32':5,'d0:c5:d3:81:4e:57':5}
 bs_pose: [0.0,0.0]  # cave

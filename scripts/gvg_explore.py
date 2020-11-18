@@ -193,7 +193,7 @@ class GVGExplore:
         pivot_node = {parent_id: edge[0]}
         parent = {leaf_id: parent_id}
         visited = [parent_id]
-        pivot_id = pivot_node.keys()[0]
+        pivot_id = all_visited_poses[edge[0]] #pivot_node.keys()[0]
         while not rospy.is_shutdown():
             if self.cancel_request:
                 break
@@ -215,10 +215,8 @@ class GVGExplore:
                         S.append(u)
                     else:
                         pivot_node = {parent_ids[u]: id_pose[parent_ids[u]]}
-<<<<<<< HEAD
                         rospy.logerr("GOT INTO THIS DEAD END!")
-=======
->>>>>>> dadaec087566c060fdb048cb4d4739132c3c10a3
+
                 else:
                     best_leaf = self.get_best_leaf(leaves)
                     if best_leaf:
@@ -291,25 +289,27 @@ class GVGExplore:
                 node_dist[k][d] = u
 
     def get_leaves(self, node, parent_node):
+        leaves={}
+        if node in self.adj_list and len(self.adj_list[node])>1:
+
+            for n in self.adj_list[node]:
+                if len(self.adj_list[n])==1:
+                    leaves[node]=n
+
         # leaves = {}
-        # if node in self.adj_list and len(self.adj_list[node]) > 1:
-        #     for n in self.adj_list[node]:
-        #         if len(self.adj_list[n]) == 1:
-        #             leaves[node] = n
-        leaves = {}
-        parent = {node: None}
-        visited = [parent_node]
-        S = [node]
-        while len(S) > 0:
-            u = S.pop()
-            neighbors = self.adj_list[u]
-            for v in neighbors:
-                if v not in visited:
-                    S.append(v)
-                    parent[v] = u
-            if len(neighbors) == 1 and parent[u]:
-                leaves[u] = parent[u]
-            visited.append(u)
+        # parent = {node: None}
+        # visited = [parent_node]
+        # S = [node]
+        # while len(S) > 0:
+        #     u = S.pop()
+        #     neighbors = self.adj_list[u]
+        #     for v in neighbors:
+        #         if v not in visited:
+        #             S.append(v)
+        #             parent[v] = u
+        #     if len(neighbors) == 1 and parent[u]:
+        #         leaves[u] = parent[u]
+        #     visited.append(u)
         return leaves
 
     def get_depth(self, leaf, parents):

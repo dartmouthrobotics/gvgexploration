@@ -27,11 +27,7 @@ from std_msgs.msg import String
 from numpy.linalg import norm
 import shapely.geometry as sg
 from shapely.geometry.polygon import Polygon
-<<<<<<< HEAD
 import line_distance as line_dist
-
-=======
->>>>>>> dadaec087566c060fdb048cb4d4739132c3c10a3
 INF = 100000
 SCALE = 10
 FREE = 0.0
@@ -74,15 +70,13 @@ class Graph:
         self.performance_data = []
         self.explored_points = set()
         self.last_intersection = None
-<<<<<<< HEAD
+
         self.max_x=0
         self.max_y=0
 
         self.min_x = 0
         self.min_y = 0
 
-=======
->>>>>>> dadaec087566c060fdb048cb4d4739132c3c10a3
         self.latest_map = None
         self.prev_ridge = None
         rospy.init_node("graph_node")
@@ -496,17 +490,6 @@ class Graph:
                 p2[INDEX_FOR_Y] = vertices[ridge_vertex[1]][INDEX_FOR_Y]
                 p1 = pu.get_point(tuple(p1))
                 p2 = pu.get_point(tuple(p2))
-<<<<<<< HEAD
-                if self.is_free(p1) and self.is_free(p2):
-                # if self.within_bounds(p1) and self.within_bounds(p2):
-                    if not self.has_unknown_points(p1, p2):
-                        e = (p1, p2)
-                        q1 = obstacles[ridge_point[0]]
-                        q2 = obstacles[ridge_point[1]]
-                        o = (pu.get_point(tuple(q1)), pu.get_point(tuple(q2)))
-                        if pu.D(q1, q2) > self.min_hallway_width:
-                            self.edges[e] = o
-=======
                 # if self.is_free(p1) and self.is_free(p2):
                 if not self.has_unknown_points(p1,p2):
                     e = (p1, p2)
@@ -515,36 +498,21 @@ class Graph:
                     o = (pu.get_point(tuple(q1)), pu.get_point(tuple(q2)))
                     if pu.D(q1, q2) > self.min_hallway_width:
                         self.edges[e] = o
->>>>>>> dadaec087566c060fdb048cb4d4739132c3c10a3
             self.get_adjacency_list(self.edges)
             self.connect_subtrees()
             self.merge_similar_edges()
 
-<<<<<<< HEAD
     def within_bounds(self,p):
         return self.min_x-self.lidar_scan_radius<=p[INDEX_FOR_X]<=self.max_x+self.lidar_scan_radius and self.min_y-self.lidar_scan_radius<=p[INDEX_FOR_X]<=self.max_y+self.lidar_scan_radius
 
     def has_unknown_points(self, p1, p2):
         line_points = self.get_line(p1[INDEX_FOR_X], p1[INDEX_FOR_Y], p2[INDEX_FOR_X], p2[INDEX_FOR_Y])
-=======
-
-    def has_unknown_points(self, p1,p2):
-        line_points= self.get_line(p1[INDEX_FOR_X],p1[INDEX_FOR_Y],p2[INDEX_FOR_X],p2[INDEX_FOR_Y])
->>>>>>> dadaec087566c060fdb048cb4d4739132c3c10a3
         for p in line_points:
             if not self.is_free(p):
                 return True
         return False
 
-<<<<<<< HEAD
-    def get_line(self, x1, y1, x2, y2):
-        x1 = int(round(x1))
-        y1 = int(round(y1))
-        x2 = int(round(x2))
-        y2 = int(round(y2))
-        points = []
-        issteep = abs(y2 - y1) > abs(x2 - x1)
-=======
+
     def get_line(self,x1, y1, x2, y2):
         x1=int(round(x1))
         y1=int(round(y1))
@@ -552,7 +520,6 @@ class Graph:
         y2=int(round(y2))
         points = []
         issteep = abs(y2-y1) > abs(x2-x1)
->>>>>>> dadaec087566c060fdb048cb4d4739132c3c10a3
         if issteep:
             x1, y1 = y1, x1
             x2, y2 = y2, x2
@@ -562,11 +529,7 @@ class Graph:
             y1, y2 = y2, y1
             rev = True
         deltax = x2 - x1
-<<<<<<< HEAD
-        deltay = abs(y2 - y1)
-=======
         deltay = abs(y2-y1)
->>>>>>> dadaec087566c060fdb048cb4d4739132c3c10a3
         error = int(deltax / 2)
         y = y1
         ystep = None
@@ -587,9 +550,6 @@ class Graph:
             points.reverse()
         return points
 
-
-<<<<<<< HEAD
-=======
     def merge_similar_edges(self):
         parents = {self.longest: None}
         deleted_nodes = {}
@@ -652,7 +612,6 @@ class Graph:
         self.edges = edges
         self.save_deleted_nodes(deleted_nodes)
 
->>>>>>> dadaec087566c060fdb048cb4d4739132c3c10a3
     def merge_graphs(self):
         if self.old_edges and self.edges:
             edge1, subtree1, parents1 = self.localize_robot(self.robot_pose, self.old_adj_list, self.old_edges)

@@ -14,7 +14,7 @@
         </node>
     </group>
 
-    <node pkg="gvgexploration" type="map_analyzer.py" name="map_analyzer">
+    <node pkg="gvgexploration" type="map_analyzer_sim.py" name="map_analyzer">
         <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
     </node>
 
