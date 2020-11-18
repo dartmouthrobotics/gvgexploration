@@ -5,11 +5,10 @@ matplotlib.use('Agg')
 from PIL import Image
 import numpy as np
 import rospy
-from project_utils import INDEX_FOR_X, INDEX_FOR_Y, pixel2pose, FREE, OCCUPIED, save_data, get_point,scale_down
+from project_utils import INDEX_FOR_X, INDEX_FOR_Y, pixel2pose, FREE, OCCUPIED, save_data, get_point, scale_down,log_msg
 from gvgexploration.msg import Coverage
 from gvgexploration.srv import ExploredRegion, ExploredRegionRequest
 from std_msgs.msg import String
-
 
 class MapAnalyzer:
     def __init__(self):
@@ -22,6 +21,8 @@ class MapAnalyzer:
         self.termination_metric = rospy.get_param("~termination_metric")
         self.environment = rospy.get_param("~environment")
         self.method = rospy.get_param("~method")
+        self.exploration_time = rospy.get_param("~max_exploration_time")
+        self.robot_id = rospy.get_param("~robot_id")
         self.is_active = False
         self.total_free_area = 0
         self.free_area_ratio = 0
@@ -32,22 +33,35 @@ class MapAnalyzer:
         self.all_maps = {}
         self.explored_region = {}
         self.pixel_desc = {}
-        for i in range(self.robot_count):
-            p = rospy.ServiceProxy('/robot_{}/explored_region'.format(i), ExploredRegion)
-            p.wait_for_service()
-            self.explored_region[i] = p
-            self.all_maps[i] = set()
+        p = rospy.ServiceProxy('/robot_{}/explored_region'.format(self.robot_id), ExploredRegion)
+        p.wait_for_service()
+        self.explored_region[self.robot_id] = p
+        self.all_maps[self.robot_id] = set()
+        # for i in range(self.robot_count):
+        #     p = rospy.ServiceProxy('/robot_{}/explored_region'.format(i), ExploredRegion)
+        #     p.wait_for_service()
+        #     self.explored_region[i] = p
+        #     self.all_maps[i] = set()
 
-        self.coverage_pub = rospy.Publisher("/coverage", Coverage, queue_size=10)
-        rospy.Subscriber('/shutdown', String, self.shutdown_callback)
-
+        self.shutdown_pub = rospy.Publisher("/shutdown".format(self.robot_id), String, queue_size=10)
+        self.coverage_pub = rospy.Publisher("/robot_{}/coverage".format(self.robot_id), Coverage, queue_size=10)
+        # rospy.Subscriber('/shutdown', String, self.shutdown_callback)
         rospy.on_shutdown(self.save_all_data)
 
     def spin(self):
         r = rospy.Rate(0.2)
-        self.read_raw_image()
+        # self.read_raw_image()
+        start_time = rospy.Time.now().to_sec()
         while not rospy.is_shutdown():
             try:
+                current_time = rospy.Time.now().to_sec()
+                elapsed_time = current_time - start_time
+                log_msg(self.robot_id,"Elapsed Time: {}".format(elapsed_time),1)
+                if elapsed_time > self.exploration_time * 60:
+                    tstr = String()
+                    tstr.data = "shutdown"
+                    self.shutdown_pub.publish(tstr)
+                    rospy.signal_shutdown("Exploration time up! Shutdown")
                 if not self.is_active:
                     self.is_active = True
                     self.publish_coverage()
@@ -58,16 +72,14 @@ class MapAnalyzer:
 
     def publish_coverage(self):
         common_points = []
-        for rid in range(self.robot_count):
-            self.get_explored_region(rid)
-            common_points.append(self.all_maps[rid])
+        # for rid in range(self.robot_count):
+        self.get_explored_region(self.robot_id)
+        common_points.append(self.all_maps[self.robot_id])
         common_area = set.intersection(*common_points)
-        common_area_size = len(common_area) / self.map_area
-        explored_area = len(self.all_explored_points) / self.map_area
-        cov_ratio = explored_area / self.free_area_ratio
-        common_coverage = common_area_size / self.free_area_ratio
-        rospy.logerr("Total points: {}, explored area: {}, common area: {}".format(self.total_free_area, cov_ratio,
-                                                                                   common_coverage))
+        common_area_size = len(common_area)  # / self.map_area
+        explored_area = len(self.all_explored_points)  # / self.map_area
+        cov_ratio = explored_area  # / self.free_area_ratio
+        common_coverage = common_area_size  # / self.free_area_ratio
         cov_msg = Coverage()
         cov_msg.header.stamp = rospy.Time.now()
         cov_msg.coverage = cov_ratio
@@ -77,6 +89,26 @@ class MapAnalyzer:
         self.all_coverage_data.append(
             {'time': rospy.Time.now().to_sec(), 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
              'expected_coverage': self.free_area_ratio})
+
+    # def publish_coverage(self):
+    #     common_points = []
+    #     for rid in range(self.robot_count):
+    #         self.get_explored_region(rid)
+    #         common_points.append(self.all_maps[rid])
+    #     common_area = set.intersection(*common_points)
+    #     common_area_size = len(common_area) #/ self.map_area
+    #     explored_area = len(self.all_explored_points) #/ self.map_area
+    #     cov_ratio = explored_area #/ self.free_area_ratio
+    #     common_coverage = common_area_size #/ self.free_area_ratio
+    #     cov_msg = Coverage()
+    #     cov_msg.header.stamp = rospy.Time.now()
+    #     cov_msg.coverage = cov_ratio
+    #     cov_msg.expected_coverage = self.free_area_ratio
+    #     cov_msg.common_coverage = common_coverage
+    #     self.coverage_pub.publish(cov_msg)
+    #     self.all_coverage_data.append(
+    #         {'time': rospy.Time.now().to_sec(), 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
+    #          'expected_coverage': self.free_area_ratio})
 
     def get_explored_region(self, rid):
         try:
@@ -100,36 +132,36 @@ class MapAnalyzer:
             whole_cells.append(cells)
         return whole_cells
 
-    def read_raw_image(self):
-        if self.map_file_name:
-            im = Image.open(self.map_file_name, 'r')
-            pixelMap = im.load()
-            free_points = 0
-            allpixels = 0
-            width = im.size[0]
-            height = im.size[1]
-            self.map_area = float(width * height) / (self.scale ** 2)
-            for i in range(width):
-                for j in range(height):
-                    index = [0.0] * 2
-                    index[INDEX_FOR_X] = i
-                    index[INDEX_FOR_Y] = (height - j)
-                    pixel = pixelMap[i, j]
-                    allpixels += 1
-                    if isinstance(pixel, int):
-                        if pixel > 0:
-                            free_points += 1
-                    else:
-                        pixel = pixelMap[i, j][0]
-                        if pixel > 0:
-                            free_points += 1
-            free_area = float(free_points)
-            self.free_area_ratio = free_points / float(allpixels)
-            rospy.logerr("Free ratio: {}, Width: {}, Height: {}, Area: {}: scale: {}".format(self.free_area_ratio, width, height,self.map_area, self.scale))
-            self.total_free_area = free_area
+    # def read_raw_image(self):
+    #     if self.map_file_name:
+    #         im = Image.open(self.map_file_name, 'r')
+    #         pixelMap = im.load()
+    #         free_points = 0
+    #         allpixels = 0
+    #         width = im.size[0]
+    #         height = im.size[1]
+    #         self.map_area = float(width * height) / (self.scale ** 2)
+    #         for i in range(width):
+    #             for j in range(height):
+    #                 index = [0.0] * 2
+    #                 index[INDEX_FOR_X] = i
+    #                 index[INDEX_FOR_Y] = (height - j)
+    #                 pixel = pixelMap[i, j]
+    #                 allpixels += 1
+    #                 if isinstance(pixel, int):
+    #                     if pixel > 0:
+    #                         free_points += 1
+    #                 else:
+    #                     pixel = pixelMap[i, j][0]
+    #                     if pixel > 0:
+    #                         free_points += 1
+    #         free_area = float(free_points)
+    #         self.free_area_ratio = free_points / float(allpixels)
+    #         rospy.logerr("Free ratio: {}, Width: {}, Height: {}, Area: {}: scale: {}".format(self.free_area_ratio, width, height,self.map_area, self.scale))
+    #         self.total_free_area = free_area
 
-    def shutdown_callback(self, msg):
-        rospy.signal_shutdown('MapAnalyzer: Shutdown command received!')
+    # def shutdown_callback(self, msg):
+    #     rospy.signal_shutdown('MapAnalyzer: Shutdown command received!')
 
     def save_all_data(self):
         save_data(self.all_coverage_data,

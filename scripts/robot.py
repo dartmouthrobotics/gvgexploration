@@ -38,6 +38,8 @@ SUCCEEDED = 3  # The goal was achieved successfully by the action server (Termin
 ABORTED = 4  # The goal was aborted during execution by the action server due to some failure (Terminal State)
 LOST = 9  # An action client can determine that a goal is LOST. This should not be sent over the wire by an action
 TURNING_ANGLE = np.deg2rad(45)
+from wifi_node.msg import WifiStrength
+from multimaster_msgs_fkie.msg import LinkStatesStamped
 
 
 class Robot:
@@ -111,6 +113,9 @@ class Robot:
         self.robot_count = rospy.get_param("~robot_count")
         self.debug_mode = rospy.get_param("~debug_mode")
         self.method = rospy.get_param("~method")
+        self.mac_id = rospy.get_param("~mac_id")
+        self.comm_range = rospy.get_param("~comm_range")
+
         self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,
                                            self.shared_data_handler)
         self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,
@@ -125,22 +130,25 @@ class Robot:
                                                         FrontierPoint)
         self.check_intersections = rospy.ServiceProxy('/robot_{}/check_intersections'.format(self.robot_id),
                                                       Intersections)
-        rospy.Subscriber('/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
+        rospy.Subscriber('/robot_{}/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
+        rospy.Subscriber('/robot_{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
+        rospy.Subscriber('/robot_{}/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped,
+                         self.discovery_callback)
+
         rospy.Subscriber('/robot_{}/gvgexplore/feedback'.format(self.robot_id), Pose, self.explore_feedback_callback)
         self.data_size_pub = rospy.Publisher('/shared_data_size', DataSize, queue_size=10)
         for rid in self.candidate_robots:
             received_data_clt = rospy.ServiceProxy("/robot_{}/shared_data".format(rid), SharedData)
             action_points_clt = rospy.ServiceProxy("/robot_{}/auction_points".format(rid), SharedPoint)
             alloc_point_clt = rospy.ServiceProxy("/robot_{}/allocated_point".format(rid), SharedFrontier)
-            pub = rospy.Publisher("/roscbt/robot_{}/initial_data".format(rid), BufferedData, queue_size=10)
+            pub = rospy.Publisher("/robot_{}/initial_data".format(rid), BufferedData, queue_size=10)
             self.publisher_map[rid] = pub
             self.allocation_pub[rid] = alloc_point_clt
             self.shared_data_srv_map[rid] = received_data_clt
             self.shared_point_srv_map[rid] = action_points_clt
-        rospy.Subscriber('/karto_out', LocalizedScan, self.robots_karto_out_callback,
+        rospy.Subscriber('/robot_{}/karto_out'.format(self.robot_id), LocalizedScan, self.robots_karto_out_callback,
                          queue_size=10)
-        self.shutdown_pub = rospy.Publisher("/shutdown".format(self.robot_id), String, queue_size=10)
         self.is_shutdown_caller = False
 
         self.trans_matrices = {}
@@ -159,11 +167,19 @@ class Robot:
         self.first_message_sent = False
         self.sent_messages = []
         self.received_messages = []
+        self.master_links = set()
 
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             try:
+                if self.is_initial_data_sharing:
+                   if len(self.master_links) == len(self.candidate_robots) + 1:
+                        sleep(5)
+                        rospy.logerr("Sending initial data to all robots...")
+                        self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
+                        self.is_initial_data_sharing = False
+
                 pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),
                            self.debug_mode)
                 if self.is_exploring:
@@ -171,6 +187,16 @@ class Robot:
             except Exception as e:
                 pu.log_msg(self.robot_id, "Throwing error: {}".format(e), self.debug_mode)
             r.sleep()
+
+    def wifi_strength_callback(self, data):
+        src_mac = data.src
+        dst_mac = data.dst
+        if src_mac in self.mac_id and dst_mac in self.mac_id and self.mac_id[dst_mac] == self.robot_id:
+            self.signal_strength[self.mac_id[src_mac]] = data.signal
+
+    def discovery_callback(self, data):
+        for d in data.links:
+            self.master_links.add(d.destination)
 
     def evaluate_exploration(self):
         # lapsed_time = rospy.Time.now().to_sec() - self.last_evaluation_time
@@ -236,17 +262,21 @@ class Robot:
             else:
                 pu.log_msg(self.robot_id, "Robot {} is in another session".format(rid), self.debug_mode)
         self.process_data(buff_data, session_id=self.session_id, sent_data=local_data_size)
+        rospy.logerr("Received and processed the data")
         frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(current_devices) + 1))
         frontier_points = self.parse_frontier_response(frontier_point_response)
+        pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)
         taken_poses = []
+        pu.log_msg(self.robot_id, "Received frontier points: {}".format(len(frontier_points)), self.debug_mode)
         if frontier_points:
             if session_devices:
                 auction = self.create_auction(frontier_points)
                 auction_feedback = {}
                 pu.log_msg(self.robot_id, "session devices: {}".format(session_devices), self.debug_mode)
                 for rid in session_devices:
-                    # pu.log_msg(self.robot_id, "Action: {}".format(auction), self.debug_mode)
+                    pu.log_msg(self.robot_id, "Action Request to Robot {}".format(rid), self.debug_mode)
                     auction_response = self.shared_point_srv_map[rid](SharedPointRequest(req_data=auction))
+                    pu.log_msg(self.robot_id, "Action Response: {}".format(auction_response), self.debug_mode)
                     if auction_response.auction_accepted:
                         data = auction_response.res_data
                         self.all_feedbacks[rid] = data
@@ -258,7 +288,7 @@ class Robot:
                                 min_pose = data.poses[i]
                                 min_dist = data.distances[i]
                         auction_feedback[rid] = (min_dist, min_pose)
-                        # pu.log_msg(self.robot_id, "received auction feedback", self.debug_mode)
+                        pu.log_msg(self.robot_id, "received auction feedback", self.debug_mode)
 
                 taken_poses = self.compute_and_share_auction_points(auction_feedback, frontier_points)
             else:
@@ -400,19 +430,19 @@ class Robot:
         return auction
 
     def robots_karto_out_callback(self, data):
-        if data.robot_id - 1 == self.robot_id:
-            for rid in self.candidate_robots:
-                self.add_to_file(rid, [data])
-            if self.is_initial_data_sharing:
-                self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
-                self.is_initial_data_sharing = False
+        rospy.logerr("Robot is saving a karto message")
+        for rid in self.candidate_robots:
+            self.add_to_file(rid, [data])
+        # if self.is_initial_data_sharing:
+        #    self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
+        #    self.is_initial_data_sharing = False
 
     def push_messages_to_receiver(self, receiver_ids, session_id, is_alert=0, initiator=0):
         for receiver_id in receiver_ids:
             message_data = self.load_data_for_id(receiver_id)
             buffered_data = self.create_buffered_data_msg(message_data, session_id, receiver_id)
             self.publisher_map[str(receiver_id)].publish(buffered_data)
-            self.delete_data_for_id(receiver_id)
+        # self.delete_data_for_id(receiver_id)
 
     def create_buffered_data_msg(self, message_data, session_id, receiver_id):
         buffered_data = BufferedData()
@@ -429,18 +459,28 @@ class Robot:
         buffered_data.data = message_data
         return buffered_data
 
+    # def get_close_devices(self):
+    #     ss_data = self.signal_strength_srv(HotSpotRequest(robot_id=str(self.robot_id)))
+    #     data = ss_data.hot_spots
+    #     signals = data.signals
+    #     robots = []
+    #     devices = []
+    #     for rs in signals:
+    #         robots.append([rs.robot_id, rs.rssi])
+    #         devices.append(str(rs.robot_id))
+    #     return set(devices)
+
     def get_close_devices(self):
-        ss_data = self.signal_strength_srv(HotSpotRequest(robot_id=str(self.robot_id)))
-        data = ss_data.hot_spots
-        signals = data.signals
-        robots = []
         devices = []
-        for rs in signals:
-            robots.append([rs.robot_id, rs.rssi])
-            devices.append(str(rs.robot_id))
+        hotspots = list(self.signal_strength)
+        rospy.logerr("Candidate robtos: {}, hotspots: {}".format(self.candidate_robots,hotspots))
+        for h in hotspots:
+            if str(h) in self.candidate_robots and self.signal_strength[h] >= self.comm_range:
+                devices.append(str(h))
         return set(devices)
 
     def process_data(self, buff_data, session_id=None, sent_data=0):
+        #rospy.logerr("data to process: {}".format(buff_data))
         self.lock.acquire()
         self.map_updating = True
         for rid, rdata in buff_data.items():
@@ -484,20 +524,27 @@ class Robot:
         return SharedDataResponse(in_session=0, res_data=buff_data)
 
     def shared_point_handler(self, auction_data):
-        # pu.log_msg(self.robot_id, "Received auction", self.debug_mode)
+        pu.log_msg(self.robot_id, "Received auction", self.debug_mode)
         data = auction_data.req_data
         session_id = data.session_id
         if self.is_sender or not self.session_id or session_id != self.session_id:
             return SharedPointResponse(auction_accepted=0)
+        rospy.logerr("creating auction response")
         sender_id = data.msg_header.header.frame_id
         poses = data.poses
+<<<<<<< HEAD
         if not poses and self.frontier_ridge:
+=======
+        if not poses:
+>>>>>>> dadaec087566c060fdb048cb4d4739132c3c10a3
             pu.log_msg(self.robot_id, "No poses received. Proceeding to my next frontier", self.debug_mode)
             self.start_exploration_action(self.frontier_ridge)
             return SharedPointResponse(auction_accepted=1, res_data=None)
         received_points = []
         distances = []
+        rospy.logerr("Getting robot pose")
         robot_pose = self.get_robot_pose()
+        rospy.logerr("Received robot pose: {}".format(robot_pose))
         for p in poses:
             received_points.append(p)
             point = (p.position.x, p.position.y,
@@ -520,7 +567,7 @@ class Robot:
         # reset waiting for auction flags
         self.waiting_for_auction = False
         self.auction_waiting_time = rospy.Time.now().to_sec()
-        # pu.log_msg(self.robot_id, "sending data back", self.debug_mode)
+        pu.log_msg(self.robot_id, "sending data back", self.debug_mode)
         return SharedPointResponse(auction_accepted=1, res_data=auction)
 
     def initial_data_callback(self, buff_data):
@@ -539,6 +586,8 @@ class Robot:
                     self.comm_session_time = rospy.Time.now().to_sec()
                     self.waiting_for_response = True
                     close_devices = self.get_close_devices()
+                    rospy.logerr(self.shared_data_srv_map)
+                    rospy.logerr("Close devices {}:".format(close_devices))
                     if close_devices:
                         self.handle_intersection(close_devices)
                 else:
@@ -592,14 +641,16 @@ class Robot:
         robot_pose = None
         while not robot_pose:
             try:
-                self.listener.waitForTransform("robot_{}/map".format(self.robot_id),
-                                               "robot_{}/base_link".format(self.robot_id), rospy.Time(),
+                self.listener.waitForTransform("map".format(self.robot_id),
+                                               "base_link".format(self.robot_id), rospy.Time(),
                                                rospy.Duration(4.0))
-                (robot_loc_val, rot) = self.listener.lookupTransform("robot_{}/map".format(self.robot_id),
-                                                                     "robot_{}/base_link".format(self.robot_id),
+                (robot_loc_val, rot) = self.listener.lookupTransform("map".format(self.robot_id),
+                                                                     "base_link".format(self.robot_id),
                                                                      rospy.Time(0))
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
+                rospy.logerr("Robot pose: {}".format(robot_pose))
                 sleep(1)
+                rospy.logerr("Robot pose: {}".format(robot_pose))     
             except:
                 pass
         return robot_pose
@@ -664,11 +715,6 @@ class Robot:
         msg = String()
         msg.data = '{}'.format(self.robot_id)
         self.is_shutdown_caller = True
-        # self.shutdown_pub.publish(msg)
-
-    # def shutdown_callback(self, data):
-    #     if not self.is_shutdown_caller:
-    #         rospy.signal_shutdown('Robot {}: Received Shutdown Exploration complete!'.format(self.robot_id))
 
 
 if __name__ == "__main__":

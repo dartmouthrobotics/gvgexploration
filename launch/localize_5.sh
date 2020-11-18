@@ -1,4 +1,4 @@
-rostopic pub -1 /robot_1/initialpose geometry_msgs/PoseWithCovarianceStamped "header:
+rostopic pub -1 /robot_5/initialpose geometry_msgs/PoseWithCovarianceStamped "header:
   seq: 0
   stamp:
     secs: 0
@@ -6,12 +6,8 @@ rostopic pub -1 /robot_1/initialpose geometry_msgs/PoseWithCovarianceStamped "he
   frame_id: 'map'
 pose:
   pose:
-    position: {x: 18.0, y: 14.0, z: 0.0}
+    position: {x: 0.0, y: 4.00, z: 0.0}
     orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
   covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-<<<<<<< HEAD
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"
-=======
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"
->>>>>>> dadaec087566c060fdb048cb4d4739132c3c10a3

@@ -6,14 +6,8 @@ rostopic pub -1 /robot_1/initialpose geometry_msgs/PoseWithCovarianceStamped "he
   frame_id: 'map'
 pose:
   pose:
-    position: {x: -8.0, y: 8.0, z: 0.0}
+    position: {x: 0.0, y: 0.0, z: 0.0}
     orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
   covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"
-
-#rosservice call /robot_0/StartExploration "{}"
-#rosservice call /robot_1/StartExploration "{}"
-#rosservice call /robot_2/StartExploration "{}"
-#rosservice call /robot_3/StartExploration "{}"
-#rosservice call /robot_4/StartExploration "{}"
