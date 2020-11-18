@@ -25,7 +25,7 @@
 
     <group ns="robot_1">
         <node pkg="nav2d_karto" name="Mapper" type="mapper">
-            <rosparam command="load" file="$(find gvgexplore)/param/mapper.yaml" subst_value="true"/>
+            <rosparam command="load" file="$(find gvgexploration)/param/mapper.yaml" subst_value="true"/>
             <remap from="karto_out" to="/karto_out"/>
 
             <param name="method" value="$(arg method)"/>
