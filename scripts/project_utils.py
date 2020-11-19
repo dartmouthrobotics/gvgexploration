@@ -88,6 +88,11 @@ def D(p, q):
     dy = q[INDEX_FOR_Y] - p[INDEX_FOR_Y]
     return math.sqrt(dx ** 2 + dy ** 2)
 
+def euclidean_distance(p, q):
+    # p and q are two-element arrays.
+    # l2 norm.
+    return np.linalg.norm(p-q)
+
 
 def T(p, q):
     return D(p, q) * math.cos(theta(p, q))
