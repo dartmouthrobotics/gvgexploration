@@ -578,36 +578,6 @@ class Graph:
         self.performance_data.append(
             {'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
 
-
-    def get_image_desc(self, occ_grid):
-        self.map_resolution = occ_grid.info.resolution
-        origin_x = occ_grid.info.origin.position.x
-        origin_y = occ_grid.info.origin.position.y
-        height = occ_grid.info.height
-        width = occ_grid.info.width
-        grid_values = np.array(occ_grid.data).reshape((height, width)).astype(np.float32)
-        num_rows = grid_values.shape[0]
-        num_cols = grid_values.shape[1]
-        self.obstacles.clear()
-
-        """
-        for row in xrange(num_rows):
-            for col in xrange(num_cols):
-                index = [0] * 2
-                index[INDEX_FOR_Y] = num_rows - row - 1
-                index[INDEX_FOR_X] = col
-                index = tuple(index)
-                pose = pu.pixel2pose(index, origin_x, origin_y, resolution)
-                scaled_pose = pu.scale_up(pose, self.graph_scale)
-                scaled_pose = pu.get_point(scaled_pose)
-                p = grid_values[num_rows - row - 1, col]
-                self.pixel_desc[scaled_pose] = p
-                if p == OCCUPIED:
-                    self.obstacles[scaled_pose] = OCCUPIED
-                if p == FREE:
-                    self.all_poses.add(pu.get_point(pose))
-        """
-
     # def round_point(self, p):
     #     xc = round(p[INDEX_FOR_X], 2)
     #     yc = round(p[INDEX_FOR_Y], 2)
