@@ -15,6 +15,7 @@ from geometry_msgs.msg import Pose
 from gvgexplore.msg import *
 from gvgexplore.srv import *
 import project_utils as pu
+from project_utils import euclidean_distance
 import tf
 from graham_scan import graham_scan
 from time import sleep
@@ -31,6 +32,7 @@ from visualization_msgs.msg import Marker
 from tf import TransformListener
 from geometry_msgs.msg import Point
 from scipy.ndimage import minimum_filter
+import igraph
 
 INF = 100000
 SCALE = 10
@@ -42,16 +44,23 @@ FONT_SIZE = 16
 MARKER_SIZE = 12
 
 class Grid:
+    """Occupancy Grid."""
+
     def __init__(self, map_msg):
-        self.frame_id = map_msg.header.frame_id
-        self.origin_translation = [map_msg.info.origin.position.x, map_msg.info.origin.position.y, map_msg.info.origin.position.z]
-        self.origin_quaternion = [map_msg.info.origin.orientation.x, map_msg.info.origin.orientation.y, map_msg.info.origin.orientation.z, map_msg.info.origin.orientation.w]
-        self.grid = np.reshape(map_msg.data, (map_msg.info.height, map_msg.info.width))
-        self.resolution = map_msg.info.resolution
+        self.header = map_msg.header
+        self.origin_translation = [map_msg.info.origin.position.x, 
+            map_msg.info.origin.position.y, map_msg.info.origin.position.z]
+        self.origin_quaternion = [map_msg.info.origin.orientation.x, 
+            map_msg.info.origin.orientation.y, 
+            map_msg.info.origin.orientation.z, 
+            map_msg.info.origin.orientation.w]
+        self.grid = np.reshape(map_msg.data, 
+            (map_msg.info.height, 
+                map_msg.info.width)) #shape: 0: height, 1: width.
+        self.resolution = map_msg.info.resolution # cell size in meters.
         #self.plot()
 
     def plot(self):
-        import matplotlib.pyplot as plt
         fig1 = plt.gcf()
         plt.imshow(self.grid)
         plt.colorbar()
@@ -61,24 +70,70 @@ class Grid:
         fig1.savefig('map.png', dpi=100)
 
     def cell_at(self, x, y):
-        return self.grid[y, x]
+        """Return cell value at x (column), y (row)."""
+        return self.grid[int(y), int(x)]
         #return self.grid[x + y * self.width]
 
     def is_free(self, x, y):
-        row_index = int(y)
-        col_index = int(x)
-        if 0 <= row_index < self.grid.shape[0] and 0 <= col_index < self.grid.shape[1]:
-            return 0 <= self.grid[int(y), int(x)] < 50
+        if 0 <= y < self.grid.shape[0] and 0 <= x < self.grid.shape[1]:
+            return 0 <= self.cell_at(x, y) < 50 # TODO: set values.
         else:
             return False
 
+    def convert_coordinates_i_to_xy(self, i):
+        """Convert coordinates if the index is given on the flattened array."""
+        x = i % self.grid.shape[1] # col
+        y = i / self.grid.shape[1] # row
+        return x, y
 
+    def wall_cells(self):
+        """
+        Return only *wall cells* -- i.e. obstacle cells that have free or 
+            unknown cells as neighbors -- as columns and rows.
+        """
+
+        # Array to check neighbors.
+        window = np.asarray([
+            [1, 1, 1],
+            [1, 0, 1],
+            [1, 1, 1]
+        ])
+        # Return all cells that are obstacles and satisfy the neighbor_condition
+        neighbor_condition = self.grid > minimum_filter(self.grid, 
+                footprint=window, mode='constant', cval=10000) # TODO: value.
+        obstacles = np.nonzero((self.grid >= OCCUPIED) & neighbor_condition)
+        obstacles = np.stack((obstacles[1], obstacles[0]), 
+            axis=1) # 1st column x, 2nd column, y.
+
+        return obstacles
 
 class Graph:
-    def __init__(self, robot_id=-1):
+    def __init__(self):
+        # Robot ID.
+        self.robot_id = rospy.get_param("~robot_id")
+
+        # Parameters related to the experiment.
+        self.robot_count = rospy.get_param("~robot_count")
+        self.environment = rospy.get_param("~environment")
+        self.run = rospy.get_param("~run")
+
+        # Physical parameters of the robot.
+        self.robot_radius = rospy.get_param('/robot_{}/robot_radius'.format(self.robot_id)) # meter.
+
+        # Internal data.
+        self.latest_map = None # Grid map.
+
+        # ROS subscribers.
+        rospy.Subscriber('/robot_{}/map'.format(self.robot_id), 
+            OccupancyGrid, self.map_callback)
+        self.tf_listener = TransformListener() # Transformation listener.
+
+        # ROS publisher
+        self.marker_pub = rospy.Publisher('voronoi', Marker, queue_size=0) # log.
+
+
+        # TO CHECK WHAT IS NEEDED.
         self.min_hallway_width = None
-        self.height = 0
-        self.width = 0
         self.pixel_desc = {}
         self.all_poses = set()
         self.obstacles = {}
@@ -107,13 +162,10 @@ class Graph:
         self.explored_points = set()
         self.last_intersection = None
 
-        self.latest_map = None
+
         self.prev_ridge = None
 
-        self.robot_id = rospy.get_param("~robot_id")
-        self.robot_count = rospy.get_param("~robot_count")
-        self.environment = rospy.get_param("~environment")
-        self.run = rospy.get_param("~run")
+
         self.debug_mode = rospy.get_param("~debug_mode")
         self.method = rospy.get_param("~method")
         self.bs_pose = rospy.get_param('~bs_pose')
@@ -124,7 +176,7 @@ class Graph:
         self.min_hallway_width = rospy.get_param("~min_hallway_width".format(self.robot_id)) * self.graph_scale
         self.comm_range = rospy.get_param("~comm_range".format(self.robot_id)) * self.graph_scale
         self.point_precision = rospy.get_param("~point_precision".format(self.robot_id))
-        self.min_edge_length = rospy.get_param("~min_edge_length".format(self.robot_id)) #* self.graph_scale
+
         self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius".format(self.robot_id)) * self.graph_scale
         self.lidar_fov = rospy.get_param("~lidar_fov".format(self.robot_id))
         self.slope_bias = rospy.get_param("~slope_bias".format(self.robot_id))
@@ -134,13 +186,12 @@ class Graph:
         rospy.Service('/robot_{}/explored_region'.format(self.robot_id), ExploredRegion,self.fetch_explored_region_handler)
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
         rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
-        rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_callback)
         rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_edge_handler)
 
 
         self.already_shutdown = False
         self.robot_pose = None
-        self.listener = tf.TransformListener()
+
         # edges
         self.deleted_nodes = {}
         self.deleted_obstacles = {}
@@ -148,28 +199,156 @@ class Graph:
         rospy.on_shutdown(self.save_all_data)
         rospy.loginfo('Robot {}: Successfully created graph node'.format(self.robot_id))
 
-        self.marker_pub = rospy.Publisher('voronoi', Marker, queue_size=0)
-        self.tf = TransformListener()
+
+
+    def compute_gvg(self):
+        """Compute GVG for exploration."""
+
+        start_time_clock = time.clock()
+        # Get only wall cells for the Voronoi.
+        obstacles = self.latest_map.wall_cells()
+        end_time_clock = time.clock()
+        print("generate obstacles2 {}".format(end_time_clock - start_time_clock))
+
+        start_time_clock = time.clock()
+        # Get Voronoi diagram.
+        vor = Voronoi(obstacles)
+        end_time_clock = time.clock()
+        rospy.logerr("voronoi {}".format(end_time_clock - start_time_clock))
+        #fig = voronoi_plot_2d(vor)
+        #from matplotlib import pyplot as plt
+        #plt.xlabel('xlabel', fontsize=18)
+        #plt.ylabel('ylabel', fontsize=16)
+        #fig.savefig("voronoi.png")
+
+
+        start_time_clock = time.clock()
+        # Initializing the graph.
+        self.graph = igraph.Graph()
+        # Correspondance between graph vertex and Voronoi vertex IDs.
+        voronoi_graph_correspondance = {}
+
+        # Simplifying access of Voronoi data structures.
+        vertices = vor.vertices
+        ridge_vertices = vor.ridge_vertices
+        ridge_points = vor.ridge_points
+
+        edges = []
+        weights = []
+        # Create a graph based on ridges.
+        for i in xrange(len(ridge_vertices)):
+            ridge_vertex = ridge_vertices[i]
+            # If any of the ridge vertices go to infinity, then don't add.
+            if ridge_vertex[0] == -1 or ridge_vertex[1] == -1:
+                continue
+            p1 = vertices[ridge_vertex[0]]
+            p2 = vertices[ridge_vertex[1]]
+
+            # Obstacle points determining the ridge.
+            ridge_point = ridge_points[i]
+            q1 = obstacles[ridge_point[0]]
+            q2 = obstacles[ridge_point[1]]
+
+            # If the vertices on the ridge are in the free space
+            # and distance between obstacle points is large enough for the robot
+            if self.latest_map.is_free(p1[INDEX_FOR_X], p1[INDEX_FOR_Y]) and \
+                self.latest_map.is_free(p2[INDEX_FOR_X], p2[INDEX_FOR_Y]) and \
+                    euclidean_distance(q1, q2) > self.min_edge_length:
+
+                # Add vertex and edge.
+                graph_vertex_ids = [-1, -1] # temporary for finding verted IDs.
+
+                # Determining graph vertex ID if existing or not.
+                for point_id in xrange(len(graph_vertex_ids)):
+                    if ridge_vertex[point_id] not in voronoi_graph_correspondance:
+                        # if not existing, add new vertex.
+                        graph_vertex_ids[point_id] = self.graph.vcount()
+                        self.graph.add_vertex(
+                            coord=vertices[ridge_vertex[point_id]])
+                        voronoi_graph_correspondance[ridge_vertex[point_id]] = graph_vertex_ids[point_id]
+                    else:
+                        # Otherwise, already added before.
+                        graph_vertex_ids[point_id] = voronoi_graph_correspondance[ridge_vertex[point_id]]
+
+                # Add edge.
+                self.graph.add_edge(graph_vertex_ids[0], graph_vertex_ids[1], 
+                    weight=euclidean_distance(p1, p2))
+            else:
+                # Otherwise, edge not added.
+                continue
+
+        # Take only the largest component.
+        cl = self.graph.clusters()
+        self.graph = cl.giant()
+        end_time_clock = time.clock()
+        rospy.logerr("ridge {}".format(end_time_clock - start_time_clock))
+
+        # self.get_adjacency_list(self.edges)
+        # self.connect_subtrees()
+        # self.merge_similar_edges()
+
+        # Publish GVG.
+        self.publish_edges()
 
     def publish_edges(self):
-        transformation_matrix = self.tf.fromTranslationRotation(self.latest_map.origin_translation, self.latest_map.origin_quaternion)
-        print (transformation_matrix)
+        """For debug, publishing of GVG."""
 
+        # Get transformation matrix map-occupancy grid.
+        transformation_matrix = self.tf_listener.fromTranslationRotation(
+            self.latest_map.origin_translation, 
+            self.latest_map.origin_quaternion)
+
+        # Marker that will contain line sequences.
         m = Marker()
-        m.header.frame_id = self.latest_map.frame_id
+        m.header.frame_id = self.latest_map.header.frame_id
         m.type = Marker.LINE_LIST
+        # TODO constant values set at the top.
         m.color.a = 1.0
         m.color.r = 1.0
         m.scale.x = 0.1
-        for e in self.edges.keys():
-            for p in e:
-                p_t = transformation_matrix.dot(np.array([p[0]* self.latest_map.resolution, p[1]* self.latest_map.resolution, 0, 1]) )
+
+        # Plot each edge.
+        for edge in self.graph.get_edgelist():
+            for vertex_id in edge:
+                # Grid coordinate for the vertex.
+                p = self.graph.vs["coord"][vertex_id]
+                # Transform grid coordinate in meters
+                # TODO: move in grid.
+                p_t = transformation_matrix.dot(
+                    np.array([p[0]* self.latest_map.resolution, 
+                    p[1]* self.latest_map.resolution, 0, 1]) )
                 p_ros = Point(x=p_t[0], y=p_t[1])
-                if p_t[1] < 0:
-                    rospy.logerr("negative {} {}".format(p[0], p[1]))
+
                 m.points.append(p_ros)
+
+        # Publish marker.
         self.marker_pub.publish(m)
 
+    def map_callback(self, map_msg):
+        """Callback for Occupancy Grid."""
+        rospy.logerr("Received map message")
+        start_time_clock = time.clock()
+        # Create a 2D grid.
+        self.latest_map = Grid(map_msg)
+        # Adjust min distance between obstacles in cells.
+        self.min_edge_length = self.robot_radius / self.latest_map.resolution
+        end_time_clock = time.clock()
+        rospy.logerr("generate obstacles1 {}".format(end_time_clock - start_time_clock))
+        # just for testing
+        self.generate_graph()
+        """
+        if not self.plot_data_active:
+            self.plot_data([], is_initial=True)
+            rospy.logerr('Plotting complete')
+        """
+
+    def generate_graph(self):
+        # self.lock.acquire()
+        if not self.latest_map:
+            self.latest_map = rospy.wait_for_message("/map".format(self.robot_id), OccupancyGrid)
+        self.compute_graph()
+        self.last_graph_update_time = rospy.Time.now().to_sec()
+        # self.lock.release()
 
 
     def spin(self):
@@ -182,19 +361,6 @@ class Graph:
             except Exception as e:
                 rospy.logerr('Robot {}: Graph node interrupted!: {}'.format(self.robot_id, e))
 
-    def map_callback(self, map_msg):
-        rospy.logerr("Received map message")
-        start_time_clock = time.clock()
-        self.latest_map = Grid(map_msg)
-        end_time_clock = time.clock()
-        rospy.logerr("generate obstacles1 {}".format(end_time_clock - start_time_clock))
-        # just for testing
-        self.generate_graph()
-        """
-        if not self.plot_data_active:
-            self.plot_data([], is_initial=True)
-            rospy.logerr('Plotting complete')
-        """
 
     def is_same_intersection(self, intersec, robot_pose):
         is_same = True
@@ -273,13 +439,7 @@ class Graph:
     def enough_delay(self):
         return rospy.Time.now().to_sec() - self.last_graph_update_time > 30  # updated last 20 secs
 
-    def generate_graph(self):
-        # self.lock.acquire()
-        if not self.latest_map:
-            self.latest_map = rospy.wait_for_message("/map".format(self.robot_id), OccupancyGrid)
-        self.compute_graph()
-        self.last_graph_update_time = rospy.Time.now().to_sec()
-        # self.lock.release()
+
 
     def create_edge_list(self, robot_pose):
         alledges = list(self.edges)
@@ -344,24 +504,15 @@ class Graph:
             chosen_edge = linear_edge[min(linear_edge.keys())]
         return chosen_edge
 
-    def convert_coordinates_i_to_xy(self, i):
-        x = i % self.latest_map.info.width # col
-        y = i / self.latest_map.info.width # row
-        return x, y
+
 
     def compute_graph(self):
         start_time = time.clock()
-        #self.get_image_desc(occ_grid)
-        #try:
-        if True:
-            self.compute_hallway_points()
-            now = time.clock()
-            t = now - start_time
-            self.performance_data.append(
-                {'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
-
-        #except Exception as e:
-        #    pu.log_msg(self.robot_id, 'Robot {}: Error in graph computation'.format(self.robot_id), self.debug_mode)
+        self.compute_gvg()
+        now = time.clock()
+        t = now - start_time
+        self.performance_data.append(
+            {'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
 
 
     def get_image_desc(self, occ_grid):
@@ -539,69 +690,7 @@ class Graph:
                 pass
         return intersec
 
-    def compute_hallway_points(self):
-        #obstacles = list(self.obstacles)
-        start_time_clock = time.clock()
-        #grid_values = np.array(self.latest_map.data).reshape((self.latest_map.info.height, self.latest_map.info.width))
-        # condition: find neighbors minimum. If value greater than, then ok -- i.e., obstacle adjacent to freespace.
-        f2 = np.asarray([
-            [1, 1, 1],
-            [1, 0, 1],
-            [1, 1, 1]
-        ])
-        neighbor_condition = self.latest_map.grid > minimum_filter(self.latest_map.grid, footprint=f2, mode='constant', cval=10000)
-        obstacles = np.nonzero((self.latest_map.grid >= OCCUPIED) & neighbor_condition)
-        obstacles = np.stack((obstacles[1], obstacles[0]), axis=1)
-        end_time_clock = time.clock()
-        print("generate obstacles2 {}".format(end_time_clock - start_time_clock))
 
-
-        start_time_clock = time.clock()
-        vor = Voronoi(obstacles)
-        end_time_clock = time.clock()
-        rospy.logerr("voronoi {}".format(end_time_clock - start_time_clock))
-        fig = voronoi_plot_2d(vor)
-        from matplotlib import pyplot as plt
-        plt.xlabel('xlabel', fontsize=18)
-        plt.ylabel('ylabel', fontsize=16)
-        fig.savefig("voronoi.png")
-
-
-        self.edges.clear()
-        start_time_clock = time.clock()
-        vertices = vor.vertices
-        ridge_vertices = vor.ridge_vertices
-        ridge_points = vor.ridge_points
-        self.edges.clear()
-        for i in xrange(len(ridge_vertices)):
-            ridge_vertex = ridge_vertices[i]
-            if ridge_vertex[0] == -1 or ridge_vertex[1] == -1:
-                continue
-            ridge_point = ridge_points[i]
-            p1 = [0] * 2
-            p2 = [0] * 2
-            p1[INDEX_FOR_X] = vertices[ridge_vertex[0]][INDEX_FOR_X]
-            p1[INDEX_FOR_Y] = vertices[ridge_vertex[0]][INDEX_FOR_Y]
-            p2[INDEX_FOR_X] = vertices[ridge_vertex[1]][INDEX_FOR_X]
-            p2[INDEX_FOR_Y] = vertices[ridge_vertex[1]][INDEX_FOR_Y]
-            p1 = tuple(p1)
-            p2 = tuple(p2)
-
-            q1 = tuple(obstacles[ridge_point[0]])
-            q2 = tuple(obstacles[ridge_point[1]])
-            if self.latest_map.is_free(p1[INDEX_FOR_X], p1[INDEX_FOR_Y]) and self.latest_map.is_free(p2[INDEX_FOR_X], p2[INDEX_FOR_Y]) and pu.D(q1,q2)>self.min_edge_length:
-                e = (p1, p2)
-            else:
-                continue
-            self.edges[e] = (q1,q2)
-        end_time_clock = time.clock()
-        rospy.logerr("ridge {}".format(end_time_clock - start_time_clock))
-
-        # self.get_adjacency_list(self.edges)
-        # self.connect_subtrees()
-        # self.merge_similar_edges()
-
-        self.publish_edges()
 
     def has_unknown_points(self, p1,p2):
         line_points= self.get_line(p1[INDEX_FOR_X],p1[INDEX_FOR_Y],p2[INDEX_FOR_X],p2[INDEX_FOR_Y])
@@ -660,8 +749,8 @@ class Graph:
             print("empty subtree")
 
     def fetch_explored_region_handler(self, data):
-        if self.latest_map and self.enough_delay():
-            self.get_image_desc(self.latest_map)
+        #if self.latest_map and self.enough_delay():
+        #    self.get_image_desc(self.latest_map)
         pixel_points = list(self.all_poses)
         poses = []
         for p in pixel_points:
@@ -1342,10 +1431,10 @@ class Graph:
         robot_pose = None
         while not robot_pose:
             try:
-                self.listener.waitForTransform("/robot_{}/map".format(self.robot_id),
+                self.tf_listener.waitForTransform("/robot_{}/map".format(self.robot_id),
                                                "/robot_{}/base_link".format(self.robot_id), rospy.Time(),
                                                rospy.Duration(4.0))
-                (robot_loc_val, rot) = self.listener.lookupTransform("/robot_{}/map".format(self.robot_id),
+                (robot_loc_val, rot) = self.tf_listener.lookupTransform("/robot_{}/map".format(self.robot_id),
                                                                      "/robot_{}/base_link".format(self.robot_id),
                                                                      rospy.Time(0))
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
