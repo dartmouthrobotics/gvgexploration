@@ -33,6 +33,7 @@ from tf import TransformListener
 from geometry_msgs.msg import Point
 from scipy.ndimage import minimum_filter
 import igraph
+from bresenham import bresenham
 
 INF = 100000
 SCALE = 10
@@ -80,6 +81,13 @@ class Grid:
         else:
             return False
 
+    def is_obstacle(self, x, y):
+        if 0 <= y < self.grid.shape[0] and 0 <= x < self.grid.shape[1]:
+            return self.cell_at(x, y) >= 50 # TODO: set values.
+        else:
+            return False
+
+
     def convert_coordinates_i_to_xy(self, i):
         """Convert coordinates if the index is given on the flattened array."""
         x = i % self.grid.shape[1] # col
@@ -106,6 +114,21 @@ class Grid:
             axis=1) # 1st column x, 2nd column, y.
 
         return obstacles
+
+    def is_line_intersecting_with_obstacle(self, previous_cell, current_cell,
+        distance):
+        v = previous_cell - current_cell
+        u = v/np.linalg.norm(v)
+
+        end_cell = current_cell - distance * u
+
+        x1, y1 = current_cell.astype(int)
+        x2, y2 = end_cell.astype(int)
+
+        for p in list(bresenham(x1, y1, x2, y2)):
+            if self.is_obstacle(*p):
+                return True
+        return False
 
 class Graph:
     def __init__(self):
@@ -284,6 +307,7 @@ class Graph:
         # self.get_adjacency_list(self.edges)
         # self.connect_subtrees()
         self.merge_similar_edges2()
+        self.prune_leaves()
         end_time_clock = time.clock()
         rospy.logerr("ridge {}".format(end_time_clock - start_time_clock))
 
@@ -307,6 +331,22 @@ class Graph:
 
                     self.graph.add_edge(p_id, r_id, 
                         weight=self.graph.es["weight"][pq_id]+self.graph.es["weight"][qr_id])
+                    self.graph.delete_vertices(current_vertex_id)
+                else:
+                    current_vertex_id += 1
+            else:
+                current_vertex_id += 1
+
+    def prune_leaves(self):
+        current_vertex_id = 0 # traversing graph from vertex 0.
+
+        while current_vertex_id < self.graph.vcount():
+            if self.graph.degree(current_vertex_id) == 1:
+                neighbor_id = self.graph.neighbors(current_vertex_id)[0]
+                neighbor = self.graph.vs["coord"][neighbor_id]
+                current_vertex = self.graph.vs["coord"][current_vertex_id]
+                if self.latest_map.is_line_intersecting_with_obstacle(
+                    neighbor, current_vertex, 5): # TODO parameter.
                     self.graph.delete_vertices(current_vertex_id)
                 else:
                     current_vertex_id += 1
