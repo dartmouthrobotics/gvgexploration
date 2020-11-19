@@ -280,15 +280,38 @@ class Graph:
         # Take only the largest component.
         cl = self.graph.clusters()
         self.graph = cl.giant()
-        end_time_clock = time.clock()
-        rospy.logerr("ridge {}".format(end_time_clock - start_time_clock))
 
         # self.get_adjacency_list(self.edges)
         # self.connect_subtrees()
-        # self.merge_similar_edges()
+        self.merge_similar_edges2()
+        end_time_clock = time.clock()
+        rospy.logerr("ridge {}".format(end_time_clock - start_time_clock))
 
         # Publish GVG.
         self.publish_edges()
+
+    def merge_similar_edges2(self):
+        current_vertex_id = 0 # traversing graph from vertex 0.
+
+        while current_vertex_id < self.graph.vcount():
+            if self.graph.degree(current_vertex_id) == 2:
+                p_id, r_id = self.graph.neighbors(current_vertex_id)
+                p = self.graph.vs["coord"][p_id]
+                current_vertex = self.graph.vs["coord"][current_vertex_id]
+                r = self.graph.vs["coord"][r_id]
+
+                if np.isclose(pu.get_slope(p, current_vertex), 
+                    pu.get_slope(current_vertex, r), equal_nan=True): # TODO tune.
+                    pq_id = self.graph.get_eid(p_id, current_vertex_id)
+                    qr_id = self.graph.get_eid(current_vertex_id, r_id)
+
+                    self.graph.add_edge(p_id, r_id, 
+                        weight=self.graph.es["weight"][pq_id]+self.graph.es["weight"][qr_id])
+                    self.graph.delete_vertices(current_vertex_id)
+                else:
+                    current_vertex_id += 1
+            else:
+                current_vertex_id += 1
 
     def publish_edges(self):
         """For debug, publishing of GVG."""
@@ -307,6 +330,7 @@ class Graph:
         m.color.r = 1.0
         m.scale.x = 0.1
 
+        rospy.logerr("{} edges".format(len(self.graph.get_edgelist())))
         # Plot each edge.
         for edge in self.graph.get_edgelist():
             for vertex_id in edge:

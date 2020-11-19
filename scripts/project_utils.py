@@ -4,6 +4,8 @@ import pickle
 from os import path
 import rospy
 import shapely.geometry as sg
+from scipy import stats # linregress
+
 
 TOTAL_COVERAGE = 1
 MAXIMUM_EXPLORATION_TIME = 2
@@ -112,6 +114,13 @@ def slope(p, q):
         return 1 / dx
     return dy / dx
 
+def get_slope(p, q):
+    return stats.linregress([p[INDEX_FOR_Y], q[INDEX_FOR_Y]],
+        [p[INDEX_FOR_X],p[INDEX_FOR_X]])[0]
+
+def get_line_err(stacked_points):
+    slope, intercept, r_value, p_value, std_err = stats.linregress(stacked_points)
+    return std_err
 
 def get_vector(p1, p2):
     xv = p2[INDEX_FOR_X] - p1[INDEX_FOR_X]
