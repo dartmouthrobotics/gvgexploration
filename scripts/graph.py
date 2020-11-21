@@ -196,15 +196,15 @@ class Graph:
         self.graph_scale = rospy.get_param("~graph_scale")
         self.termination_metric = rospy.get_param("~termination_metric")
         self.frontier_threshold = rospy.get_param("~frontier_threshold")
-        self.min_hallway_width = rospy.get_param("~min_hallway_width".format(self.robot_id)) * self.graph_scale
-        self.comm_range = rospy.get_param("~comm_range".format(self.robot_id)) * self.graph_scale
-        self.point_precision = rospy.get_param("~point_precision".format(self.robot_id))
+        self.min_hallway_width = rospy.get_param("~min_hallway_width") * self.graph_scale
+        self.comm_range = rospy.get_param("~comm_range") * self.graph_scale
+        self.point_precision = rospy.get_param("~point_precision")
 
-        self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius".format(self.robot_id)) * self.graph_scale
-        self.lidar_fov = rospy.get_param("~lidar_fov".format(self.robot_id))
-        self.slope_bias = rospy.get_param("~slope_bias".format(self.robot_id))
-        self.separation_bias = rospy.get_param("~separation_bias".format(self.robot_id)) * self.graph_scale
-        self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias".format(self.robot_id))
+        self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius") * self.graph_scale
+        self.lidar_fov = rospy.get_param("~lidar_fov")
+        self.slope_bias = rospy.get_param("~slope_bias")
+        self.separation_bias = rospy.get_param("~separation_bias") * self.graph_scale
+        self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias")
         rospy.Service('/robot_{}/rendezvous'.format(self.robot_id), RendezvousPoints,self.fetch_rendezvous_points_handler)
         rospy.Service('/robot_{}/explored_region'.format(self.robot_id), ExploredRegion,self.fetch_explored_region_handler)
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
