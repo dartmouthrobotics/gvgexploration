@@ -1,7 +1,13 @@
-global_frame: odom
-robot_base_frame: base_link
+global_frame: robot_$(arg robot_id_topics)/odom
+robot_base_frame: robot_$(arg robot_id_topics)/base_link
 update_frequency: 5.0
-publish_frequency: 1.0
+publish_frequency: 2.0
+always_send_full_costmap: true
+
+# TOCHECK where they are used -- seems to be hydro related. # http://wiki.ros.org/action/diff/costmap_2d/hydro/staticmap?action=diff&rev1=5&rev2=6
+map_topic: map
+subscribe_to_updates: true
+
 
 #set if you want the voxel map published
 publish_voxel_map: true
@@ -26,7 +32,7 @@ max_obstacle_height: 2.0
 raytrace_range: 4.5
 
 robot_radius: 0.2
-inflation_radius: 0.5
+inflation_radius: 0.4
 cost_scaling_factor: 2.0
 lethal_cost_threshold: 100
 observation_sources: scan
