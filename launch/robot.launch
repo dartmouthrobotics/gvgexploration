@@ -14,7 +14,7 @@
 
 
     <group ns="$(arg robot_name)">
-        <node pkg="gvgexploration" type="robot.py" name="node$(arg robot_name)" >
+        <!--node pkg="gvgexploration" type="robot.py" name="node$(arg robot_name)" >
             <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
             <param name="method" value="$(arg method)"/>
             <param name="robot_count" value="$(arg robot_count)"/>
@@ -28,9 +28,9 @@
             <param name="frontier_robots" value="$(arg frontier_robots)"/>
             <param name="relay_robots" value="$(arg relay_robots)"/>
 
-        </node>
+        </node-->
 
-        <node pkg="gvgexploration" type="graph.py" name="node$(arg robot_name)_graph_processor" >
+        <!--node pkg="gvgexploration" type="graph.py" name="node$(arg robot_name)_graph_processor" >
             <param name="method" value="$(arg method)"/>
             <param name="robot_count" value="$(arg robot_count)"/>
             <param name="run" value="$(arg run)"/>
@@ -44,7 +44,7 @@
             <param name="frontier_robots" value="$(arg frontier_robots)"/>
             <param name="relay_robots" value="$(arg relay_robots)"/>
 
-        </node>
+        </node-->
 
         <node pkg="gvgexploration" type="gvg_explore.py" name="node$(arg robot_name)_explore" >
 
