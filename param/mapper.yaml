@@ -1,11 +1,11 @@
 ### Mapper ################################################
 
-grid_resolution: 0.1
-range_threshold: 8.0
+grid_resolution: 0.2
+range_threshold: 5.9999999999999999
 map_update_rate: 5
-publish_pose_graph: true
+publish_pose_graph: false
 max_covariance: 0.00
-transform_publish_period: 0.1
+transform_publish_period: 0.05
 min_map_size: 3
 
 ### Localizer #############################################
@@ -18,15 +18,17 @@ max_particles: 10000
 # For a full list of available parameters and their
 # corresponding default values, see OpenKarto/OpenMapper.h
 
-MinimumTravelDistance: 1.0
+MinimumTravelDistance: 0.5
 MinimumTravelHeading: 1.57
-LoopSearchMaximumDistance: 10.0
+UseScanBarycenter: false
 UseScanMatching: false
-DistanceVariancePenalty: 0.01
-AngleVariancePenalty: 0.0004
 ScanBufferSize: 2
+DistanceVariancePenalty: 0.0
+AngleVariancePenalty: 0.0
+LinkScanMaximumDistance: 1.0
+LoopSearchMaximumDistance: 100.0
 #LinkMatchMinimumResponseFine: 1.0
-#LinkScanMaximumDistance: 0.1
+
 #LoopMatchMinimumChainSize: 10000000
 ###########################################################
 
