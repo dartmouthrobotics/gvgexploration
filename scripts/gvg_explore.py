@@ -144,6 +144,9 @@ class GVGExplore:
                     self.prev_goal_grid = self.graph.latest_map.pose_to_grid(prev_pose)
                     self.goal_grid = self.graph.latest_map.pose_to_grid(self.path_to_leaf[-1])
                     self.move_robot_to_goal(self.path_to_leaf[-1], pu.angle_pq_line(self.path_to_leaf[-1], prev_pose))
+                else:
+                    rospy.logerr("no more leaves")
+                    self.current_state == IDLE:
 
             r.sleep()
 
