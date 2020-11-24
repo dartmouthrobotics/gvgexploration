@@ -95,6 +95,17 @@ def euclidean_distance(p, q):
     # l2 norm.
     return np.linalg.norm(p-q)
 
+def angle_pq_line(p, q):
+    pq = p - q
+    return np.arctan2(pq[1], pq[0])
+
+def get_closest_point(point, set_of_points):
+    """Get the closest point to a set of points."""
+
+    dist_2 = np.sum((set_of_points - point)**2, axis=1)
+    closest_point_id = np.argmin(dist_2)
+
+    return closest_point_id, dist_2[closest_point_id]
 
 def T(p, q):
     return D(p, q) * math.cos(theta(p, q))

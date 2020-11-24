@@ -1,4 +1,172 @@
 #!/usr/bin/python
+
+# Python modules
+import numpy as np
+import time # clock.
+
+# ROS related python modules
+import rospy
+
+import tf # for TransformListener
+
+import actionlib
+from std_srvs.srv import Trigger, TriggerResponse
+from actionlib_msgs.msg import GoalStatus
+from nav2d_navigator.msg import MoveToPosition2DAction, MoveToPosition2DGoal
+
+# Custom modules
+from graph import Graph
+import project_utils as pu
+from project_utils import INDEX_FOR_X, INDEX_FOR_Y, save_data
+
+# States of the node
+IDLE = 0 # Not initiated.
+DECISION = 1 # Finding the next GVG
+MOVE_TO = 2 # Go to the next location
+
+class GVGExplore:
+    def __init__(self):
+        # GVG graph.
+        self.graph = Graph()
+
+        # List of previous poses.
+        self.prev_pose = []
+
+        # Current state of the node.
+        self.current_state = IDLE
+
+        # Parameters.
+        self.robot_id = rospy.get_param('~robot_id')
+
+        # Goal parameters.
+        self.target_distance = rospy.get_param('~target_distance')
+        self.target_angle = rospy.get_param('~target_angle')
+
+        # nav2d MoveTo action.
+        self.client_motion = actionlib.SimpleActionClient("/robot_{}/MoveTo".format(self.robot_id), 
+            MoveToPosition2DAction)
+        self.client_motion.wait_for_server()
+
+        # Service to start or stop the gvg exploration.
+        self.start_gvg_explore = rospy.Service(
+            '/robot_{}/gvg/start_stop'.format(self.robot_id), Trigger, self.start_stop)
+
+        # tf listener.
+        self.listener = tf.TransformListener()
+
+        rospy.loginfo("Robot {}: Exploration server online...".format(self.robot_id))
+
+    def start_stop(self, req):
+        if self.current_state == IDLE:
+            self.current_state = DECISION
+        else:
+            self.client_motion.cancel_goal()
+            self.current_state = IDLE
+        return TriggerResponse()
+
+    def move_robot_to_goal(self, goal, theta=0):
+        self.current_point = goal
+        move = MoveToPosition2DGoal()
+        frame_id = 'robot_{}/map'.format(self.robot_id) # TODO check.
+        move.header.frame_id = frame_id
+        move.target_pose.x = goal[INDEX_FOR_X]
+        move.target_pose.y = goal[INDEX_FOR_Y]
+        move.target_pose.theta = theta
+        move.target_distance = self.target_distance
+        move.target_angle = self.target_angle
+
+        self.last_distance = -1
+        self.client_motion.send_goal(move, feedback_cb = self.feedback_motion_cb)
+        self.prev_pose.append(self.current_pose)
+        if self.client_motion.wait_for_result():
+            state = self.client_motion.get_state()
+            if state == GoalStatus.SUCCEEDED:
+                self.prev_pose += self.path_to_leaf[1:]
+                self.current_pose = goal
+            else:
+                self.current_pose = self.get_robot_pose()
+                self.prev_pose += self.path_to_leaf[1:pu.get_closest_point(self.current_pose, np.array(self.path_to_leaf))[0]+1]
+            #rospy.sleep(1)
+
+    def feedback_motion_cb(self, feedback):
+        if (np.isclose(self.last_distance, feedback.distance) or \
+            np.isclose(feedback.distance, self.last_distance)):
+            self.same_location_counter += 1
+            if self.same_location_counter > 5: # TODO parameter:
+                self.client_motion.cancel_goal()
+        else:
+            self.last_distance = feedback.distance
+            self.same_location_counter = 0
+
+        if rospy.Time.now() - self.graph.latest_map.header.stamp > rospy.Duration(10): #TODO parameter:
+            self.graph.generate_graph()
+            if not self.graph.latest_map.is_frontier(
+                self.prev_goal_grid, 
+                self.goal_grid, self.graph.min_range_radius):
+                self.client_motion.cancel_goal()
+        
+    def get_robot_pose(self):
+        robot_pose = None
+        while not robot_pose:
+            if True:
+                self.listener.waitForTransform("robot_{}/map".format(self.robot_id),
+                                             "robot_{}/base_link".format(self.robot_id),
+                                             rospy.Time(0),
+                                             rospy.Duration(4.0))
+                (robot_loc_val, rot) = self.listener.lookupTransform("robot_{}/map".format(self.robot_id),
+                                                                     "robot_{}/base_link".format(self.robot_id),
+                                                                     rospy.Time(0))
+                robot_pose = robot_loc_val[0:2]
+            #except:
+            #    rospy.sleep(1)
+            #    pass
+        robot_pose = np.array(robot_pose)
+        return robot_pose
+
+    def spin(self):
+        r = rospy.Rate(1) # TODO frequency as parameter
+        self.current_pose = self.get_robot_pose()
+        while not rospy.is_shutdown():
+            if self.current_state == DECISION:
+                self.graph.generate_graph()
+                rospy.logerr("Graph generated")
+
+                start_time_clock = time.clock()
+                self.path_to_leaf = self.graph.get_successors(self.current_pose, 
+                    self.prev_pose)
+                end_time_clock = time.clock()
+                rospy.logerr("next path time {}".format(end_time_clock - start_time_clock))
+                if self.path_to_leaf:
+                    if len(self.path_to_leaf) > 1:
+                        prev_pose = self.path_to_leaf[-2]
+                    else:
+                        prev_pose = self.current_pose
+                    self.prev_goal_grid = self.graph.latest_map.pose_to_grid(prev_pose)
+                    self.goal_grid = self.graph.latest_map.pose_to_grid(self.path_to_leaf[-1])
+                    self.move_robot_to_goal(self.path_to_leaf[-1], pu.angle_pq_line(self.path_to_leaf[-1], prev_pose))
+                    """
+                    for i, goal in enumerate(self.path_to_leaf):
+                        self.move_robot_to_goal(goal, pu.angle_pq_line(goal, prev_pose))
+                        prev_pose = self.path_to_leaf[i]
+                    """
+
+            r.sleep()
+
+
+
+
+if __name__ == "__main__":
+    rospy.init_node("gvg_explore_node")
+
+    gvg_explore = GVGExplore()
+    gvg_explore.spin()
+
+
+
+
+
+
+"""
 from threading import Thread
 
 import matplotlib
@@ -16,7 +184,6 @@ import actionlib
 import rospy
 import math
 from gvgexploration.msg import EdgeList, Coverage, Ridge
-from nav2d_navigator.msg import MoveToPosition2DActionGoal, MoveToPosition2DActionResult
 from actionlib_msgs.msg import GoalStatusArray, GoalID
 from std_srvs.srv import Trigger
 from nav_msgs.msg import GridCells, Odometry
@@ -42,9 +209,31 @@ TO_RENDEZVOUS = 1
 TO_FRONTIER = 0
 FROM_EXPLORATION = 4
 
+# States of the node
+IDLE = 0 # Not initiated.
+DECISION = 1 # Finding the next GVG
+MOVE_TO = 2 # Go to the next location
 
 class GVGExplore:
+
     def __init__(self):
+        rospy.init_node("gvgexplore", anonymous=True)
+        rospy.sleep(1)
+
+
+        # List of previous poses.
+        self.prev_pose = []
+        # Current state of the node.
+        self.current_state = IDLE
+
+        # nav2d MoveTo action.
+        self.client_motion = actionlib.SimpleActionClient("MoveTo", 
+            MoveToPosition2DAction)
+        self.client_motion.wait_for_server()
+        rospy.logdebug('initialized action exec')
+
+
+
         self.has_arrived = False
         self.navigation_failed = False
         self.received_first = False
@@ -75,9 +264,9 @@ class GVGExplore:
         self.cancel_request = False
         self.motion_failed = False
         self.start_time = 0
-        self.prev_pose = 0
+
         self.updated_graph = None
-        rospy.init_node("gvgexplore", anonymous=True)
+
         self.robot_id = rospy.get_param('~robot_id')
         self.run = rospy.get_param("~run")
         self.debug_mode = rospy.get_param("~debug_mode")
@@ -99,13 +288,22 @@ class GVGExplore:
         self.environment = rospy.get_param("~environment")
         self.max_coverage_ratio = rospy.get_param("~max_coverage")
         self.method = rospy.get_param("~method")
-        rospy.Subscriber("/robot_{}/MoveTo/status".format(self.robot_id), GoalStatusArray, self.move_status_callback)
-        rospy.Subscriber("/robot_{}/MoveTo/result".format(self.robot_id), MoveToPosition2DActionResult,
-                         self.move_result_callback)
+
+
+
+
+
+        #rospy.Subscriber("/robot_{}/MoveTo/status".format(self.robot_id), GoalStatusArray, self.move_status_callback)
+        #rospy.Subscriber("/robot_{}/MoveTo/result".format(self.robot_id), MoveToPosition2DActionResult,
+        #                 self.move_result_callback)
         rospy.Subscriber("/robot_{}/navigator/plan".format(self.robot_id), GridCells, self.navigation_plan_callback)
         self.move_to_stop = rospy.ServiceProxy('/robot_{}/Stop'.format(self.robot_id), Trigger)
         self.moveTo_pub = rospy.Publisher("/robot_{}/MoveTo/goal".format(self.robot_id), MoveToPosition2DActionGoal,
                                           queue_size=10)
+
+
+
+
         self.vertex_publisher = rospy.Publisher("/robot_{}/explore/vertices".format(self.robot_id), Marker,
                                                 queue_size=10)
 
@@ -126,10 +324,42 @@ class GVGExplore:
         self.already_shutdown = False
         rospy.loginfo("Robot {}: Exploration server online...".format(self.robot_id))
 
+    def move_robot_to_goal(self, goal, theta=0):
+        self.current_point = goal
+        move = MoveToPosition2DGoal()
+        frame_id = 'robot_{}/map'.format(self.robot_id) # TODO check.
+        move.header.frame_id = frame_id
+        move.goal.target_pose.x = goal[INDEX_FOR_X]
+        move.goal.target_pose.y = goal[INDEX_FOR_Y]
+        move.goal.target_pose.theta = theta
+        move.goal.target_distance = self.target_distance
+        move.goal.target_angle = self.target_angle
+
+        self.current_state == MOVE_TO
+        self.client_motion.send_goal(goal)#, feedback_cb = self.feedback_motion_cb)
+
+        self.prev_pose.append(self.get_robot_pose())
+
+        if self.client_motion.wait_for_result():
+            self.current_state == DECISION
+
     def spin(self):
-        r = rospy.Rate(0.1)
+        r = rospy.Rate(1) # TODO frequency as parameter
         while not rospy.is_shutdown():
+            if self.current_state == DECISION:
+                # Find new location.
+                pass
             r.sleep()
+
+
+
+
+
+
+
+
+
+
 
     def process_graph(self):
         pixels = self.updated_graph.pixels
@@ -525,23 +755,6 @@ class GVGExplore:
                 pair = (list(v)[0], k)
                 self.leaves[k] = edge_dict[pair]
 
-    def move_robot_to_goal(self, goal, theta=0):
-        self.current_point = goal
-        id_val = "robot_{}_{}_explore".format(self.robot_id, self.goal_count)
-        self.goal_count += 1
-        move = MoveToPosition2DActionGoal()
-        frame_id = '/map'.format(self.robot_id)
-        move.header.frame_id = frame_id
-        move.goal_id.id = id_val
-        move.goal.target_pose.x = goal[INDEX_FOR_X]
-        move.goal.target_pose.y = goal[INDEX_FOR_Y]
-        move.goal.target_pose.theta = theta
-        move.goal.header.frame_id = frame_id
-        move.goal.target_distance = self.target_distance
-        move.goal.target_angle = self.target_angle
-        self.moveTo_pub.publish(move)
-        self.prev_pose = self.get_robot_pose()
-        self.start_time = rospy.Time.now().secs
 
     def move_to_frontier(self, pose, theta=0):
         scaled_pose = pu.scale_down(pose, self.graph_scale)
@@ -790,15 +1003,16 @@ class GVGExplore:
         robot_pose = None
         while not robot_pose:
             try:
-                self.listener.waitForTransform("map".format(self.robot_id),
-                                               "base_link".format(self.robot_id), rospy.Time(),
-                                               rospy.Duration(4.0))
-                (robot_loc_val, rot) = self.listener.lookupTransform("map".format(self.robot_id),
-                                                                     "base_link".format(self.robot_id),
+                self.listener.waitForTransform("robot_{}/map".format(self.robot_id),
+                                             "robot_{}/base_link".format(self.robot_id),
+                                             rospy.Time(0),
+                                             rospy.Duration(4.0))
+                (robot_loc_val, rot) = self.listener.lookupTransform("robot_{}/map".format(self.robot_id),
+                                                                     "robot_{}/base_link".format(self.robot_id),
                                                                      rospy.Time(0))
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
-                time.sleep(1)
             except:
+                rospy.sleep(1)
                 pass
         return robot_pose
 
@@ -816,7 +1030,8 @@ class GVGExplore:
                                                                            self.termination_metric,
                                                                            self.robot_id))
 
-
 if __name__ == "__main__":
     graph = GVGExplore()
     rospy.spin()
+"""
+

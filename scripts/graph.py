@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 import copy
 import matplotlib
 
@@ -35,6 +36,8 @@ from scipy.ndimage import minimum_filter
 import igraph
 from bresenham import bresenham
 
+from nav_msgs.srv import GetMap
+
 INF = 100000
 SCALE = 10
 FREE = 0.0
@@ -59,6 +62,14 @@ class Grid:
             (map_msg.info.height, 
                 map_msg.info.width)) #shape: 0: height, 1: width.
         self.resolution = map_msg.info.resolution # cell size in meters.
+
+        self.tf_listener = TransformListener() # Transformation listener.
+
+        self.transformation_matrix_map_grid = self.tf_listener.fromTranslationRotation(
+            self.origin_translation, 
+            self.origin_quaternion)
+
+        self.transformation_matrix_grid_map = np.linalg.inv(self.transformation_matrix_map_grid)
         #self.plot()
 
     def plot(self):
@@ -76,17 +87,28 @@ class Grid:
         #return self.grid[x + y * self.width]
 
     def is_free(self, x, y):
-        if 0 <= y < self.grid.shape[0] and 0 <= x < self.grid.shape[1]:
+        if self.within_boundaries(x, y):
             return 0 <= self.cell_at(x, y) < 50 # TODO: set values.
         else:
             return False
 
     def is_obstacle(self, x, y):
-        if 0 <= y < self.grid.shape[0] and 0 <= x < self.grid.shape[1]:
+        if self.within_boundaries(x, y):
             return self.cell_at(x, y) >= 50 # TODO: set values.
         else:
             return False
 
+    def is_unknown(self, x, y):
+        if self.within_boundaries(x, y):
+            return self.cell_at(x, y) < 0 # TODO: set values.
+        else:
+            return True
+
+    def within_boundaries(self, x, y):
+        if 0 <= y < self.grid.shape[0] and 0 <= x < self.grid.shape[1]:
+            return True
+        else:
+            return False
 
     def convert_coordinates_i_to_xy(self, i):
         """Convert coordinates if the index is given on the flattened array."""
@@ -115,8 +137,9 @@ class Grid:
 
         return obstacles
 
-    def is_line_intersecting_with_obstacle(self, previous_cell, current_cell,
+    def is_frontier(self, previous_cell, current_cell,
         distance):
+        """current_cell a frontier?"""
         v = previous_cell - current_cell
         u = v/np.linalg.norm(v)
 
@@ -126,9 +149,25 @@ class Grid:
         x2, y2 = end_cell.astype(int)
 
         for p in list(bresenham(x1, y1, x2, y2)):
-            if self.is_obstacle(*p):
+            if self.is_unknown(*p):
                 return True
+            elif self.is_obstacle(*p):
+                return False
         return False
+
+
+    def pose_to_grid(self, pose):
+        """Pose (x,y) in header.frame_id to grid coordinates"""
+        # Get transformation matrix map-occupancy grid.
+        return (self.transformation_matrix_grid_map.dot([pose[0], pose[1], 0, 1]))[0:2] / self.resolution # TODO check int.
+
+    def grid_to_pose(self, grid_coordinate):
+        """Pose (x,y) in grid coordinates to pose in frame_id"""
+        # Get transformation matrix map-occupancy grid.
+        return (self.transformation_matrix_map_grid.dot(
+                    np.array([grid_coordinate[0]* self.resolution, 
+                    grid_coordinate[1]* self.resolution, 0, 1])))[0:2]
+
 
 class Graph:
     def __init__(self):
@@ -146,9 +185,6 @@ class Graph:
         # Internal data.
         self.latest_map = None # Grid map.
 
-        # ROS subscribers.
-        rospy.Subscriber('/robot_{}/map'.format(self.robot_id), 
-            OccupancyGrid, self.map_callback)
         self.tf_listener = TransformListener() # Transformation listener.
 
         # ROS publisher
@@ -210,6 +246,9 @@ class Graph:
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
         rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
         rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_edge_handler)
+
+        rospy.wait_for_service('/robot_{}/static_map'.format(self.robot_id))
+        self.get_map = rospy.ServiceProxy('/robot_{}/static_map'.format(self.robot_id), GetMap)
 
 
         self.already_shutdown = False
@@ -306,7 +345,7 @@ class Graph:
 
         # self.get_adjacency_list(self.edges)
         # self.connect_subtrees()
-        self.merge_similar_edges2()
+        #self.merge_similar_edges2()
         self.prune_leaves()
         end_time_clock = time.clock()
         rospy.logerr("ridge {}".format(end_time_clock - start_time_clock))
@@ -324,8 +363,12 @@ class Graph:
                 current_vertex = self.graph.vs["coord"][current_vertex_id]
                 r = self.graph.vs["coord"][r_id]
 
-                if np.isclose(pu.get_slope(p, current_vertex), 
-                    pu.get_slope(current_vertex, r), equal_nan=True): # TODO tune.
+                slope_pc = pu.get_slope(p, current_vertex)
+                slope_cr = pu.get_slope(p, current_vertex)
+                if np.isclose(slope_pc, 
+                    slope_cr, rtol=0.001, atol=0.001, equal_nan=True) or \
+                    np.isclose(slope_cr, slope_pc, rtol=0.001, atol=0.001, 
+                        equal_nan=True): # TODO tune.
                     pq_id = self.graph.get_eid(p_id, current_vertex_id)
                     qr_id = self.graph.get_eid(current_vertex_id, r_id)
 
@@ -339,30 +382,28 @@ class Graph:
 
     def prune_leaves(self):
         current_vertex_id = 0 # traversing graph from vertex 0.
-
+        self.leaves = []
         while current_vertex_id < self.graph.vcount():
             if self.graph.degree(current_vertex_id) == 1:
                 neighbor_id = self.graph.neighbors(current_vertex_id)[0]
                 neighbor = self.graph.vs["coord"][neighbor_id]
                 current_vertex = self.graph.vs["coord"][current_vertex_id]
-                if self.latest_map.is_line_intersecting_with_obstacle(
-                    neighbor, current_vertex, 5): # TODO parameter.
+                if not self.latest_map.is_frontier(
+                    neighbor, current_vertex, self.min_range_radius): # TODO parameter.
                     self.graph.delete_vertices(current_vertex_id)
                 else:
+                    self.leaves.append(current_vertex_id)
                     current_vertex_id += 1
             else:
                 current_vertex_id += 1
+        self.publish_leaves()
 
     def publish_edges(self):
         """For debug, publishing of GVG."""
 
-        # Get transformation matrix map-occupancy grid.
-        transformation_matrix = self.tf_listener.fromTranslationRotation(
-            self.latest_map.origin_translation, 
-            self.latest_map.origin_quaternion)
-
         # Marker that will contain line sequences.
         m = Marker()
+        m.id = 0
         m.header.frame_id = self.latest_map.header.frame_id
         m.type = Marker.LINE_LIST
         # TODO constant values set at the top.
@@ -370,23 +411,184 @@ class Graph:
         m.color.r = 1.0
         m.scale.x = 0.1
 
-        rospy.logerr("{} edges".format(len(self.graph.get_edgelist())))
         # Plot each edge.
         for edge in self.graph.get_edgelist():
             for vertex_id in edge:
                 # Grid coordinate for the vertex.
                 p = self.graph.vs["coord"][vertex_id]
-                # Transform grid coordinate in meters
-                # TODO: move in grid.
-                p_t = transformation_matrix.dot(
-                    np.array([p[0]* self.latest_map.resolution, 
-                    p[1]* self.latest_map.resolution, 0, 1]) )
+                p_t = self.latest_map.grid_to_pose(p)
                 p_ros = Point(x=p_t[0], y=p_t[1])
 
                 m.points.append(p_ros)
 
         # Publish marker.
         self.marker_pub.publish(m)
+
+
+    def publish_current_vertex(self, vertex_id):
+        # Publish current vertex
+        m = Marker()
+        m.id = 1
+        m.header.frame_id = self.latest_map.header.frame_id
+        m.type = Marker.SPHERE
+        m.color.a = 1.0
+        m.color.g = 1.0
+        # TODO constant values set at the top.
+        m.scale.x = 0.5
+        m.scale.y = 0.5
+        #m.scale.x = 0.1
+        p = self.graph.vs["coord"][vertex_id]
+        p_t = self.latest_map.grid_to_pose(p)
+        p_ros = Point(x=p_t[0], y=p_t[1])
+        m.pose.position = p_ros
+        self.marker_pub.publish(m)
+
+
+    def publish_visited_vertices(self):
+   
+        # Publish visited vertices
+        m = Marker()
+        m.id = 2
+        m.header.frame_id = self.latest_map.header.frame_id
+        m.type = Marker.POINTS
+        # TODO constant values set at the top.
+        m.color.a = 1.0
+        m.color.b = 1.0
+        m.scale.x = 0.5
+        m.scale.y = 0.5
+        for vertex_id in self.visited_vertices:
+            # Grid coordinate for the vertex.
+            p = self.graph.vs["coord"][vertex_id]
+            p_t = self.latest_map.grid_to_pose(p)
+            p_ros = Point(x=p_t[0], y=p_t[1])
+            m.points.append(p_ros)
+        self.marker_pub.publish(m)
+
+    def publish_leaves(self):
+        # Publish leaves
+        if self.leaves:
+            m = Marker()
+            m.id = 3
+            m.header.frame_id = self.latest_map.header.frame_id
+            m.type = Marker.POINTS
+            # TODO constant values set at the top.
+            m.color.a = 1.0
+            m.color.r = 1.0
+            m.color.b = 1.0
+            m.scale.x = 0.5
+            m.scale.y = 0.5
+            for vertex_id in self.leaves:
+                # Grid coordinate for the vertex.
+                p = self.graph.vs["coord"][vertex_id]
+                p_t = self.latest_map.grid_to_pose(p)
+                p_ros = Point(x=p_t[0], y=p_t[1])
+                m.points.append(p_ros)
+            self.marker_pub.publish(m)
+
+    def generate_graph(self):
+        # self.lock.acquire()
+
+        try:
+            self.latest_map = Grid(self.get_map().map)
+        except rospy.ServiceException:
+            rospy.logerr("Map didn't update")
+            return
+        self.min_range_radius = 8 / self.latest_map.resolution # TODO range.
+        self.min_edge_length = self.robot_radius / self.latest_map.resolution
+        self.compute_graph()
+        self.last_graph_update_time = rospy.Time.now().to_sec()
+        # self.lock.release()
+
+    def get_closest_vertex(self, robot_pose):
+        """Get the closest vertex to robot_pose (x,y) in frame_id."""
+        robot_grid = self.latest_map.pose_to_grid(robot_pose) 
+        vertices = np.asarray(self.graph.vs["coord"])
+
+        return pu.get_closest_point(robot_grid, vertices)
+
+    def get_successors(self, robot_pose, previous_pose=None):
+        # Get current vertex.
+        self.current_vertex_id, distance_current_vertex = self.get_closest_vertex(robot_pose)
+        current_vertex_id = self.current_vertex_id
+        self.publish_current_vertex(self.current_vertex_id)
+
+
+        # find visited vertices
+        self.visited_vertices = set()
+        previous_previous_vertex_id = -1
+        previous_vertex_id = -1
+        for p in previous_pose:
+            p_vertex_id, distance_p = self.get_closest_vertex(p)
+            if distance_p < 6 and p_vertex_id != current_vertex_id: # TODO parameter.
+                self.visited_vertices.add(p_vertex_id)
+                previous_previous_vertex_id = previous_vertex_id
+                previous_vertex_id = p_vertex_id
+                if len(self.visited_vertices) > 1:
+                    path_prev_current = self.graph.get_shortest_paths(previous_previous_vertex_id, 
+                        to=previous_vertex_id, weights=self.graph.es["weight"], 
+                        mode=igraph.ALL)
+                    self.visited_vertices.update(path_prev_current[0])
+
+
+        if previous_vertex_id != -1:
+            path_prev_current = self.graph.get_shortest_paths(previous_vertex_id, 
+                to=current_vertex_id, weights=self.graph.es["weight"], 
+                mode=igraph.ALL)
+            self.visited_vertices.update(path_prev_current[0][:-1])
+
+        self.publish_visited_vertices()        
+
+
+
+        # find next node
+        non_visited_leaves = []
+        for l_vertex_id in self.leaves:
+            if l_vertex_id not in self.visited_vertices and l_vertex_id != self.current_vertex_id:
+                non_visited_leaves.append(l_vertex_id)
+        
+        # If current vertex is a leaf, then continue in that direction.
+        if current_vertex_id in non_visited_leaves:
+            return [self.latest_map.grid_to_pose(
+                            self.graph.vs["coord"][current_vertex_id])]
+
+        # Find other leaves to visit
+        paths_to_leaves = self.graph.get_shortest_paths(current_vertex_id, 
+            to=non_visited_leaves, weights=self.graph.es["weight"], 
+            mode=igraph.ALL)
+
+        full_path = []
+
+        path_costs = [0] * len(paths_to_leaves)
+        depth = 1
+        path_to_leaf = -1
+        path_length = np.inf
+        max_depth = max([len(path) for path in paths_to_leaves])
+        while depth < max_depth:
+            counter = 0
+            for i, path in enumerate(paths_to_leaves):
+                if depth < len(path):
+                    if path_to_leaf != i:
+                        path_costs[i] += self.graph.es["weight"][self.graph.get_eid(path[depth-1], path[depth])]
+
+                        if path[depth] not in self.visited_vertices:
+                            if (path_to_leaf == -1 or path_costs[i] < path_costs[path_to_leaf]):
+                                path_to_leaf = i
+                if path_to_leaf != -1 and path_costs[i] > path_costs[path_to_leaf]:
+                    counter += 1 
+
+            if counter == len(paths_to_leaves):
+                break
+            depth += 1
+        if path_to_leaf == -1:
+            path_to_leaf = np.argmin(path_costs)
+
+
+        for v in paths_to_leaves[path_to_leaf]:
+            full_path.append(self.latest_map.grid_to_pose(
+                self.graph.vs["coord"][v]))
+        return full_path
+
+    ###### TO CHECK what is needed.
 
     def map_callback(self, map_msg):
         """Callback for Occupancy Grid."""
@@ -405,15 +607,6 @@ class Graph:
             self.plot_data([], is_initial=True)
             rospy.logerr('Plotting complete')
         """
-
-    def generate_graph(self):
-        # self.lock.acquire()
-        if not self.latest_map:
-            self.latest_map = rospy.wait_for_message("/map".format(self.robot_id), OccupancyGrid)
-        self.compute_graph()
-        self.last_graph_update_time = rospy.Time.now().to_sec()
-        # self.lock.release()
-
 
     def spin(self):
         r = rospy.Rate(0.1)
@@ -1458,26 +1651,6 @@ class Graph:
         plt.close(fig)
         self.plot_intersection_active = False
 
-    def get_robot_pose(self):
-        if self.method == 'recurrent' and self.robot_id == self.robot_count:
-            rospy.logerr("Robot id: {} count: {}, pose: {}".format(self.robot_id, self.robot_count, self.bs_pose))
-            return self.bs_pose
-        robot_pose = None
-        while not robot_pose:
-            try:
-                self.tf_listener.waitForTransform("/robot_{}/map".format(self.robot_id),
-                                               "/robot_{}/base_link".format(self.robot_id), rospy.Time(),
-                                               rospy.Duration(4.0))
-                (robot_loc_val, rot) = self.tf_listener.lookupTransform("/robot_{}/map".format(self.robot_id),
-                                                                     "/robot_{}/base_link".format(self.robot_id),
-                                                                     rospy.Time(0))
-                robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
-                sleep(1)
-            except Exception as e:
-                rospy.logerr(e)
-                pass
-
-        return robot_pose
 
     def save_all_data(self):
         save_data(self.performance_data,
@@ -1486,8 +1659,11 @@ class Graph:
                                                                 self.termination_metric, self.robot_id))
 
 
+
 if __name__ == "__main__":
-    rospy.init_node("graph_node")
+    rospy.init_node("gvg_graph_node")
 
     graph = Graph()
+    rospy.Subscriber('/robot_{}/map'.format(graph.robot_id), 
+        OccupancyGrid, graph.map_callback)
     graph.spin()
