@@ -557,35 +557,35 @@ class Graph:
             mode=igraph.ALL)
 
         full_path = []
+        if paths_to_leaves:
+            path_costs = [0] * len(paths_to_leaves)
+            depth = 1
+            path_to_leaf = -1
+            path_length = np.inf
+            max_depth = max([len(path) for path in paths_to_leaves])
+            while depth < max_depth:
+                counter = 0
+                for i, path in enumerate(paths_to_leaves):
+                    if depth < len(path):
+                        if path_to_leaf != i:
+                            path_costs[i] += self.graph.es["weight"][self.graph.get_eid(path[depth-1], path[depth])]
 
-        path_costs = [0] * len(paths_to_leaves)
-        depth = 1
-        path_to_leaf = -1
-        path_length = np.inf
-        max_depth = max([len(path) for path in paths_to_leaves])
-        while depth < max_depth:
-            counter = 0
-            for i, path in enumerate(paths_to_leaves):
-                if depth < len(path):
-                    if path_to_leaf != i:
-                        path_costs[i] += self.graph.es["weight"][self.graph.get_eid(path[depth-1], path[depth])]
+                            if path[depth] not in self.visited_vertices:
+                                if (path_to_leaf == -1 or path_costs[i] < path_costs[path_to_leaf]):
+                                    path_to_leaf = i
+                    if path_to_leaf != -1 and path_costs[i] > path_costs[path_to_leaf]:
+                        counter += 1 
 
-                        if path[depth] not in self.visited_vertices:
-                            if (path_to_leaf == -1 or path_costs[i] < path_costs[path_to_leaf]):
-                                path_to_leaf = i
-                if path_to_leaf != -1 and path_costs[i] > path_costs[path_to_leaf]:
-                    counter += 1 
-
-            if counter == len(paths_to_leaves):
-                break
-            depth += 1
-        if path_to_leaf == -1:
-            path_to_leaf = np.argmin(path_costs)
+                if counter == len(paths_to_leaves):
+                    break
+                depth += 1
+            if path_to_leaf == -1:
+                path_to_leaf = np.argmin(path_costs)
 
 
-        for v in paths_to_leaves[path_to_leaf]:
-            full_path.append(self.latest_map.grid_to_pose(
-                self.graph.vs["coord"][v]))
+            for v in paths_to_leaves[path_to_leaf]:
+                full_path.append(self.latest_map.grid_to_pose(
+                    self.graph.vs["coord"][v]))
         return full_path
 
     ###### TO CHECK what is needed.

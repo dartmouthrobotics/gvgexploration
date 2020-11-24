@@ -144,11 +144,6 @@ class GVGExplore:
                     self.prev_goal_grid = self.graph.latest_map.pose_to_grid(prev_pose)
                     self.goal_grid = self.graph.latest_map.pose_to_grid(self.path_to_leaf[-1])
                     self.move_robot_to_goal(self.path_to_leaf[-1], pu.angle_pq_line(self.path_to_leaf[-1], prev_pose))
-                    """
-                    for i, goal in enumerate(self.path_to_leaf):
-                        self.move_robot_to_goal(goal, pu.angle_pq_line(goal, prev_pose))
-                        prev_pose = self.path_to_leaf[i]
-                    """
 
             r.sleep()
 
