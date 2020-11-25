@@ -103,33 +103,28 @@ class Robot:
         self.frontier_data = []
         self.interconnection_data = []
         self.rate = rospy.Rate(0.1)
-        self.run = rospy.get_param("~run")
-        self.termination_metric = rospy.get_param("~termination_metric")
-        self.max_exploration_time = rospy.get_param("~max_exploration_time")
-        self.max_coverage = rospy.get_param("~max_coverage")
-        self.max_common_coverage = rospy.get_param("~max_common_coverage")
-        self.max_wait_time = rospy.get_param("~max_wait_time")
-        self.environment = rospy.get_param("~environment")
-        self.robot_count = rospy.get_param("~robot_count")
-        self.debug_mode = rospy.get_param("~debug_mode")
-        self.method = rospy.get_param("~method")
-        # self.mac_id = rospy.get_param("~mac_id")
-        self.comm_range = rospy.get_param("~comm_range")
+        self.run = rospy.get_param("/run")
+        self.termination_metric = rospy.get_param("/termination_metric")
+        self.max_exploration_time = rospy.get_param("/max_exploration_time")
+        self.max_coverage = rospy.get_param("/max_coverage")
+        self.max_common_coverage = rospy.get_param("/max_common_coverage")
+        self.max_wait_time = rospy.get_param("/max_wait_time")
+        self.environment = rospy.get_param("/environment")
+        self.robot_count = rospy.get_param("/robot_count")
+        self.debug_mode = rospy.get_param("/debug_mode")
+        self.method = rospy.get_param("/method")
+        # self.mac_id = rospy.get_param("/mac_id")
+        self.comm_range = rospy.get_param("/comm_range")
 
-        self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,
-                                           self.shared_data_handler)
-        self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,
-                                                self.shared_point_handler)
-        self.alloc_point_srv = rospy.Service("/robot_{}/allocated_point".format(self.robot_id), SharedFrontier,
-                                             self.shared_frontier_handler)
+        self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,self.shared_data_handler)
+        self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,self.shared_point_handler)
+        self.alloc_point_srv = rospy.Service("/robot_{}/allocated_point".format(self.robot_id), SharedFrontier,self.shared_frontier_handler)
         rospy.Subscriber('/robot_{}/initial_data'.format(self.robot_id), BufferedData,
                          self.initial_data_callback)  # just for initial data *
         self.karto_pub = rospy.Publisher("/robot_{}/karto_in".format(self.robot_id), LocalizedScan, queue_size=10)
         self.signal_strength_srv = rospy.ServiceProxy("/signal_strength".format(self.robot_id), HotSpot)
-        self.fetch_frontier_points = rospy.ServiceProxy('/robot_{}/frontier_points'.format(self.robot_id),
-                                                        FrontierPoint)
-        self.check_intersections = rospy.ServiceProxy('/robot_{}/check_intersections'.format(self.robot_id),
-                                                      Intersections)
+        self.fetch_frontier_points = rospy.ServiceProxy('/robot_{}/frontier_points'.format(self.robot_id),FrontierPoint)
+        self.check_intersections = rospy.ServiceProxy('/robot_{}/check_intersections'.format(self.robot_id),Intersections)
         rospy.Subscriber('/robot_{}/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
         # rospy.Subscriber('/robot_{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
@@ -716,6 +711,7 @@ class Robot:
 if __name__ == "__main__":
     # initializing a node
     rospy.init_node("robot_node", anonymous=True)
+
     robot_id = int(rospy.get_param("~robot_id", 0))
     robot_type = int(rospy.get_param("~robot_type", 0))
     base_stations = str(rospy.get_param("~base_stations", ''))

@@ -77,22 +77,14 @@ class roscbt:
         # new parameter -- specifying how information is shared among robots
         self.shared_topics = rospy.get_param("~shared_topics", {})
 
-        # processing groundtruth about the map
-        map_image_path = rospy.get_param("~map_image_path", '')
-        self.world_scale = rospy.get_param("~world_scale", 1)
-        self.map_pose = rospy.get_param("~map_pose", [])
-        self.world_center = rospy.get_param("~world_center", [])
-
-        self.termination_metric = rospy.get_param("~termination_metric")
-        self.robot_count = rospy.get_param("~robot_count")
-        self.environment = rospy.get_param("~environment")
-        self.comm_range = rospy.get_param("~comm_range")
-        self.method = rospy.get_param("~method")
-        self.run = rospy.get_param("~run")
+        self.termination_metric = rospy.get_param("/termination_metric")
+        self.robot_count = rospy.get_param("/robot_count")
+        self.environment = rospy.get_param("/environment")
+        self.comm_range = rospy.get_param("/comm_range")
+        self.method = rospy.get_param("/method")
+        self.run = rospy.get_param("/run")
 
         # difference in center of map image and actual simulation
-        self.dx = self.world_center[0] - self.map_pose[0]
-        self.dy = self.world_center[1] - self.map_pose[1]
         self.exploration_data = []
         self.received_messages = []
 

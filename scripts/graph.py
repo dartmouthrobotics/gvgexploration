@@ -192,9 +192,9 @@ class Graph:
         self.robot_id = rospy.get_param("~robot_id")
 
         # Parameters related to the experiment.
-        self.robot_count = rospy.get_param("~robot_count")
-        self.environment = rospy.get_param("~environment")
-        self.run = rospy.get_param("~run")
+        self.robot_count = rospy.get_param("/robot_count")
+        self.environment = rospy.get_param("/environment")
+        self.run = rospy.get_param("/run")
 
         # Physical parameters of the robot.
         self.robot_radius = rospy.get_param('/robot_{}/robot_radius'.format(self.robot_id)) # meter.
@@ -242,22 +242,22 @@ class Graph:
         self.prev_ridge = None
 
 
-        self.debug_mode = rospy.get_param("~debug_mode")
-        self.method = rospy.get_param("~method")
-        self.bs_pose = rospy.get_param('~bs_pose')
-        self.map_scale = rospy.get_param('~map_scale')
-        self.graph_scale = rospy.get_param("~graph_scale")
-        self.termination_metric = rospy.get_param("~termination_metric")
-        self.frontier_threshold = rospy.get_param("~frontier_threshold")
-        self.min_hallway_width = rospy.get_param("~min_hallway_width") * self.graph_scale
-        self.comm_range = rospy.get_param("~comm_range") * self.graph_scale
-        self.point_precision = rospy.get_param("~point_precision")
+        self.debug_mode = rospy.get_param("/debug_mode")
+        self.method = rospy.get_param("/method")
+        self.bs_pose = rospy.get_param('/bs_pose')
+        self.map_scale = rospy.get_param('/map_scale')
+        self.graph_scale = rospy.get_param("/graph_scale")
+        self.termination_metric = rospy.get_param("/termination_metric")
+        self.frontier_threshold = rospy.get_param("/frontier_threshold")
+        self.min_hallway_width = rospy.get_param("/min_hallway_width") * self.graph_scale
+        self.comm_range = rospy.get_param("/comm_range") * self.graph_scale
+        self.point_precision = rospy.get_param("/point_precision")
 
-        self.lidar_scan_radius = rospy.get_param("~lidar_scan_radius") * self.graph_scale
-        self.lidar_fov = rospy.get_param("~lidar_fov")
-        self.slope_bias = rospy.get_param("~slope_bias")
-        self.separation_bias = rospy.get_param("~separation_bias") * self.graph_scale
-        self.opposite_vector_bias = rospy.get_param("~opposite_vector_bias")
+        self.lidar_scan_radius = rospy.get_param("/lidar_scan_radius") * self.graph_scale
+        self.lidar_fov = rospy.get_param("/lidar_fov")
+        self.slope_bias = rospy.get_param("/slope_bias")
+        self.separation_bias = rospy.get_param("/separation_bias") * self.graph_scale
+        self.opposite_vector_bias = rospy.get_param("/opposite_vector_bias")
         rospy.Service('/robot_{}/rendezvous'.format(self.robot_id), RendezvousPoints,self.fetch_rendezvous_points_handler)
         rospy.Service('/robot_{}/explored_region'.format(self.robot_id), ExploredRegion,self.fetch_explored_region_handler)
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
@@ -294,13 +294,6 @@ class Graph:
         vor = Voronoi(obstacles)
         end_time_clock = time.clock()
         rospy.logerr("voronoi {}".format(end_time_clock - start_time_clock))
-        #fig = voronoi_plot_2d(vor)
-        #from matplotlib import pyplot as plt
-        #plt.xlabel('xlabel', fontsize=18)
-        #plt.ylabel('ylabel', fontsize=16)
-        #fig.savefig("voronoi.png")
-
-
         start_time_clock = time.clock()
         # Initializing the graph.
         self.graph = igraph.Graph()
@@ -571,11 +564,8 @@ class Graph:
                 previous_previous_vertex_id = previous_vertex_id
                 previous_vertex_id = p_vertex_id
                 if len(self.visited_vertices) > 1:
-                    path_prev_current = self.graph.get_shortest_paths(previous_previous_vertex_id, 
-                        to=previous_vertex_id, weights=self.graph.es["weight"], 
-                        mode=igraph.ALL)
+                    path_prev_current = self.graph.get_shortest_paths(previous_previous_vertex_id, to=previous_vertex_id, weights=self.graph.es["weight"], mode=igraph.ALL)
                     self.visited_vertices.update(path_prev_current[0])
-
 
         if previous_vertex_id != -1:
             path_prev_current = self.graph.get_shortest_paths(previous_vertex_id, 

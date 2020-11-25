@@ -24,13 +24,13 @@ class ScanFilter:
         self.robot_count = rospy.get_param('/robot_count')
         # Robot ID starting from 1, as navigation_2d
         self.robot_id = rospy.get_param('~robot_id')
-
+        rospy.logerr("Received Robot ID: {} Robot Count: {}".format(self.robot_id,self.robot_count))
         # Initialization of variables.
         self.all_poses = {} # Poses of other robots in the world reference frame.
 
         # Get pose from other robots.        
         for i in xrange(0, self.robot_count):
-            if i != self.robot_id-1:
+            if i != self.robot_id:
                 s = "def a_{0}(self, data): self.all_poses[{0}] = (data.pose.pose.position.x," \
                     "data.pose.pose.position.y," \
                     "(data.pose.pose.orientation.x,data.pose.pose.orientation.y,data.pose.pose.orientation.z," \

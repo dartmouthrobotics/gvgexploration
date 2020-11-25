@@ -1,5 +1,5 @@
-global_frame: robot_$(arg robot_id_topics)/odom
-robot_base_frame: robot_$(arg robot_id_topics)/base_link
+global_frame: robot_$(arg robot_id)/odom
+robot_base_frame: robot_$(arg robot_id)/base_link
 update_frequency: 5.0
 publish_frequency: 2.0
 always_send_full_costmap: true

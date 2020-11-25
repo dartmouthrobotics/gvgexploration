@@ -39,8 +39,8 @@ class GVGExplore:
         self.robot_id = rospy.get_param('~robot_id')
 
         # Goal parameters.
-        self.target_distance = rospy.get_param('~target_distance')
-        self.target_angle = rospy.get_param('~target_angle')
+        self.target_distance = rospy.get_param('/target_distance')
+        self.target_angle = rospy.get_param('/target_angle')
 
         # nav2d MoveTo action.
         self.client_motion = actionlib.SimpleActionClient("/robot_{}/MoveTo".format(self.robot_id), 
@@ -48,8 +48,7 @@ class GVGExplore:
         self.client_motion.wait_for_server()
 
         # Service to start or stop the gvg exploration.
-        self.start_gvg_explore = rospy.Service(
-            '/robot_{}/gvg/start_stop'.format(self.robot_id), Trigger, self.start_stop)
+        self.start_gvg_explore = rospy.Service('/robot_{}/gvg/start_stop'.format(self.robot_id), Trigger, self.start_stop)
 
         # tf listener.
         self.listener = tf.TransformListener()

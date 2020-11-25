@@ -1,5 +1,4 @@
 <launch>
-
     <arg name="world" default="maze"/>
     <arg name="robot_count" default="2"/>
     <arg name="run" default="0"/>
@@ -14,56 +13,35 @@
     </node>
 
     <param name="robot_count" value="$(arg robot_count)" />
+    <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
 
     <group ns="robot_0">
-        <arg name="robot_id" value="1"/>
-
-        <include file="$(find gvgexploration)/launch/robot_sim.launch">
-            <arg name="robot_id" value="$(arg robot_id)"/>
+        <include file="$(find gvgexploration)/launch/nodes.launch">
+            <arg name="robot_name" value="1"/>
         </include>
 
         <include file="$(find gvgexploration)/launch/robot.launch">
-            <arg name="robot_name" value="0" />
+            <arg name="robot_id" value="0" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="1" />
-
-            <arg name="method" value="$(arg method)"/>
-            <arg name="robot_count" value="$(arg robot_count)"/>
-            <arg name="run" value="$(arg run)"/>
-            <arg name="bs_pose" value="$(arg bs_pose)"/>
-            <arg name="environment" value="$(arg environment)"/>
         </include>
 
     </group>
 
     <group ns="robot_1">
-        <arg name="robot_id" value="2"/>
-        <include file="$(find gvgexploration)/launch/robot_sim.launch">
-            <arg name="robot_id" value="$(arg robot_id)"/>
+        <include file="$(find gvgexploration)/launch/nodes.launch">
+            <arg name="robot_name" value="2"/>
         </include>
 
         <include file="$(find gvgexploration)/launch/robot.launch">
-            <arg name="robot_name" value="1" />
+            <arg name="robot_id" value="1" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="0" />
-
-            <arg name="method" value="$(arg method)"/>
-            <arg name="robot_count" value="$(arg robot_count)"/>
-            <arg name="run" value="$(arg run)"/>
-            <arg name="bs_pose" value="$(arg bs_pose)"/>
-            <arg name="environment" value="$(arg environment)"/>
-
         </include>
     </group>
 
     <node name="roscbt" pkg="gvgexploration" type="roscbt.py" respawn="true">
-        <rosparam file="$(find gvgexploration)/param/roscbt_config2.yaml"/>
-        <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
-        <param name="method" value="$(arg method)"/>
-        <param name="robot_count" value="$(arg robot_count)"/>
-        <param name="run" value="$(arg run)"/>
-        <param name="bs_pose" value="$(arg bs_pose)"/>
-        <param name="environment" value="$(arg environment)"/>
+        <rosparam file="$(find gvgexploration)/param/roscbt_config$(arg robot_count).yaml"/>
     </node>
 
     <!-- RVIZ to view the visualization -->
