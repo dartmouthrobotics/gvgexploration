@@ -98,7 +98,10 @@ class GVGExplore:
             self.last_distance = feedback.distance
             self.same_location_counter = 0
 
-        if rospy.Time.now() - self.graph.latest_map.header.stamp > rospy.Duration(10): #TODO parameter:
+        if self.graph.should_communicate(self.get_robot_pose()):
+            rospy.logerr("communicate")
+
+        if rospy.Time.now() - self.graph.latest_map.header.stamp > rospy.Duration(20): #TODO parameter:
             self.graph.generate_graph()
             if not self.graph.latest_map.is_frontier(
                 self.prev_goal_grid, 

@@ -1,14 +1,21 @@
 #!/usr/bin/python
 
+import time
+import math
+import numpy as np
+from numpy.linalg import norm
+from sklearn.metrics import mean_squared_error
+from scipy.spatial import Voronoi, voronoi_plot_2d
+
+import igraph
+from bresenham import bresenham
+
 import copy
 import matplotlib
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import math
-import numpy as np
-from scipy.spatial import Voronoi, voronoi_plot_2d
-import time
+
 import rospy
 from threading import Lock
 from nav_msgs.msg import OccupancyGrid
@@ -19,22 +26,19 @@ import project_utils as pu
 from project_utils import euclidean_distance
 import tf
 from graham_scan import graham_scan
-from time import sleep
 import shapely.geometry as sg
 from nav_msgs.msg import *
 from nav2d_navigator.msg import *
 from std_srvs.srv import *
 from project_utils import INDEX_FOR_X, INDEX_FOR_Y, save_data
 from std_msgs.msg import String
-from numpy.linalg import norm
+
 import shapely.geometry as sg
 from shapely.geometry.polygon import Polygon
 from visualization_msgs.msg import Marker
 from tf import TransformListener
 from geometry_msgs.msg import Point
 from scipy.ndimage import minimum_filter
-import igraph
-from bresenham import bresenham
 
 from nav_msgs.srv import GetMap
 
@@ -154,6 +158,19 @@ class Grid:
             elif self.is_obstacle(*p):
                 return False
         return False
+
+    def line_in_unknown(self, start_cell, end_cell):
+        x1, y1 = start_cell.astype(int)
+        x2, y2 = end_cell.astype(int)
+
+        unknown_cells_counter = 0
+        for p in list(bresenham(x1, y1, x2, y2)):
+            if self.is_unknown(*p):
+                unknown_cells_counter += 1
+            elif self.is_obstacle(*p):
+                return False
+        return unknown_cells_counter
+
 
 
     def pose_to_grid(self, pose):
@@ -345,7 +362,7 @@ class Graph:
 
         # self.get_adjacency_list(self.edges)
         # self.connect_subtrees()
-        #self.merge_similar_edges2()
+
         self.prune_leaves()
         end_time_clock = time.clock()
         rospy.logerr("ridge {}".format(end_time_clock - start_time_clock))
@@ -356,6 +373,7 @@ class Graph:
     def merge_similar_edges2(self):
         current_vertex_id = 0 # traversing graph from vertex 0.
 
+        self.leaves = []
         while current_vertex_id < self.graph.vcount():
             if self.graph.degree(current_vertex_id) == 2:
                 p_id, r_id = self.graph.neighbors(current_vertex_id)
@@ -376,13 +394,17 @@ class Graph:
                         weight=self.graph.es["weight"][pq_id]+self.graph.es["weight"][qr_id])
                     self.graph.delete_vertices(current_vertex_id)
                 else:
+
                     current_vertex_id += 1
             else:
+                if self.graph.degree(current_vertex_id) == 1:
+                    self.leaves.append(current_vertex_id)
                 current_vertex_id += 1
 
     def prune_leaves(self):
         current_vertex_id = 0 # traversing graph from vertex 0.
         self.leaves = []
+        self.intersections = {}
         while current_vertex_id < self.graph.vcount():
             if self.graph.degree(current_vertex_id) == 1:
                 neighbor_id = self.graph.neighbors(current_vertex_id)[0]
@@ -395,6 +417,8 @@ class Graph:
                     self.leaves.append(current_vertex_id)
                     current_vertex_id += 1
             else:
+                if self.graph.degree(current_vertex_id) > 2:
+                    self.intersections[current_vertex_id] = self.graph.vs["coord"][current_vertex_id]
                 current_vertex_id += 1
         self.publish_leaves()
 
@@ -425,14 +449,16 @@ class Graph:
         self.marker_pub.publish(m)
 
 
-    def publish_current_vertex(self, vertex_id):
+    def publish_current_vertex(self, vertex_id, marker_id=1):
         # Publish current vertex
         m = Marker()
-        m.id = 1
+        m.id = marker_id
         m.header.frame_id = self.latest_map.header.frame_id
         m.type = Marker.SPHERE
         m.color.a = 1.0
         m.color.g = 1.0
+        if marker_id == 5:
+            m.color.b = 1.0
         # TODO constant values set at the top.
         m.scale.x = 0.5
         m.scale.y = 0.5
@@ -485,9 +511,26 @@ class Graph:
                 m.points.append(p_ros)
             self.marker_pub.publish(m)
 
+    def publish_line(self, p, q):
+        m = Marker()
+        m.id = 7
+        m.header.frame_id = self.latest_map.header.frame_id
+        m.type = Marker.LINE_STRIP
+        # TODO constant values set at the top.
+        m.color.a = 1.0
+        m.color.r = 1.0
+        m.scale.x = 0.1
+        p_t = self.latest_map.grid_to_pose(p)
+        p_ros = Point(x=p_t[0], y=p_t[1])
+        m.points.append(p_ros)
+        q_t = self.latest_map.grid_to_pose(q)
+        q_ros = Point(x=q_t[0], y=q_t[1])
+        m.points.append(q_ros)
+        self.marker_pub.publish(m)
+
     def generate_graph(self):
         # self.lock.acquire()
-
+        start_time = time.clock()
         try:
             self.latest_map = Grid(self.get_map().map)
         except rospy.ServiceException:
@@ -495,9 +538,13 @@ class Graph:
             return
         self.min_range_radius = 8 / self.latest_map.resolution # TODO range.
         self.min_edge_length = self.robot_radius / self.latest_map.resolution
-        self.compute_graph()
-        self.last_graph_update_time = rospy.Time.now().to_sec()
+        self.compute_gvg()
         # self.lock.release()
+        now = time.clock()
+        t = now - start_time
+        self.performance_data.append(
+            {'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
+
 
     def get_closest_vertex(self, robot_pose):
         """Get the closest vertex to robot_pose (x,y) in frame_id."""
@@ -510,7 +557,7 @@ class Graph:
         # Get current vertex.
         self.current_vertex_id, distance_current_vertex = self.get_closest_vertex(robot_pose)
         current_vertex_id = self.current_vertex_id
-        self.publish_current_vertex(self.current_vertex_id)
+        #self.publish_current_vertex(self.current_vertex_id)
 
 
         # find visited vertices
@@ -588,6 +635,93 @@ class Graph:
                     self.graph.vs["coord"][v]))
         return full_path
 
+
+    def find_similar_slope_vertices(self, vertex_id):
+        similar_slope_vertices = {}
+        self.find_similar_slope_vertices_helper(vertex_id, similar_slope_vertices)
+
+        return np.array(similar_slope_vertices.values())
+
+
+    def find_similar_slope_vertices_helper(self, current_vertex_id, similar_slope_vertices):
+        similar_slope_vertices[current_vertex_id] = self.graph.vs["coord"][current_vertex_id]
+        if self.graph.degree(current_vertex_id) == 2:
+            p_id, r_id = self.graph.neighbors(current_vertex_id)
+
+            p = self.graph.vs["coord"][p_id]
+            current_vertex = self.graph.vs["coord"][current_vertex_id]
+            r = self.graph.vs["coord"][r_id]
+
+            slope_pc = pu.get_slope(p, current_vertex)
+            slope_cr = pu.get_slope(p, current_vertex)
+            if np.isclose(slope_pc, 
+                slope_cr, rtol=0.001, atol=0.001, equal_nan=True) or \
+                np.isclose(slope_cr, slope_pc, rtol=0.001, atol=0.001, 
+                    equal_nan=True): # TODO tune.
+
+                if p_id not in similar_slope_vertices:
+                    self.find_similar_slope_vertices_helper(p_id, similar_slope_vertices)
+                if r_id not in similar_slope_vertices:
+                    self.find_similar_slope_vertices_helper(r_id, similar_slope_vertices)
+        elif self.graph.degree(current_vertex_id) == 1:
+            p_id = self.graph.neighbors(current_vertex_id)
+            if p_id[0] not in similar_slope_vertices:
+                self.find_similar_slope_vertices_helper(p_id[0], similar_slope_vertices)
+
+
+    def should_communicate(self, robot_pose):
+        """Return True if should communicate; false otherwise."""
+        start_time = time.clock()
+
+        #self.merge_similar_edges2()
+
+        # Get current vertex of the robot.
+        self.current_vertex_id, distance_current_vertex = self.get_closest_vertex(robot_pose)
+        current_vertex_id = self.current_vertex_id
+        robot_grid = self.graph.vs["coord"][current_vertex_id]
+
+        self.publish_current_vertex(current_vertex_id, marker_id=5)
+        # If at a junction point, might be worth to communicate.
+        if self.graph.degree(self.current_vertex_id) > 2:
+            rospy.logerr("intersection")
+            return True
+        else:
+            vertices = np.array(self.intersections.values())
+
+            closest_intersection_point, dist = pu.get_closest_point(robot_grid, vertices)
+            if dist < 5:# TODO parameter
+                rospy.logerr("intersection")
+                return True
+
+        # Points on the same line for current_vertex_id
+        current_vertex_similar_slope_vertices = self.find_similar_slope_vertices(current_vertex_id)
+        rospy.logerr("current_vertex_similar_slope_vertices {}".format(len(current_vertex_similar_slope_vertices)))
+        # If can connect with another end, might be worth to communicate.
+        for l_vertex_id in self.leaves:
+            if l_vertex_id != current_vertex_id:
+                rospy.sleep(0.01)
+                self.publish_current_vertex(l_vertex_id, marker_id=6)
+
+                if pu.euclidean_distance(self.graph.vs["coord"][current_vertex_id], self.graph.vs["coord"][l_vertex_id]) < 30 / self.latest_map.resolution: # TODO parameter for communication range
+                    l_vertex_similar_slope_vertices = self.find_similar_slope_vertices(l_vertex_id)
+
+                    line_regress = pu.get_line(np.vstack((current_vertex_similar_slope_vertices, l_vertex_similar_slope_vertices)))
+
+
+                    if line_regress[2] < 2.0 and self.latest_map.line_in_unknown(self.graph.vs["coord"][current_vertex_id], self.graph.vs["coord"][l_vertex_id]): # TODO parameter:  
+                        rospy.logerr("line rmse {} {}".format(line_regress[2], np.vstack((current_vertex_similar_slope_vertices, l_vertex_similar_slope_vertices))))
+                        p = [self.graph.vs["coord"][current_vertex_id][0], line_regress[1] + line_regress[0] * self.graph.vs["coord"][current_vertex_id][0]]
+                        q = [self.graph.vs["coord"][l_vertex_id][0], line_regress[1] + line_regress[0] * self.graph.vs["coord"][l_vertex_id][0]]
+                        self.publish_line(p, q)
+        end_time = time.clock()
+        t = (end_time - start_time)
+        rospy.logerr("should_communicate {}".format(t))
+        self.performance_data.append(
+            {'time': rospy.Time.now().to_sec(), 'type': 1, 'robot_id': self.robot_id, 'computational_time': t})
+        return False
+
+
+
     ###### TO CHECK what is needed.
 
     def map_callback(self, map_msg):
@@ -602,6 +736,8 @@ class Graph:
         rospy.logerr("generate obstacles1 {}".format(end_time_clock - start_time_clock))
         # just for testing
         self.generate_graph()
+
+        rospy.logerr("should comm {}".format(self.should_communicate(self.get_robot_pose())))
         """
         if not self.plot_data_active:
             self.plot_data([], is_initial=True)
@@ -763,13 +899,6 @@ class Graph:
 
 
 
-    def compute_graph(self):
-        start_time = time.clock()
-        self.compute_gvg()
-        now = time.clock()
-        t = now - start_time
-        self.performance_data.append(
-            {'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
 
     # def round_point(self, p):
     #     xc = round(p[INDEX_FOR_X], 2)
@@ -780,41 +909,6 @@ class Graph:
     #     new_p = tuple(new_p)
     #     return new_p
 
-    def compute_intersections(self, pose):
-        start = rospy.Time.now().to_sec()
-        intersecs = []
-        close_edge = []
-        robot_pose = pu.scale_up(pose, self.graph_scale)
-        closest_ridge = {}
-        edge_list = list(self.edges)
-        vertex_dict = {}
-        for e in edge_list:
-            p1 = e[0]
-            p2 = e[1]
-            o = self.edges[e]
-            width = pu.D(o[0], o[1])
-            u_check = pu.W(p1, robot_pose) < width or pu.W(p2, robot_pose) < width
-            if u_check:
-                v1 = pu.get_vector(p1, p2)
-                desc = (v1, width)
-                vertex_dict[e] = desc
-                d = self.distance_to_line(p1, p2, robot_pose)  # min([pu.D(robot_pose, e[0]), pu.D(robot_pose, e[1])])
-                if d != INF:
-                    closest_ridge[e] = d
-        if closest_ridge:
-            cr = min(closest_ridge, key=closest_ridge.get)
-            if closest_ridge[cr] < vertex_dict[cr][1]:
-                close_edge = cr
-                intersecs = self.process_decision(vertex_dict, close_edge, robot_pose)
-            if self.debug_mode:
-                if not self.plot_intersection_active:  # and intersecs:
-                    self.plot_intersections(None, close_edge, intersecs, robot_pose)
-
-        now = rospy.Time.now().to_sec()
-        t = (now - start)
-        self.performance_data.append(
-            {'time': rospy.Time.now().to_sec(), 'type': 1, 'robot_id': self.robot_id, 'computational_time': t})
-        return close_edge, intersecs
 
     def distance_to_line(self, p1, p2, pose):
         p2_p1_vec = pu.get_vector(p1, p2)
@@ -825,37 +919,7 @@ class Graph:
             d = INF
         return d
 
-    def process_decision(self, vertex_descriptions, ridge, robot_pose):
-        r_desc = vertex_descriptions[ridge]
-        v1 = r_desc[0]
-        w1 = r_desc[1]
-        p1 = ridge[0]
-        p2 = ridge[1]
-        intesec_pose = {}
-        for j, desc in vertex_descriptions.items():
-            if j != ridge:  # and (ridge[0] not in j or ridge[1] not in j):
-                p3 = j[1]
-                v2 = desc[0]
-                w2 = desc[1]
-                # if self.lidar_scan_radius < pu.D(p2, p3) < self.comm_range:
-                if pu.D(robot_pose, p3) < self.comm_range:
-                    if pu.collinear(p1, p2, p3, w1, self.slope_bias):
-                        cos_theta, separation = pu.compute_similarity(v1, v2, ridge, j)
-                        if -1 <= cos_theta <= -1 + self.opposite_vector_bias and abs(separation) < abs(w1 - w2):
-                            intesec_pose[pu.D(p2, p3)] = (ridge, j)
-                        else:
-                            # pu.log_msg(self.robot_id,"Costheta: {}, Separation: {}, corridor: {}".format(cos_theta, abs(separation),abs(w1 - w2)),self.debug_mode)
-                            pass
-                    else:
-                        # pu.log_msg(self.robot_id, "Collinear: {}".format(pu.collinear(p1, p2, p3, w1, self.slope_bias)),
-                        #            self.debug_mode)
-                        pass
-                else:
-                    # pu.log_msg(self.robot_id, "Comm range: {}".format(pu.D(p2, p3)), self.debug_mode)
-                    pass
 
-        intersections = self.get_pairs_with_unknown_area(intesec_pose)
-        return intersections
 
     def get_pairs_with_unknown_area(self, edge_pairs):
         edge_boxes = {}
@@ -1658,6 +1722,25 @@ class Graph:
                                                                 self.run,
                                                                 self.termination_metric, self.robot_id))
 
+
+    def get_robot_pose(self):
+        # TODO add in a different class.
+        robot_pose = None
+        while not robot_pose:
+            if True:
+                self.tf_listener.waitForTransform("robot_{}/map".format(self.robot_id),
+                                             "robot_{}/base_link".format(self.robot_id),
+                                             rospy.Time(0),
+                                             rospy.Duration(4.0))
+                (robot_loc_val, rot) = self.tf_listener.lookupTransform("robot_{}/map".format(self.robot_id),
+                                                                     "robot_{}/base_link".format(self.robot_id),
+                                                                     rospy.Time(0))
+                robot_pose = robot_loc_val[0:2]
+            #except:
+            #    rospy.sleep(1)
+            #    pass
+        robot_pose = np.array(robot_pose)
+        return robot_pose
 
 
 if __name__ == "__main__":

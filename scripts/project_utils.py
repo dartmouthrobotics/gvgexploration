@@ -5,6 +5,7 @@ from os import path
 import rospy
 import shapely.geometry as sg
 from scipy import stats # linregress
+from sklearn.metrics import mean_squared_error
 
 
 TOTAL_COVERAGE = 1
@@ -129,9 +130,11 @@ def get_slope(p, q):
     return stats.linregress([p[INDEX_FOR_Y], q[INDEX_FOR_Y]],
         [p[INDEX_FOR_X],p[INDEX_FOR_X]])[0]
 
-def get_line_err(stacked_points):
+def get_line(stacked_points):
     slope, intercept, r_value, p_value, std_err = stats.linregress(stacked_points)
-    return std_err
+    y_predict =  intercept + slope*stacked_points[:,0]
+    
+    return slope, intercept, np.sqrt(mean_squared_error(stacked_points[:,1], y_predict))
 
 def get_vector(p1, p2):
     xv = p2[INDEX_FOR_X] - p1[INDEX_FOR_X]
