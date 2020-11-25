@@ -20,8 +20,8 @@ import rospy
 from threading import Lock
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Pose
-from gvgexplore.msg import *
-from gvgexplore.srv import *
+from gvgexploration.msg import *
+from gvgexploration.srv import *
 import project_utils as pu
 from project_utils import euclidean_distance
 import tf
