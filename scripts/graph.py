@@ -185,6 +185,19 @@ class Grid:
                     np.array([grid_coordinate[0]* self.resolution, 
                     grid_coordinate[1]* self.resolution, 0, 1])))[0:2]
 
+    def get_explored_region(self):
+        """ Get all the explored cells on the grid map"""
+        poses=[]
+        for x in range(self.grid.shape[1]):
+            for y in range(self.grid.shape[0]):
+                if not self.is_unknown(x,y):
+                    p=self.grid_to_pose((x,y))
+                    pose = Pose()
+                    pose.position.x = p[INDEX_FOR_X]
+                    pose.position.y = p[INDEX_FOR_Y]
+                    poses.append(pose)
+        return poses
+
 
 class Graph:
     def __init__(self):
@@ -1030,15 +1043,12 @@ class Graph:
             print("empty subtree")
 
     def fetch_explored_region_handler(self, data):
-        #if self.latest_map and self.enough_delay():
-        #    self.get_image_desc(self.latest_map)
-        pixel_points = list(self.all_poses)
-        poses = []
-        for p in pixel_points:
-            pose = Pose()
-            pose.position.x = p[INDEX_FOR_X]
-            pose.position.y = p[INDEX_FOR_Y]
-            poses.append(pose)
+        '''
+        Map Analyzer use this to fetch explored cells
+        :param data:
+        :return:
+        '''
+        poses=self.latest_map.get_explored_region()
         return ExploredRegionResponse(poses=poses, resolution=self.map_resolution)
 
     def already_exists(self, p):

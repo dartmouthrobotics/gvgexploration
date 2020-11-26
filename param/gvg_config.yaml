@@ -17,11 +17,11 @@ max_coverage: 0.8   # allowed maximum coverage
 max_common_coverage: 0.8
 max_exploration_time: 20
 termination_metric: 1 # 1: TOTAL COVERAGE, 2: MAXIMUM_EXPLORATION_TIME 3: COMMON_COVERAGE, 4: FULL_COVERAGE
-map_scale: 20.0     # scale of the map
-graph_scale: 10.0     # scale of the map
+map_scale: 1.0     # scale of the map
+graph_scale: 1.0     # scale of the map
 bs_pose: $(arg bs_pose)  # basic
 map_inflation_radius: 1   # inflation radius of the robot
-map_file: '$(find gvgexploration)/world/$(arg world).png'    # environment file
+map_file: '$(find gvgexploration)/world/$(arg environment).png'    # environment file
 target_distance: 1.0
 target_angle: 1.57
 environment: $(arg environment)
