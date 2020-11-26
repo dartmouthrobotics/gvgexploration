@@ -9,6 +9,8 @@ from project_utils import INDEX_FOR_X, INDEX_FOR_Y, pixel2pose, FREE, OCCUPIED, 
 from gvgexploration.msg import Coverage
 from gvgexploration.srv import ExploredRegion, ExploredRegionRequest
 from std_msgs.msg import String
+from graph import Grid
+from nav_msgs.msg import OccupancyGrid
 
 
 class MapAnalyzer:
@@ -19,6 +21,7 @@ class MapAnalyzer:
         self.map_file_name = rospy.get_param("/map_file")
         self.run = rospy.get_param("/run")
         self.debug_mode = rospy.get_param("/debug_mode")
+        self.max_coverage=rospy.get_param("/max_coverage")
         self.termination_metric = rospy.get_param("/termination_metric")
         self.environment = rospy.get_param("/environment")
         self.method = rospy.get_param("/method")
@@ -31,14 +34,16 @@ class MapAnalyzer:
         self.all_maps = {}
         self.explored_region = {}
         self.pixel_desc = {}
+        self.raw_maps= {}
+
         for i in range(self.robot_count):
-            p = rospy.ServiceProxy('/robot_{}/explored_region'.format(i), ExploredRegion)
-            p.wait_for_service()
-            self.explored_region[i] = p
+            exec("def a_{0}(self, data): self.raw_maps[{0}] = data".format(i))
+            exec("setattr(MapAnalyzer, 'callback_map{0}', a_{0})".format(i))
+            exec("rospy.Subscriber('/robot_{0}/map', OccupancyGrid, self.callback_map{0},queue_size = 100)".format(i))
             self.all_maps[i] = set()
 
         self.coverage_pub = rospy.Publisher("/coverage", Coverage, queue_size=10)
-        rospy.Subscriber('/shutdown', String, self.shutdown_callback)
+        self.shutdown_pub=rospy.Publisher('/shutdown', String,queue_size=2 )
 
         rospy.on_shutdown(self.save_all_data)
 
@@ -76,20 +81,22 @@ class MapAnalyzer:
         self.all_coverage_data.append(
             {'time': rospy.Time.now().to_sec(), 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
              'expected_coverage': self.free_area_ratio})
+        if cov_ratio >= self.max_coverage:
+            rospy.signal_shutdown("Exploration Complete")
 
     def get_explored_region(self, rid):
         try:
-            explored_points = self.explored_region[rid](ExploredRegionRequest(robot_id=rid))
-            poses = explored_points.poses
-            self.all_maps[rid].clear()
-            self.all_explored_points.clear()
-            for p in poses:
-                point = (p.position.x, p.position.y)
-                self.all_maps[rid].add(point)
-                self.all_explored_points.add(point)
+            if rid in self.raw_maps:
+                grid=Grid(self.raw_maps[rid])
+                poses = grid.get_explored_region()
+                self.all_maps[rid].clear()
+                self.all_explored_points.clear()
+                for p in poses:
+                    point=tuple(p)
+                    self.all_maps[rid].add(point)
+                    self.all_explored_points.add(point)
         except Exception as e:
             rospy.logerr(e)
-            pass
 
     def get_common_area(self, common_points):
         whole_cells = []
@@ -133,6 +140,9 @@ class MapAnalyzer:
         save_data(self.all_coverage_data,
                   '{}/coverage_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count, self.run,
                                                           self.termination_metric))
+        tstr = String()
+        tstr.data = "shutdown"
+        self.shutdown_pub.publish(tstr)
 
 
 if __name__ == '__main__':

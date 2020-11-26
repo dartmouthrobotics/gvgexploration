@@ -135,9 +135,7 @@ class roscbt:
             # self.listener = tf.TransformListener()
         self.shared_data_size = []
         rospy.Subscriber('/shared_data_size', DataSize, self.shared_data_callback)
-        rospy.on_shutdown(self.save_all_data)
-        # rospy.Subscriber('/shutdown', String, self.shutdown_callback)
-        self.already_shutdown = False
+        rospy.Subscriber('/shutdown', String, self.save_all_data)
         rospy.loginfo("ROSCBT Initialized Successfully!")
 
     def spin(self):
@@ -314,17 +312,14 @@ class roscbt:
         self.coverage.append(result)
         return result
 
-    def shutdown_callback(self, msg):
-        self.save_all_data()
-        rospy.signal_shutdown('ROSCBT: Shutdown command received!')
-
-    def save_all_data(self):
+    def save_all_data(self,data):
         save_data(self.exploration_data,
                   '{}/exploration_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count, self.run,
                                                              self.termination_metric))
         save_data(self.shared_data_size,
                   '{}/roscbt_data_shared_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count,
                                                                     self.run, self.termination_metric))
+        rospy.signal_shutdown("Shutting down ROSCBT")
 
 
 if __name__ == '__main__':

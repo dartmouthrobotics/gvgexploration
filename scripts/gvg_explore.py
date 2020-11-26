@@ -13,7 +13,7 @@ import actionlib
 from std_srvs.srv import Trigger, TriggerResponse
 from actionlib_msgs.msg import GoalStatus
 from nav2d_navigator.msg import MoveToPosition2DAction, MoveToPosition2DGoal
-
+from std_msgs.msg import String
 # Custom modules
 from graph import Graph
 import project_utils as pu
@@ -52,6 +52,8 @@ class GVGExplore:
 
         # tf listener.
         self.listener = tf.TransformListener()
+
+        rospy.Subscriber('/shutdown', String, self.save_all_data)
 
         rospy.loginfo("Robot {}: Exploration server online...".format(self.robot_id))
 
@@ -151,6 +153,11 @@ class GVGExplore:
                     self.current_state = IDLE
 
             r.sleep()
+
+
+    def save_all_data(self,data):
+        """ Save data and kill yourself"""
+        rospy.signal_shutdown("Shutting down GVG explore")
 
 
 

@@ -192,10 +192,7 @@ class Grid:
             for y in range(self.grid.shape[0]):
                 if not self.is_unknown(x,y):
                     p=self.grid_to_pose((x,y))
-                    pose = Pose()
-                    pose.position.x = p[INDEX_FOR_X]
-                    pose.position.y = p[INDEX_FOR_Y]
-                    poses.append(pose)
+                    poses.append(p)
         return poses
 
 

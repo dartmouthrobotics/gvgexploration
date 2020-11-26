@@ -158,7 +158,7 @@ class Robot:
                                                   CancelExploration)
         rospy.Subscriber("/robot_{}/gvgexplore/feedback".format(self.robot_id), Pose, self.explore_feedback_callback)
         rospy.loginfo("Robot {} Initialized successfully!!".format(self.robot_id))
-        rospy.on_shutdown(self.save_all_data)
+        rospy.Subscriber("/shutdown",String,self.save_all_data)
         self.first_message_sent = False
         self.sent_messages = []
         self.received_messages = []
@@ -694,7 +694,7 @@ class Robot:
         yaw = euler[2]
         return yaw
 
-    def save_all_data(self):
+    def save_all_data(self,data):
         pu.save_data(self.interconnection_data,
                      '{}/interconnections_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count,
                                                                         self.run,
@@ -703,9 +703,7 @@ class Robot:
                      '{}/frontiers_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count,
                                                                  self.run,
                                                                  self.termination_metric, self.robot_id))
-        msg = String()
-        msg.data = '{}'.format(self.robot_id)
-        self.is_shutdown_caller = True
+        rospy.signal_shutdown("Shutting down Robot")
 
 
 if __name__ == "__main__":

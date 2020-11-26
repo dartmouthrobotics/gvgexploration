@@ -8,6 +8,7 @@ import message_filters
 
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
+from std_msgs.msg import String
 
 
 class ScanFilter:
@@ -50,6 +51,8 @@ class ScanFilter:
         self.scan_subscriber = message_filters.Subscriber('base_scan', LaserScan)
         ats = TimeSynchronizer([self.base_pose_subscriber, self.scan_subscriber], 1)#, 0.01)
         ats.registerCallback(self.pose_scan_callback)
+
+        rospy.Subscriber('/shutdown', String, self.save_all_data)
 
         # Publisher of the filtered scan.
         self.scan_pub = rospy.Publisher('filtered_scan', LaserScan, queue_size=1)
@@ -178,6 +181,8 @@ class ScanFilter:
         else:
             return mTr
 
+    def save_all_data(self,data):
+       rospy.signal_shutdown("Shutting down Scan filter")
 
 if __name__ == '__main__':
     scan_filter = ScanFilter()
