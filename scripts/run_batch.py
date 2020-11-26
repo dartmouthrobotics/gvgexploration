@@ -50,9 +50,6 @@ for nrobots in nrobots_all:
                         raise rostopic.ROSTopicIOException("Unable to communicate with master!")
 
                 time.sleep(5)
-                karto_args = ['roslaunch', karto_pkg, 'karto_{}.launch'.format(nrobots), "robot_count:={}".format(nrobots) , "run:={}".format(run),"method:={}".format(env)]
-                karto_process = subprocess.Popen(karto_args)
-                time.sleep(5)
                 localizer_command = ".{}/localizer/maze_localize".format(package_path) #".{}/localizer/{}_{}_localize".format(package_path,world, nrobots)
                 localizer_args = [localizer_command]
                 os.system("cd {}/localizer && ./maze_localize".format(package_path))
@@ -60,6 +57,7 @@ for nrobots in nrobots_all:
                 time.sleep(5)
 
                 main_process.wait()
+                os.system("rosnode kill "+ node)
                 errors_after = num_errors()
                 print("finished")
                 time.sleep(3)

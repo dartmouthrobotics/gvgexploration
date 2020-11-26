@@ -21,6 +21,7 @@ from threading import Thread
 import project_utils as pu
 from std_msgs.msg import String
 
+
 MAX_COVERAGE_RATIO = 0.8
 
 INF = 1000000000000

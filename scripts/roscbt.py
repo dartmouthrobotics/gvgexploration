@@ -319,6 +319,7 @@ class roscbt:
         save_data(self.shared_data_size,
                   '{}/roscbt_data_shared_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count,
                                                                     self.run, self.termination_metric))
+
         rospy.signal_shutdown("Shutting down ROSCBT")
 
 

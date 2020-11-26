@@ -5,12 +5,14 @@ matplotlib.use('Agg')
 from PIL import Image
 import numpy as np
 import rospy
+from time import sleep
 from project_utils import INDEX_FOR_X, INDEX_FOR_Y, pixel2pose, FREE, OCCUPIED, save_data, get_point,scale_down
 from gvgexploration.msg import Coverage
 from gvgexploration.srv import ExploredRegion, ExploredRegionRequest
 from std_msgs.msg import String
 from graph import Grid
 from nav_msgs.msg import OccupancyGrid
+import rosnode
 
 
 class MapAnalyzer:
@@ -143,6 +145,14 @@ class MapAnalyzer:
         tstr = String()
         tstr.data = "shutdown"
         self.shutdown_pub.publish(tstr)
+        sleep(3)
+        all_nodes=[]
+        for i in range(self.robot_count):
+            all_nodes+=['/robot_{}/GetMap'.format(i),'/robot_{}/Mapper'.format(i),'/robot_{}/map_align'.format(i),'/robot_{}/navigator'.format(i),'/robot_{}/operator'.format(i),'/robot_{}/SetGoal'.format(i)]
+
+        all_nodes+=['/rosout','/RVIZ','/Stage','/rostopic*']
+        rosnode.kill_nodes(all_nodes)
+
 
 
 if __name__ == '__main__':
