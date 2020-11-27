@@ -98,7 +98,8 @@ class GVGExplore:
                 else:
                     self.current_pose = self.get_robot_pose()
                     self.prev_pose += self.path_to_leaf[1:pu.get_closest_point(self.current_pose, np.array(self.path_to_leaf))[0]+1]
-            else:
+            elif self.current_state == self.MOVE_TO_LEAF:
+                self.current_state = self.DECISION
                 self.current_pose = self.get_robot_pose()
             #rospy.sleep(1)
 
@@ -182,8 +183,10 @@ class GVGExplore:
 
     def initial_action_handler(self, leaf):
         rospy.logerr("Robot {}: GVGExplore received new goal".format(self.robot_id))
-        self.current_state = MOVE_TO_LEAF
-        self.move_robot_to_goal(leaf)
+        self.graph.generate_graph()
+        self.prev_goal_grid = self.current_pose
+        self.current_state = self.MOVE_TO_LEAF
+        self.move_robot_to_goal(np.array([leaf.position.x, leaf.position.y]))
 
     def received_prempt_handler(self, data):
         rospy.logerr("Robot {}: GVGExplore action preempted".format(self.robot_id))

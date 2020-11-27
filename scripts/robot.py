@@ -128,9 +128,11 @@ class Robot:
         self.check_intersections = rospy.ServiceProxy('/robot_{}/check_intersections'.format(self.robot_id),Intersections)
         rospy.Subscriber('/robot_{}/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
         rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
+
+        # For real robots. # TODO make it uniform.
         # rospy.Subscriber('/robot_{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
-        # rospy.Subscriber('/robot_{}/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped,
-        #                  self.discovery_callback)
+        #rospy.Subscriber('/robot_{}/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped,
+        #                 self.discovery_callback)
 
         rospy.Subscriber('/robot_{}/gvgexplore/feedback'.format(self.robot_id), Pose, self.explore_feedback_callback)
         self.data_size_pub = rospy.Publisher('/shared_data_size', DataSize, queue_size=10)
@@ -170,11 +172,12 @@ class Robot:
         while not rospy.is_shutdown():
             try:
                 if self.is_initial_data_sharing:
-                   if len(self.master_links) == len(self.candidate_robots) + 1:
-                        sleep(5)
-                        rospy.logerr("Sending initial data to all robots...")
-                        self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
-                        self.is_initial_data_sharing = False
+                    rospy.logerr("initial data sharing {} {}".format(len(self.master_links),len(self.candidate_robots) + 1))
+                    #if len(self.master_links) == len(self.candidate_robots) + 1: # For real robot. # TODO
+                    rospy.sleep(5)
+                    rospy.logerr("Sending initial data to all robots...")
+                    self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
+                    self.is_initial_data_sharing = False
 
                 pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),
                            self.debug_mode)
@@ -184,15 +187,17 @@ class Robot:
                 pu.log_msg(self.robot_id, "Throwing error: {}".format(e), self.debug_mode)
             r.sleep()
 
+
+    # For real robot. # TODO: make it consistent.
     # def wifi_strength_callback(self, data):
     #     src_mac = data.src
     #     dst_mac = data.dst
     #     if src_mac in self.mac_id and dst_mac in self.mac_id and self.mac_id[dst_mac] == self.robot_id:
     #         self.signal_strength[self.mac_id[src_mac]] = data.signal
 
-    # def discovery_callback(self, data):
-    #     for d in data.links:
-    #         self.master_links.add(d.destination)
+    #def discovery_callback(self, data):
+    #    for d in data.links:
+    #        self.master_links.add(d.destination)
 
     def evaluate_exploration(self):
         # lapsed_time = rospy.Time.now().to_sec() - self.last_evaluation_time
@@ -295,12 +300,12 @@ class Robot:
                 auction = self.create_auction(frontier_points)
                 self.shared_point_srv_map[rid](SharedPointRequest(req_data=auction))
         pu.log_msg(self.robot_id, "Point allocation complete", self.debug_mode)
-        ridge = self.compute_next_frontier(taken_poses, frontier_points)
+        ridge = self.compute_next_frontier(taken_poses, frontier_points) # TODO renaming
         if ridge:
             self.frontier_ridge = ridge
         # pu.log_msg(self.robot_id, "Going to new frontier now: {}".format(self.frontier_ridge), self.debug_mode)
         if not self.frontier_ridge:
-            self.frontier_ridge = list(frontier_points.values())[0]
+            self.frontier_ridge = frontier_points[0]
         self.start_exploration_action(self.frontier_ridge)
         pu.log_msg(self.robot_id, "Action sent to gvgexplore", self.debug_mode)
         self.is_sender = False
@@ -312,12 +317,12 @@ class Robot:
         robot_pose = self.get_robot_pose()
         dist_dict = {}
         for point in frontier_points:
-            dist_dict[pu.D(robot_pose, point)] = point
+            dist_dict[pu.D(robot_pose, [point.position.x, point.position.y])] = point
         while not ridge and dist_dict:
             min_dist = min(list(dist_dict))
             closest = dist_dict[min_dist]
             if closest not in taken_poses:
-                ridge = frontier_points[closest]
+                ridge = closest
                 break
             del dist_dict[min_dist]
         return ridge
@@ -375,7 +380,7 @@ class Robot:
                     if pose_i == pose_j:
                         conflicts.append((i, j))
             rpose = auction_feedback[i][1]
-            frontier = self.create_frontier(i, frontier_points[(rpose.position.x, rpose.position.y)])
+            frontier = self.create_frontier(i, (rpose.position.x, rpose.position.y))
             # pu.log_msg(self.robot_id, "Sharing point with {}".format(i),self.debug_mode)
             res = self.allocation_pub[i](SharedFrontierRequest(frontier=frontier))
             pu.log_msg(self.robot_id, "Shared a frontier point with robot {}: {}".format(i, res), self.debug_mode)
@@ -395,14 +400,17 @@ class Robot:
                     auction_feedback[conflicting_robot_id] = (next_closest_dist, remaining_poses[next_closest_dist])
         return taken_poses
 
-    def create_frontier(self, receiver, ridge):
+    def create_frontier(self, receiver, frontier_point):
         frontier = Frontier()
         frontier.msg_header.header.frame_id = '{}'.format(self.robot_id)
         frontier.msg_header.header.stamp = rospy.Time.now()
         frontier.msg_header.sender_id = str(self.robot_id)
         frontier.msg_header.receiver_id = str(receiver)
         frontier.msg_header.topic = 'allocated_point'
-        frontier.ridge = ridge  #
+        p = Pose()
+        p.position.x = frontier_point[0]
+        p.position.y = frontier_point[1]
+        frontier.frontier = p #
         frontier.session_id = self.session_id
         return frontier
 
@@ -633,19 +641,17 @@ class Robot:
     def get_robot_pose(self):
         robot_pose = None
         while not robot_pose:
-            try:
+            if True:
                 self.listener.waitForTransform("map".format(self.robot_id),
-                                               "base_link".format(self.robot_id), rospy.Time(),
+                                               "robot_{}/base_link".format(self.robot_id), rospy.Time(),
                                                rospy.Duration(4.0))
                 (robot_loc_val, rot) = self.listener.lookupTransform("map".format(self.robot_id),
-                                                                     "base_link".format(self.robot_id),
+                                                                     "robot_{}/base_link".format(self.robot_id),
                                                                      rospy.Time(0))
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
                 rospy.logerr("Robot pose: {}".format(robot_pose))
-                sleep(1)
-                rospy.logerr("Robot pose: {}".format(robot_pose))     
-            except:
-                pass
+            #except: # TODO: catch proper exceptions.
+            #    pass
         return robot_pose
 
     def cancel_exploration(self):

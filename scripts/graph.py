@@ -775,7 +775,7 @@ class Graph:
             p_ros.position.x = p[0]
             p_ros.position.y = p[1]
             frontiers.append(p_ros)
-            if len(selected_leaves) == count:
+            if len(frontiers) == count:
                 break
             now = time.clock()
         t = (now - start_time)
