@@ -184,7 +184,8 @@ class GVGExplore:
     def initial_action_handler(self, leaf):
         rospy.logerr("Robot {}: GVGExplore received new goal".format(self.robot_id))
         self.graph.generate_graph()
-        self.prev_goal_grid = self.current_pose
+        self.prev_goal_grid = self.graph.latest_map.pose_to_grid(self.current_pose)
+        self.goal_grid = self.graph.latest_map.pose_to_grid(np.array([leaf.position.x, leaf.position.y]))
         self.current_state = self.MOVE_TO_LEAF
         self.move_robot_to_goal(np.array([leaf.position.x, leaf.position.y]))
 
