@@ -252,6 +252,7 @@ class Graph:
 
         # ROS publisher
         self.marker_pub = rospy.Publisher('voronoi', Marker, queue_size=0) # log.
+        self.intersec_pub = rospy.Publisher('intersection', Pose, queue_size=0)
 
 
         # TO CHECK WHAT IS NEEDED.
@@ -822,7 +823,13 @@ class Graph:
         # just for testing
         self.generate_graph()
 
-        rospy.logerr("should comm {}".format(self.should_communicate(self.get_robot_pose())))
+        cpose=self.get_robot_pose()
+        if self.should_communicate(self.get_robot_pose(cpose)):
+            pose = Pose()
+            pose.position.x = cpose[INDEX_FOR_X]
+            pose.position.y = cpose[INDEX_FOR_Y]
+            self.intersec_pub.publish(pose)
+        rospy.logerr("should comm {}".format(self.should_communicate(cpose)))
         """
         if not self.plot_data_active:
             self.plot_data([], is_initial=True)

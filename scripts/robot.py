@@ -162,6 +162,7 @@ class Robot:
         rospy.Subscriber("/robot_{}/gvgexplore/feedback".format(self.robot_id), Pose, self.explore_feedback_callback)
         rospy.loginfo("Robot {} Initialized successfully!!".format(self.robot_id))
         rospy.Subscriber("/shutdown",String,self.save_all_data)
+        rospy.Subscriber("/intersection",Pose,self.check_data_sharing_status)
         self.first_message_sent = False
         self.sent_messages = []
         self.received_messages = []
@@ -220,28 +221,13 @@ class Robot:
             # self.last_evaluation_time = rospy.Time.now().to_sec()
         return its_time
 
-    def check_data_sharing_status(self):
-        if not self.intersections_requested:
-            self.intersections_requested = True
-            robot_pose = self.get_robot_pose()
-            p = Pose()
-            p.position.x = robot_pose[pu.INDEX_FOR_X]
-            p.position.y = robot_pose[pu.INDEX_FOR_Y]
-            response = self.check_intersections(IntersectionsRequest(pose=p))
-            pu.log_msg(self.robot_id, "Intersec response..{}".format(response), self.debug_mode)
-            time_stamp = rospy.Time.now().to_sec()
-            if response.result:
-                close_devices = self.get_close_devices()
-                if close_devices and not self.session_id:  # devices available and you're not in session
-                    self.interconnection_data.append(
-                        {'time': time_stamp, 'pose': robot_pose, 'intersection_range': response.result})
-                    pu.log_msg(self.robot_id, "Before calling intersection: {}".format(self.session_id),
-                               self.debug_mode)
-                    self.handle_intersection(close_devices)
-            self.intersections_requested = False
-        else:
-            pu.log_msg(self.robot_id, "Last intersection request still running", self.debug_mode)
-            # self.last_map_update_time = rospy.Time.now().to_sec()
+    def check_data_sharing_status(self, data):
+        pu.log_msg(self.robot_id, "Intersec callback..{}".format(data), self.debug_mode)
+        close_devices = self.get_close_devices()
+        if close_devices and not self.session_id:  # devices available and you're not in session
+            pu.log_msg(self.robot_id, "Before calling intersection: {}".format(self.session_id),self.debug_mode)
+            self.handle_intersection(close_devices)
+
 
     def handle_intersection(self, current_devices):
         self.cancel_exploration()

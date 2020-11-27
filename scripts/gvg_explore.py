@@ -65,6 +65,7 @@ class GVGExplore:
         rospy.Service('/robot_{}/gvgexplore/cancel'.format(self.robot_id), CancelExploration,
                       self.received_prempt_handler)
 
+
         rospy.loginfo("Robot {}: Exploration server online...".format(self.robot_id))
 
     def start_stop(self, req):
