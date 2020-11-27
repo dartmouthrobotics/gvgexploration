@@ -107,6 +107,7 @@ class GVGExplore:
                 else:
                     self.current_pose = self.get_robot_pose()
                     self.prev_pose += self.path_to_leaf[1:pu.get_closest_point(self.current_pose, np.array(self.path_to_leaf))[0]+1]
+                self.current_state = self.DECISION
             elif self.current_state == self.MOVE_TO_LEAF:
                 self.current_state = self.DECISION
                 self.current_pose = self.get_robot_pose()
@@ -179,6 +180,7 @@ class GVGExplore:
                         prev_pose = self.current_pose
                     self.prev_goal_grid = self.graph.latest_map.pose_to_grid(prev_pose)
                     self.goal_grid = self.graph.latest_map.pose_to_grid(self.path_to_leaf[-1])
+                    self.current_state = self.MOVE_TO
                     self.move_robot_to_goal(self.path_to_leaf[-1], pu.angle_pq_line(self.path_to_leaf[-1], prev_pose))
                 else:
                     rospy.logerr("no more leaves")
