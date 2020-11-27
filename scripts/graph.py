@@ -769,10 +769,8 @@ class Graph:
     #####
 
     def frontier_point_handler(self, request):
-        rospy.logerr("received a request")
+        rospy.logerr("received a request: {}".format(request.count))
         count = request.count
-
-
         self.generate_graph()
         start_time = time.clock()
 
@@ -789,7 +787,7 @@ class Graph:
         t = (now - start_time)
         self.performance_data.append(
             {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
-        rospy.logerr('computed frontier result')
+        rospy.logerr('COMPUTED FRONTIER RESULTS: {}'.format(frontiers))
         return FrontierPointResponse(frontiers=frontiers)
 
     def intersection_handler(self, data):

@@ -173,11 +173,11 @@ class Robot:
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             try:
-                if self.is_initial_data_sharing:
-                    if len(self.get_close_devices()) == len(self.candidate_robots): # For real robot. # TODO
-                        pu.log_msg(self.robot_id,"Sending initial data to all robots...",self.debug_mode)
-                        self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
-                        self.is_initial_data_sharing = False
+                # if self.is_initial_data_sharing:
+                #     if len(self.get_close_devices()) == len(self.candidate_robots): # For real robot. # TODO
+                #         pu.log_msg(self.robot_id,"Sending initial data to all robots...",self.debug_mode)
+                #         self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
+                #         self.is_initial_data_sharing = False
 
                 pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),
                            self.debug_mode)
@@ -284,15 +284,20 @@ class Robot:
         else:
             pu.log_msg(self.robot_id, "Just send an empty message so that the robots move on", self.debug_mode)
             for rid in current_devices:
-                auction = self.create_auction(frontier_points)
-                self.shared_point_srv_map[rid](SharedPointRequest(req_data=auction))
+                # auction = self.create_auction(frontier_points)
+                frontier = self.create_frontier(rid, [])
+                # pu.log_msg(self.robot_id, "Sharing point with {}".format(i),self.debug_mode)
+                res = self.allocation_pub[rid](SharedFrontierRequest(frontier=frontier))
+
+                # self.shared_point_srv_map[rid](SharedPointRequest(req_data=auction))
         pu.log_msg(self.robot_id, "Point allocation complete", self.debug_mode)
         ridge = self.compute_next_frontier(taken_poses, frontier_points) # TODO renaming
         if ridge:
             self.frontier_ridge = ridge
         pu.log_msg(self.robot_id, "Going to new frontier now: {}".format(frontier_points), self.debug_mode)
-        if not self.frontier_ridge:
+        if not self.frontier_ridge and frontier_points:
             self.frontier_ridge = frontier_points[0]
+
         self.start_exploration_action(self.frontier_ridge)
         pu.log_msg(self.robot_id, "Action sent to gvgexplore", self.debug_mode)
         self.is_sender = False
@@ -398,8 +403,14 @@ class Robot:
         frontier.msg_header.receiver_id = str(receiver)
         frontier.msg_header.topic = 'allocated_point'
         p = Pose()
-        p.position.x = frontier_point[0]
-        p.position.y = frontier_point[1]
+        if frontier_point:
+            p.position.x = frontier_point[0]
+            p.position.y = frontier_point[1]
+        else:
+            rp =self.get_robot_pose()
+            p.position.x = rp[pu.INDEX_FOR_X]
+            p.position.y = rp[pu.INDEX_FOR_Y]
+
         frontier.frontier = p #
         frontier.session_id = self.session_id
         return frontier
@@ -425,9 +436,9 @@ class Robot:
             rospy.logerr("ROBOT received a message Robot is saving a karto message: {}".format(data.robot_id))
             for rid in self.candidate_robots:
                 self.add_to_file(rid, [data])
-            # if self.is_initial_data_sharing:
-            #    self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
-            #    self.is_initial_data_sharing = False
+            if self.is_initial_data_sharing:
+               self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
+               self.is_initial_data_sharing = False
 
     def push_messages_to_receiver(self, receiver_ids, session_id, is_alert=0, initiator=0):
         for receiver_id in receiver_ids:
@@ -559,7 +570,7 @@ class Robot:
         # reset waiting for auction flags
         self.waiting_for_auction = False
         self.auction_waiting_time = rospy.Time.now().to_sec()
-        pu.log_msg(self.robot_id, "sending data back", self.debug_mode)
+        pu.log_msg(self.robot_id, "sending auction data back", self.debug_mode)
         return SharedPointResponse(auction_accepted=1, res_data=auction)
 
     def initial_data_callback(self, buff_data):
@@ -589,6 +600,11 @@ class Robot:
         while self.map_updating:  # wait for map to update
             sleep(1)
         self.feedback_count = 0
+        if not frontier_ridge:
+            current_pose=self.get_robot_pose()
+            frontier_ridge= Pose()
+            frontier_ridge.position.x=current_pose[pu.INDEX_FOR_X]
+            frontier_ridge.position.y=current_pose[pu.INDEX_FOR_Y]
         self.gvgexplore_goal_pub.publish(frontier_ridge)
 
     def parse_frontier_response(self, data):
