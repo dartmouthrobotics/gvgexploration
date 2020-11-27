@@ -785,7 +785,7 @@ class Graph:
             frontiers.append(p_ros)
             if len(frontiers) == count:
                 break
-            now = time.clock()
+        now = time.clock()
         t = (now - start_time)
         self.performance_data.append(
             {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})

@@ -146,7 +146,7 @@ class Robot:
             self.allocation_pub[rid] = alloc_point_clt
             self.shared_data_srv_map[rid] = received_data_clt
             self.shared_point_srv_map[rid] = action_points_clt
-        rospy.Subscriber('/robot_{}/karto_out'.format(self.robot_id), LocalizedScan, self.robots_karto_out_callback,
+        rospy.Subscriber('/karto_out'.format(self.robot_id), LocalizedScan, self.robots_karto_out_callback,
                          queue_size=10)
         self.is_shutdown_caller = False
 
@@ -290,7 +290,7 @@ class Robot:
         ridge = self.compute_next_frontier(taken_poses, frontier_points) # TODO renaming
         if ridge:
             self.frontier_ridge = ridge
-        # pu.log_msg(self.robot_id, "Going to new frontier now: {}".format(self.frontier_ridge), self.debug_mode)
+        pu.log_msg(self.robot_id, "Going to new frontier now: {}".format(frontier_points), self.debug_mode)
         if not self.frontier_ridge:
             self.frontier_ridge = frontier_points[0]
         self.start_exploration_action(self.frontier_ridge)
@@ -421,8 +421,8 @@ class Robot:
         return auction
 
     def robots_karto_out_callback(self, data):
-        rospy.logerr("Robot is saving a karto message: {}".format(data.robot_id))
         if data.robot_id-1 ==self.robot_id:
+            rospy.logerr("ROBOT received a message Robot is saving a karto message: {}".format(data.robot_id))
             for rid in self.candidate_robots:
                 self.add_to_file(rid, [data])
             # if self.is_initial_data_sharing:
