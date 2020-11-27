@@ -1,3 +1,3 @@
 gvgexploration/MessageHeader msg_header
-gvgexploration/Ridge ridge
+geometry_msgs/Pose frontier
 string session_id

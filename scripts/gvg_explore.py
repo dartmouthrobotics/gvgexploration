@@ -10,21 +10,26 @@ import rospy
 import tf # for TransformListener
 
 import actionlib
-from std_srvs.srv import Trigger, TriggerResponse
 from actionlib_msgs.msg import GoalStatus
+from geometry_msgs.msg import Pose
+from std_srvs.srv import Trigger, TriggerResponse
 from nav2d_navigator.msg import MoveToPosition2DAction, MoveToPosition2DGoal
 from std_msgs.msg import String
 # Custom modules
 from graph import Graph
 import project_utils as pu
 from project_utils import INDEX_FOR_X, INDEX_FOR_Y, save_data
-
-# States of the node
-IDLE = 0 # Not initiated.
-DECISION = 1 # Finding the next GVG
-MOVE_TO = 2 # Go to the next location
+# TODO specify what is actually imported.
+from gvgexploration.msg import *
+from gvgexploration.srv import *
 
 class GVGExplore:
+    # States of the node
+    IDLE = 0 # Not initiated.
+    DECISION = 1 # Finding the next GVG
+    MOVE_TO = 2 # Go to the next location
+    MOVE_TO_LEAF = 3 # Initial motion before starting the DFS.
+
     def __init__(self):
         # GVG graph.
         self.graph = Graph()
@@ -33,7 +38,7 @@ class GVGExplore:
         self.prev_pose = []
 
         # Current state of the node.
-        self.current_state = IDLE
+        self.current_state = self.IDLE
 
         # Parameters.
         self.robot_id = rospy.get_param('~robot_id')
@@ -55,14 +60,19 @@ class GVGExplore:
 
         rospy.Subscriber('/shutdown', String, self.save_all_data)
 
+        # Topics for robot.py # TODO restructure it.
+        rospy.Subscriber('/robot_{}/gvgexplore/goal'.format(self.robot_id), Pose, self.initial_action_handler)
+        rospy.Service('/robot_{}/gvgexplore/cancel'.format(self.robot_id), CancelExploration,
+                      self.received_prempt_handler)
+
         rospy.loginfo("Robot {}: Exploration server online...".format(self.robot_id))
 
     def start_stop(self, req):
-        if self.current_state == IDLE:
-            self.current_state = DECISION
+        if self.current_state == self.IDLE:
+            self.current_state = self.INITIAL_COMMUNICATE
         else:
             self.client_motion.cancel_goal()
-            self.current_state = IDLE
+            self.current_state = self.IDLE
         return TriggerResponse()
 
     def move_robot_to_goal(self, goal, theta=0):
@@ -81,15 +91,21 @@ class GVGExplore:
         self.prev_pose.append(self.current_pose)
         if self.client_motion.wait_for_result():
             state = self.client_motion.get_state()
-            if state == GoalStatus.SUCCEEDED:
-                self.prev_pose += self.path_to_leaf[1:]
-                self.current_pose = goal
+            if self.current_state == self.MOVE_TO:
+                if state == GoalStatus.SUCCEEDED:
+                    self.prev_pose += self.path_to_leaf[1:]
+                    self.current_pose = goal
+                else:
+                    self.current_pose = self.get_robot_pose()
+                    self.prev_pose += self.path_to_leaf[1:pu.get_closest_point(self.current_pose, np.array(self.path_to_leaf))[0]+1]
             else:
                 self.current_pose = self.get_robot_pose()
-                self.prev_pose += self.path_to_leaf[1:pu.get_closest_point(self.current_pose, np.array(self.path_to_leaf))[0]+1]
             #rospy.sleep(1)
 
     def feedback_motion_cb(self, feedback):
+        if self.current_state == self.MOVE_TO_LEAF:
+            self.prev_pose.append(self.get_robot_pose())
+
         if (np.isclose(self.last_distance, feedback.distance) or \
             np.isclose(feedback.distance, self.last_distance)):
             self.same_location_counter += 1
@@ -99,10 +115,13 @@ class GVGExplore:
             self.last_distance = feedback.distance
             self.same_location_counter = 0
 
+        """
         if self.graph.should_communicate(self.get_robot_pose()):
+            self.current_state = self.COMMUNICATE
             rospy.logerr("communicate")
+        """
 
-        if rospy.Time.now() - self.graph.latest_map.header.stamp > rospy.Duration(20): #TODO parameter:
+        if rospy.Time.now() - self.graph.latest_map.header.stamp > rospy.Duration(10): #TODO parameter:
             self.graph.generate_graph()
             if not self.graph.latest_map.is_frontier(
                 self.prev_goal_grid, 
@@ -112,7 +131,7 @@ class GVGExplore:
     def get_robot_pose(self):
         robot_pose = None
         while not robot_pose:
-            if True:
+            try:
                 self.listener.waitForTransform("robot_{}/map".format(self.robot_id),
                                              "robot_{}/base_link".format(self.robot_id),
                                              rospy.Time(0),
@@ -121,9 +140,9 @@ class GVGExplore:
                                                                      "robot_{}/base_link".format(self.robot_id),
                                                                      rospy.Time(0))
                 robot_pose = robot_loc_val[0:2]
-            #except:
-            #    rospy.sleep(1)
-            #    pass
+            except:
+                rospy.sleep(1)
+                pass
         robot_pose = np.array(robot_pose)
         return robot_pose
 
@@ -131,7 +150,7 @@ class GVGExplore:
         r = rospy.Rate(1) # TODO frequency as parameter
         self.current_pose = self.get_robot_pose()
         while not rospy.is_shutdown():
-            if self.current_state == DECISION:
+            if self.current_state == self.DECISION:
                 self.graph.generate_graph()
                 rospy.logerr("Graph generated")
 
@@ -150,7 +169,8 @@ class GVGExplore:
                     self.move_robot_to_goal(self.path_to_leaf[-1], pu.angle_pq_line(self.path_to_leaf[-1], prev_pose))
                 else:
                     rospy.logerr("no more leaves")
-                    self.current_state = IDLE
+                    self.current_state = self.IDLE
+
 
             r.sleep()
 
@@ -160,7 +180,16 @@ class GVGExplore:
         rospy.signal_shutdown("Shutting down GVG explore")
 
 
+    def initial_action_handler(self, leaf):
+        rospy.logerr("Robot {}: GVGExplore received new goal".format(self.robot_id))
+        self.current_state = MOVE_TO_LEAF
+        self.move_robot_to_goal(leaf)
 
+    def received_prempt_handler(self, data):
+        rospy.logerr("Robot {}: GVGExplore action preempted".format(self.robot_id))
+        self.client_motion.cancel_goal()
+        self.current_state = self.IDLE
+        return CancelExplorationResponse(result=1)
 
 if __name__ == "__main__":
     rospy.init_node("gvg_explore_node")
@@ -320,11 +349,7 @@ class GVGExplore:
         self.fetch_graph = rospy.ServiceProxy('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph)
         self.pose_publisher = rospy.Publisher("/robot_{}/cmd_vel".format(self.robot_id), Twist, queue_size=1)
         rospy.Subscriber("/odom".format(self.robot_id), Odometry, callback=self.pose_callback)
-        rospy.Subscriber('/robot_{}/gvgexplore/goal'.format(self.robot_id), Ridge, self.initial_action_handler)
-        rospy.Service('/robot_{}/gvgexplore/cancel'.format(self.robot_id), CancelExploration,
-                      self.received_prempt_handler)
-        self.goal_feedback_pub = rospy.Publisher("/robot_{}/gvgexplore/feedback".format(self.robot_id), Pose,
-                                                 queue_size=1)
+
 
         self.listener = tf.TransformListener()
         rospy.on_shutdown(self.save_all_data)
@@ -401,23 +426,6 @@ class GVGExplore:
             while self.cancel_request:
                 sleep(1)
 
-    def initial_action_handler(self, ridge):
-        rospy.logerr("Robot {}: GVGExplore received new goal".format(self.robot_id))
-        ridge_dict = self.get_edge(ridge)
-        edge = ridge_dict.keys()[0]
-        leaf = edge[1]
-        scaled_pose = pu.scale_down(leaf, self.graph_scale)
-        self.moving_to_frontier = True
-        self.motion_failed = False
-        self.move_robot_to_goal(scaled_pose, 0)
-        while self.moving_to_frontier:
-            sleep(1)
-        p = self.get_robot_pose()
-        pose = Pose()
-        pose.position.x = p[INDEX_FOR_X]
-        pose.position.y = p[INDEX_FOR_Y]
-        self.goal_feedback_pub.publish(pose)  # publish to feedback
-        self.start_gvg_exploration(edge)
 
     def start_gvg_exploration(self, edge):
         parent_id = self.get_id()

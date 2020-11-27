@@ -153,7 +153,7 @@ class Robot:
 
         # ======= pose transformations====================
         self.listener = tf.TransformListener()
-        self.gvgexplore_goal_pub = rospy.Publisher('/robot_{}/gvgexplore/goal'.format(self.robot_id), Ridge,
+        self.gvgexplore_goal_pub = rospy.Publisher('/robot_{}/gvgexplore/goal'.format(self.robot_id), Pose,
                                                    queue_size=1)
         self.goal_cancel_srv = rospy.ServiceProxy('/robot_{}/gvgexplore/cancel'.format(self.robot_id),
                                                   CancelExploration)
@@ -260,7 +260,7 @@ class Robot:
         self.process_data(buff_data, session_id=self.session_id, sent_data=local_data_size)
         rospy.logerr("Received and processed the data")
         frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(current_devices) + 1))
-        frontier_points = self.parse_frontier_response(frontier_point_response)
+        frontier_points = frontier_point_response.frontiers # self.parse_frontier_response(frontier_point_response)
         pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)
         taken_poses = []
         pu.log_msg(self.robot_id, "Received frontier points: {}".format(len(frontier_points)), self.debug_mode)
@@ -351,10 +351,10 @@ class Robot:
             self.waiting_for_frontier_point = False
             self.time_after_bidding = rospy.Time.now().to_sec()
             # ============ End here =================
-            self.frontier_ridge = data.ridge
+            self.frontier_ridge = data.frontier
             new_point = [0.0] * 2
-            new_point[pu.INDEX_FOR_X] = self.frontier_ridge.nodes[1].position.x
-            new_point[pu.INDEX_FOR_Y] = self.frontier_ridge.nodes[1].position.y
+            new_point[pu.INDEX_FOR_X] = self.frontier_ridge.position.x
+            new_point[pu.INDEX_FOR_Y] = self.frontier_ridge.position.y
             robot_pose = self.get_robot_pose()
             self.frontier_data.append(
                 {'time': rospy.Time.now().to_sec(), 'distance_to_frontier': pu.D(robot_pose, new_point)})
@@ -418,11 +418,12 @@ class Robot:
         auction.distances = distances
         auction.poses = []
         self.all_feedbacks.clear()
-        for k, v in rendezvous_poses.items():
-            pose = Pose()
-            pose.position.x = k[pu.INDEX_FOR_X]
-            pose.position.y = k[pu.INDEX_FOR_Y]
-            auction.poses.append(pose)
+        #for k, v in rendezvous_poses.items():
+        #    pose = Pose()
+        #    pose.position.x = k[pu.INDEX_FOR_X]
+        #    pose.position.y = k[pu.INDEX_FOR_Y]
+        for f in rendezvous_poses:
+            auction.poses.append(f)
         return auction
 
     def robots_karto_out_callback(self, data):

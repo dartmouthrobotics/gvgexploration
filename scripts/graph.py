@@ -74,6 +74,10 @@ class Grid:
             self.origin_quaternion)
 
         self.transformation_matrix_grid_map = np.linalg.inv(self.transformation_matrix_map_grid)
+
+        # Array to check neighbors.
+        self.cell_radius = int(10 / self.resolution) # TODO parameter
+        self.footprint = np.ones((self.cell_radius+1,self.cell_radius+1))
         #self.plot()
 
     def plot(self):
@@ -172,6 +176,38 @@ class Grid:
         return unknown_cells_counter
 
 
+    def unknown_area_approximate(self, cell): 
+        """Approximate unknown area with the robot at cell."""
+        cell_x = int(cell[INDEX_FOR_X])
+        cell_y = int(cell[INDEX_FOR_Y])
+
+        min_x = np.max((0, cell_x - self.cell_radius))
+        max_x = np.min((self.grid.shape[1], cell_x + self.cell_radius + 1))
+        min_y = np.max((0, cell_y - self.cell_radius))
+        max_y = np.min((self.grid.shape[0], cell_y + self.cell_radius + 1))
+
+        return (self.grid[min_y:max_y, min_x:max_x] < FREE).sum()
+
+    def unknown_area(self, cell): # TODO orientation of the robot if fov is not 360 degrees
+        """Return unknown area with the robot at cell"""
+        unknown_cells = set()
+
+        shadow_angle = set()
+        cell_x = int(cell[INDEX_FOR_X])
+        cell_y = int(cell[INDEX_FOR_Y])
+        for d in np.arange(1, self.cell_radius): # TODO orientation
+            for x in xrange(cell_x-d, cell_x+d+1): # go over x axis
+                for y in range(cell_y-d,cell_y+d+1): # go over y axis
+                    if self.within_boundaries(x, y):
+                        angle = np.around(np.rad2deg(pu.theta(cell, [x,y])),decimals=1) # TODO parameter
+                        if angle not in shadow_angle:
+                            if self.is_obstacle(x, y):
+                                shadow_angle.add(angle)
+                            elif self.is_unknown(x, y):
+                                unknown_cells.add((x,y))
+
+        return len(unknown_cells)
+
 
     def pose_to_grid(self, pose):
         """Pose (x,y) in header.frame_id to grid coordinates"""
@@ -190,7 +226,7 @@ class Grid:
         poses=[]
         for x in range(self.grid.shape[1]):
             for y in range(self.grid.shape[0]):
-                if not self.is_unknown(x,y):
+                if self.is_free(x,y):
                     p=self.grid_to_pose((x,y))
                     poses.append(p)
         return poses
@@ -376,7 +412,7 @@ class Graph:
     def merge_similar_edges2(self):
         current_vertex_id = 0 # traversing graph from vertex 0.
 
-        self.leaves = []
+        self.leaves = {}
         while current_vertex_id < self.graph.vcount():
             if self.graph.degree(current_vertex_id) == 2:
                 p_id, r_id = self.graph.neighbors(current_vertex_id)
@@ -401,12 +437,12 @@ class Graph:
                     current_vertex_id += 1
             else:
                 if self.graph.degree(current_vertex_id) == 1:
-                    self.leaves.append(current_vertex_id)
+                    self.leaves[current_vertex_id] = self.latest_map.unknown_area_approximate(current_vertex)
                 current_vertex_id += 1
 
     def prune_leaves(self):
         current_vertex_id = 0 # traversing graph from vertex 0.
-        self.leaves = []
+        self.leaves = {}
         self.intersections = {}
         while current_vertex_id < self.graph.vcount():
             if self.graph.degree(current_vertex_id) == 1:
@@ -417,12 +453,13 @@ class Graph:
                     neighbor, current_vertex, self.min_range_radius): # TODO parameter.
                     self.graph.delete_vertices(current_vertex_id)
                 else:
-                    self.leaves.append(current_vertex_id)
+                    self.leaves[current_vertex_id] = self.latest_map.unknown_area_approximate(current_vertex)
                     current_vertex_id += 1
             else:
                 if self.graph.degree(current_vertex_id) > 2:
                     self.intersections[current_vertex_id] = self.graph.vs["coord"][current_vertex_id]
                 current_vertex_id += 1
+        rospy.logerr(self.leaves)
         self.publish_leaves()
 
     def publish_edges(self):
@@ -700,7 +737,7 @@ class Graph:
         for l_vertex_id in self.leaves:
             if l_vertex_id != current_vertex_id:
                 rospy.sleep(0.01)
-                self.publish_current_vertex(l_vertex_id, marker_id=6)
+                self.publish_current_vertex(l_vertex_id, marker_id=6) # TODO disable
 
                 if pu.euclidean_distance(self.graph.vs["coord"][current_vertex_id], self.graph.vs["coord"][l_vertex_id]) < 30 / self.latest_map.resolution: # TODO parameter for communication range
                     l_vertex_similar_slope_vertices = self.find_similar_slope_vertices(l_vertex_id)
@@ -712,7 +749,8 @@ class Graph:
                         rospy.logerr("line rmse {} {}".format(line_regress[2], np.vstack((current_vertex_similar_slope_vertices, l_vertex_similar_slope_vertices))))
                         p = [self.graph.vs["coord"][current_vertex_id][0], line_regress[1] + line_regress[0] * self.graph.vs["coord"][current_vertex_id][0]]
                         q = [self.graph.vs["coord"][l_vertex_id][0], line_regress[1] + line_regress[0] * self.graph.vs["coord"][l_vertex_id][0]]
-                        self.publish_line(p, q)
+                        self.publish_line(p, q) # TODO disable
+                        return True
         end_time = time.clock()
         t = (end_time - start_time)
         rospy.logerr("should_communicate {}".format(t))
@@ -720,7 +758,54 @@ class Graph:
             {'time': rospy.Time.now().to_sec(), 'type': 1, 'robot_id': self.robot_id, 'computational_time': t})
         return False
 
+    #####
 
+    def frontier_point_handler(self, request):
+        rospy.logerr("received a request")
+        count = request.count
+
+
+        self.generate_graph()
+        start_time = time.clock()
+
+        frontiers = []
+        for leaf_id, new_area in sorted(self.leaves.items(), key=lambda kv:(kv[1], kv[0]), reverse=True):
+            p = self.latest_map.grid_to_pose(self.graph.vs["coord"][leaf_id])
+            p_ros = Pose()
+            p_ros.position.x = p[0]
+            p_ros.position.y = p[1]
+            frontiers.append(p_ros)
+            if len(selected_leaves) == count:
+                break
+            now = time.clock()
+        t = (now - start_time)
+        self.performance_data.append(
+            {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
+        if self.debug_mode:
+            if not self.plot_data_active:
+                self.plot_data(ppoints, is_initial=True)
+        rospy.logerr('computed frontier result')
+        return FrontierPointResponse(frontiers=frontiers)
+
+    def intersection_handler(self, data):
+        pose_data = data.pose
+        pu.log_msg(self.robot_id, "Received Intersection request", self.debug_mode)
+        if not self.edges or self.enough_delay():
+            self.generate_graph()
+        robot_pose = [0.0] * 2
+        robot_pose[INDEX_FOR_X] = pose_data.position.x
+        robot_pose[INDEX_FOR_Y] = pose_data.position.y
+        result = self.should_communicate(np.array(robot_pose))
+        return IntersectionsResponse(result=result)
+
+    def fetch_explored_region_handler(self, data):
+        '''
+        Map Analyzer use this to fetch explored cells
+        :param data:
+        :return:
+        '''
+        poses=self.latest_map.get_explored_region()
+        return ExploredRegionResponse(poses=poses, resolution=self.map_resolution)
 
     ###### TO CHECK what is needed.
 
@@ -776,58 +861,7 @@ class Graph:
         return FetchGraphResponse(edgelist=edgelist)
 
 
-    def frontier_point_handler(self, request):
-        rospy.logerr("received a request")
-        count = request.count
-        self.generate_graph()
-        start_time = rospy.Time.now().to_sec()
-        self.compute_new_information()
-        ppoints = []
-        selected_leaves = []
-        try:
-            rospy.logerr(self.new_information)
-            while len(self.new_information) > 0:
-                best_edge = max(self.new_information, key=self.new_information.get)
-                ridge = self.create_ridge(best_edge)
-                selected_leaves.append(ridge)
-                ppoints.append(best_edge[0][1])
-                del self.new_information[best_edge]
-                if len(selected_leaves) == count:
-                    break
-            now = rospy.Time.now().to_sec()
-            t = (now - start_time)
-            self.performance_data.append(
-                {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
-            if self.debug_mode:
-                if not self.plot_data_active:
-                    self.plot_data(ppoints, is_initial=True)
-            rospy.logerr('computed frontier result')
-        except Exception as e:
-            rospy.logerr("got an exception")
-            rospy.logerr(e)
-        return FrontierPointResponse(ridges=selected_leaves)
 
-    def intersection_handler(self, data):
-        pose_data = data.pose
-        pu.log_msg(self.robot_id, "Received Intersection request", self.debug_mode)
-        if not self.edges or self.enough_delay():
-            self.generate_graph()
-        robot_pose = [0.0] * 2
-        robot_pose[INDEX_FOR_X] = pose_data.position.x
-        robot_pose[INDEX_FOR_Y] = pose_data.position.y
-        result = 0
-        try:
-            close_edge, intersecs = self.compute_intersections(robot_pose)
-            if intersecs:
-                intersec = intersecs[0]
-                self.last_intersection = intersec
-                pu.log_msg(self.robot_id, "Intersection: {}".format(intersecs), self.debug_mode)
-                result = pu.D(pu.scale_down(intersec[0][1], self.graph_scale),
-                              pu.scale_down(intersec[1][0], self.graph_scale))
-        except Exception as e:
-            rospy.logerr(e)
-            pass
-        return IntersectionsResponse(result=result)
 
     def enough_delay(self):
         return rospy.Time.now().to_sec() - self.last_graph_update_time > 30  # updated last 20 secs
@@ -1039,14 +1073,7 @@ class Graph:
         else:
             print("empty subtree")
 
-    def fetch_explored_region_handler(self, data):
-        '''
-        Map Analyzer use this to fetch explored cells
-        :param data:
-        :return:
-        '''
-        poses=self.latest_map.get_explored_region()
-        return ExploredRegionResponse(poses=poses, resolution=self.map_resolution)
+
 
     def already_exists(self, p):
         pose = [0.0] * 2
