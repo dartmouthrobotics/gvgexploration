@@ -181,8 +181,6 @@ class Robot:
 
                 pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),
                            self.debug_mode)
-                if self.is_exploring:
-                    self.check_data_sharing_status()
             except Exception as e:
                 pu.log_msg(self.robot_id, "Throwing error: {}".format(e), self.debug_mode)
             r.sleep()
@@ -221,11 +219,14 @@ class Robot:
         return its_time
 
     def check_data_sharing_status(self, data):
-        pu.log_msg(self.robot_id, "Intersec callback..{}, session: {}".format(data,self.session_id), self.debug_mode)
-        close_devices = self.get_close_devices()
-        if close_devices and not self.session_id:  # devices available and you're not in session
-            pu.log_msg(self.robot_id, "Before calling intersection: {}".format(self.session_id),self.debug_mode)
-            self.handle_intersection(close_devices)
+        if self.is_exploring:
+            pu.log_msg(self.robot_id, "Intersec callback, session: {}".format(self.session_id), self.debug_mode)
+            close_devices = self.get_close_devices()
+            if close_devices and not self.session_id:  # devices available and you're not in session
+                pu.log_msg(self.robot_id, "Before calling intersection: {}".format(self.session_id),self.debug_mode)
+                self.handle_intersection(close_devices)
+        else:
+            pu.log_msg(self.robot_id, "Can't communicate. Robot not exploring", self.debug_mode)
 
 
     def handle_intersection(self, current_devices):
@@ -263,7 +264,7 @@ class Robot:
                 for rid in session_devices:
                     pu.log_msg(self.robot_id, "Action Request to Robot {}".format(rid), self.debug_mode)
                     auction_response = self.shared_point_srv_map[rid](SharedPointRequest(req_data=auction))
-                    pu.log_msg(self.robot_id, "Action Response: {}".format(auction_response), self.debug_mode)
+                    # pu.log_msg(self.robot_id, "Action Response: {}".format(auction_response), self.debug_mode)
                     if auction_response.auction_accepted:
                         data = auction_response.res_data
                         self.all_feedbacks[rid] = data
