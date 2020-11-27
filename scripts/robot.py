@@ -341,7 +341,10 @@ class Robot:
             self.waiting_for_frontier_point = False
             self.time_after_bidding = rospy.Time.now().to_sec()
             # ============ End here =================
-            self.frontier_ridge = data.frontier
+            p_in_sender = PoseStamped()
+            p_in_sender.header = data.msg_header.header
+            p_in_sender.pose = data.frontier
+            self.frontier_ridge = self.listener.transformPose("robot_{}/map".format(self.robot_id), p_in_sender).pose
             new_point = [0.0] * 2
             new_point[pu.INDEX_FOR_X] = self.frontier_ridge.position.x
             new_point[pu.INDEX_FOR_Y] = self.frontier_ridge.position.y
