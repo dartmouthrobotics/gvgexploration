@@ -44,6 +44,7 @@
         <rosparam file="$(find gvgexploration)/param/roscbt_config$(arg robot_count).yaml"/>
     </node>
 
+    <node name="localizer" pkg="gvgexploration" type="$(find gvgexploration)/localizer/$(arg world)_localize" />
     <node name="map_analyzer" pkg="gvgexploration" type="map_analyzer.py"/>
 
     <!-- RVIZ to view the visualization -->

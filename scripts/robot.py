@@ -414,10 +414,6 @@ class Robot:
         auction.distances = distances
         auction.poses = []
         self.all_feedbacks.clear()
-        #for k, v in rendezvous_poses.items():
-        #    pose = Pose()
-        #    pose.position.x = k[pu.INDEX_FOR_X]
-        #    pose.position.y = k[pu.INDEX_FOR_Y]
         for f in rendezvous_poses:
             auction.poses.append(f)
         return auction
