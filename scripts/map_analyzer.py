@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import matplotlib
-
+import os
+import signal
 matplotlib.use('Agg')
 from PIL import Image
 import numpy as np
@@ -47,7 +48,7 @@ class MapAnalyzer:
         self.coverage_pub = rospy.Publisher("/coverage", Coverage, queue_size=10)
         self.shutdown_pub=rospy.Publisher('/shutdown', String,queue_size=2 )
 
-        rospy.on_shutdown(self.save_all_data)
+        # rospy.on_shutdown(self.save_all_data)
 
     def spin(self):
         r = rospy.Rate(0.2)
@@ -84,7 +85,7 @@ class MapAnalyzer:
             {'time': rospy.Time.now().to_sec(), 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
              'expected_coverage': self.free_area_ratio})
         if cov_ratio >= self.max_coverage:
-            rospy.signal_shutdown("Exploration Complete")
+            self.save_all_data()
 
     def get_explored_region(self, rid):
         try:
@@ -135,8 +136,13 @@ class MapAnalyzer:
             rospy.logerr("Free ratio: {}, Width: {}, Height: {}, Area: {}: scale: {}".format(self.free_area_ratio, width, height,self.map_area, self.scale))
             self.total_free_area = free_area
 
-    def shutdown_callback(self, msg):
-        rospy.signal_shutdown('MapAnalyzer: Shutdown command received!')
+
+    def check_kill_process(self,pstring):
+        for line in os.popen("ps ax | grep " + pstring + " | grep -v grep"):
+            fields = line.split()
+            pid = fields[0]
+            print(line)
+            os.kill(int(pid), signal.SIGKILL)
 
     def save_all_data(self):
         save_data(self.all_coverage_data,
@@ -145,13 +151,15 @@ class MapAnalyzer:
         tstr = String()
         tstr.data = "shutdown"
         self.shutdown_pub.publish(tstr)
-        sleep(3)
+        sleep(5)
+        self.check_kill_process(self.environment)
         all_nodes=[]
         for i in range(self.robot_count):
             all_nodes+=['/robot_{}/GetMap'.format(i),'/robot_{}/Mapper'.format(i),'/robot_{}/map_align'.format(i),'/robot_{}/navigator'.format(i),'/robot_{}/operator'.format(i),'/robot_{}/SetGoal'.format(i)]
 
         all_nodes+=['/rosout','/RVIZ','/Stage','/rostopic*']
         rosnode.kill_nodes(all_nodes)
+        rospy.signal_shutdown("Exploration complete! Shutting down")
 
 
 
