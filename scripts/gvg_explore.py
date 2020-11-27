@@ -46,6 +46,7 @@ class GVGExplore:
         # Goal parameters.
         self.target_distance = rospy.get_param('/target_distance')
         self.target_angle = rospy.get_param('/target_angle')
+        self.debug_mode=rospy.get_param('/debug_mode')
 
         # nav2d MoveTo action.
         self.client_motion = actionlib.SimpleActionClient("/robot_{}/MoveTo".format(self.robot_id), 
@@ -59,7 +60,7 @@ class GVGExplore:
         self.listener = tf.TransformListener()
 
         rospy.Subscriber('/shutdown', String, self.save_all_data)
-
+        self.intersec_pub=rospy.Publisher('intersection',Pose,queue_size=0)
         # Topics for robot.py # TODO restructure it.
         rospy.Subscriber('/robot_{}/gvgexplore/goal'.format(self.robot_id), Pose, self.initial_action_handler)
         rospy.Service('/robot_{}/gvgexplore/cancel'.format(self.robot_id), CancelExploration,
@@ -68,10 +69,17 @@ class GVGExplore:
 
         rospy.loginfo("Robot {}: Exploration server online...".format(self.robot_id))
 
+    # def start_stop(self, req):
+    #     if self.current_state == self.IDLE:
+    #         self.current_state = self.INITIAL_COMMUNICATE
+    #     else:
+    #         self.client_motion.cancel_goal()
+    #         self.current_state = self.IDLE
+    #     return TriggerResponse()
+
+
     def start_stop(self, req):
-        if self.current_state == self.IDLE:
-            self.current_state = self.INITIAL_COMMUNICATE
-        else:
+        if self.current_state != self.IDLE:
             self.client_motion.cancel_goal()
             self.current_state = self.IDLE
         return TriggerResponse()
@@ -117,11 +125,14 @@ class GVGExplore:
             self.last_distance = feedback.distance
             self.same_location_counter = 0
 
-        """
-        if self.graph.should_communicate(self.get_robot_pose()):
-            self.current_state = self.COMMUNICATE
-            rospy.logerr("communicate")
-        """
+        cpose=self.get_robot_pose()
+        if self.graph.should_communicate(cpose):
+            # self.current_state = self.COMMUNICATE
+            pu.log_msg(self.robot_id,"communicate",self.debug_mode)
+            cp=Pose()
+            cp.position.x=cpose[INDEX_FOR_X]
+            cp.position.x=cpose[INDEX_FOR_X]
+            self.intersec_pub.publish(cp)
 
         if rospy.Time.now() - self.graph.latest_map.header.stamp > rospy.Duration(10): #TODO parameter:
             self.graph.generate_graph()

@@ -124,6 +124,7 @@ class Robot:
                          self.initial_data_callback)  # just for initial data *
         self.karto_pub = rospy.Publisher("/robot_{}/karto_in".format(self.robot_id), LocalizedScan, queue_size=10)
         self.signal_strength_srv = rospy.ServiceProxy("/signal_strength".format(self.robot_id), HotSpot)
+        self.signal_strength_srv.wait_for_service()
         self.fetch_frontier_points = rospy.ServiceProxy('/robot_{}/frontier_points'.format(self.robot_id),FrontierPoint)
         self.check_intersections = rospy.ServiceProxy('/robot_{}/check_intersections'.format(self.robot_id),Intersections)
         rospy.Subscriber('/robot_{}/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
@@ -173,12 +174,10 @@ class Robot:
         while not rospy.is_shutdown():
             try:
                 if self.is_initial_data_sharing:
-                    rospy.logerr("initial data sharing {} {}".format(len(self.master_links),len(self.candidate_robots) + 1))
-                    #if len(self.master_links) == len(self.candidate_robots) + 1: # For real robot. # TODO
-                    rospy.sleep(5)
-                    rospy.logerr("Sending initial data to all robots...")
-                    self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
-                    self.is_initial_data_sharing = False
+                    if len(self.get_close_devices()) == len(self.candidate_robots): # For real robot. # TODO
+                        pu.log_msg(self.robot_id,"Sending initial data to all robots...",self.debug_mode)
+                        self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
+                        self.is_initial_data_sharing = False
 
                 pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),
                            self.debug_mode)
@@ -564,7 +563,7 @@ class Robot:
         if self.initial_receipt:
             # self.wait_for_updates()
             self.initial_data.add(sender_id)
-            rospy.logerr("Counts: {}".format(len(self.initial_data)))
+            pu.log_msg(self.robot_id,"Counts: {}".format(len(self.initial_data)),self.debug_mode)
             if len(self.initial_data) == len(self.candidate_robots):
                 self.initial_receipt = False
                 if self.i_have_least_id():
@@ -628,10 +627,10 @@ class Robot:
         robot_pose = None
         while not robot_pose:
             if True:
-                self.listener.waitForTransform("map".format(self.robot_id),
+                self.listener.waitForTransform("robot_{}/map".format(self.robot_id),
                                                "robot_{}/base_link".format(self.robot_id), rospy.Time(),
                                                rospy.Duration(4.0))
-                (robot_loc_val, rot) = self.listener.lookupTransform("map".format(self.robot_id),
+                (robot_loc_val, rot) = self.listener.lookupTransform("robot_{}/map".format(self.robot_id),
                                                                      "robot_{}/base_link".format(self.robot_id),
                                                                      rospy.Time(0))
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
