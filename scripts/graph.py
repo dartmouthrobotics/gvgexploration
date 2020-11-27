@@ -502,11 +502,14 @@ class Graph:
         m.scale.x = 0.5
         m.scale.y = 0.5
         #m.scale.x = 0.1
-        p = self.graph.vs["coord"][vertex_id]
-        p_t = self.latest_map.grid_to_pose(p)
-        p_ros = Point(x=p_t[0], y=p_t[1])
-        m.pose.position = p_ros
-        self.marker_pub.publish(m)
+        try: # TODO this shouldn't be necessary, racing condition that changes the graph.
+            p = self.graph.vs["coord"][vertex_id]
+            p_t = self.latest_map.grid_to_pose(p)
+            p_ros = Point(x=p_t[0], y=p_t[1])
+            m.pose.position = p_ros
+            self.marker_pub.publish(m)
+        except IndexError:
+            pass
 
 
     def publish_visited_vertices(self):
