@@ -724,10 +724,11 @@ class Graph:
         else:
             vertices = np.array(self.intersections.values())
 
-            closest_intersection_point, dist = pu.get_closest_point(robot_grid, vertices)
-            if dist < 5:# TODO parameter
-                rospy.logerr("intersection")
-                return True
+            if vertices.size != 0:
+                closest_intersection_point, dist = pu.get_closest_point(robot_grid, vertices)
+                if dist < 5:# TODO parameter
+                    rospy.logerr("intersection")
+                    return True
 
         # Points on the same line for current_vertex_id
         current_vertex_similar_slope_vertices = self.find_similar_slope_vertices(current_vertex_id)
@@ -741,7 +742,10 @@ class Graph:
                 if pu.euclidean_distance(self.graph.vs["coord"][current_vertex_id], self.graph.vs["coord"][l_vertex_id]) < 30 / self.latest_map.resolution: # TODO parameter for communication range
                     l_vertex_similar_slope_vertices = self.find_similar_slope_vertices(l_vertex_id)
 
-                    line_regress = pu.get_line(np.vstack((current_vertex_similar_slope_vertices, l_vertex_similar_slope_vertices)))
+                    try:
+                        line_regress = pu.get_line(np.vstack((current_vertex_similar_slope_vertices, l_vertex_similar_slope_vertices)))
+                    except ValueError:
+                        continue
 
 
                     if line_regress[2] < 2.0 and self.latest_map.line_in_unknown(self.graph.vs["coord"][current_vertex_id], self.graph.vs["coord"][l_vertex_id]): # TODO parameter:  

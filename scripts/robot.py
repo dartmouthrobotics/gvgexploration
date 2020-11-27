@@ -387,7 +387,7 @@ class Robot:
 
     def create_frontier(self, receiver, frontier_point):
         frontier = Frontier()
-        frontier.msg_header.header.frame_id = '{}'.format(self.robot_id)
+        frontier.msg_header.header.frame_id = 'robot_{}/map'.format(self.robot_id)
         frontier.msg_header.header.stamp = rospy.Time.now()
         frontier.msg_header.sender_id = str(self.robot_id)
         frontier.msg_header.receiver_id = str(receiver)
@@ -401,7 +401,7 @@ class Robot:
 
     def create_auction(self, rendezvous_poses, distances=[]):
         auction = Auction()
-        auction.msg_header.header.frame_id = '{}'.format(self.robot_id)
+        auction.msg_header.header.frame_id = 'robot_{}/map'.format(self.robot_id)
         auction.msg_header.sender_id = str(self.robot_id)
         auction.msg_header.topic = 'auction_points'
         auction.msg_header.header.stamp = rospy.Time.now()
@@ -484,7 +484,7 @@ class Robot:
         self.map_updating = False
         if session_id:
             data_size = DataSize()
-            data_size.header.frame_id = '{}'.format(self.robot_id)
+            data_size.header.frame_id = 'robot_{}/map'.format(self.robot_id)
             data_size.header.stamp = rospy.Time.now()
             data_size.size = sent_data
             data_size.session_id = session_id
@@ -520,7 +520,7 @@ class Robot:
         if self.is_sender or not self.session_id or session_id != self.session_id:
             return SharedPointResponse(auction_accepted=0)
         rospy.logerr("creating auction response")
-        sender_id = data.msg_header.header.frame_id
+        sender_id = data.msg_header.sender_id
         poses = data.poses
         if not poses and self.frontier_ridge:
             pu.log_msg(self.robot_id, "No poses received. Proceeding to my next frontier", self.debug_mode)
@@ -531,19 +531,23 @@ class Robot:
         rospy.logerr("Getting robot pose")
         robot_pose = self.get_robot_pose()
         rospy.logerr("Received robot pose: {}".format(robot_pose))
-        for p in poses:
+        p_in_sender = PoseStamped()
+        p_in_sender.header = data.msg_header.header
+        for p_from_sender in poses:
+            p_in_sender.pose = p_from_sender
+            p = self.listener.transformPose("robot_{}/map".format(self.robot_id), p_in_sender)
             received_points.append(p)
-            point = (p.position.x, p.position.y,
-                     self.get_elevation((p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w)))
+            point = (p.pose.position.x, p.pose.position.y)
+                     #self.get_elevation((p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w)))
             distance = pu.D(robot_pose, point)
             distances.append(distance)
         auction = Auction()
-        auction.msg_header.header.frame_id = '{}'.format(self.robot_id)
+        auction.msg_header.header.frame_id = data.msg_header.header.frame_id
         auction.msg_header.header.stamp = rospy.Time.now()
         auction.msg_header.sender_id = str(self.robot_id)
         auction.msg_header.receiver_id = str(sender_id)
         auction.msg_header.topic = 'auction_feedback'
-        auction.poses = received_points
+        auction.poses = poses
         auction.distances = distances
         auction.session_id = data.session_id
         # start waiting for location after bidding
@@ -557,7 +561,7 @@ class Robot:
         return SharedPointResponse(auction_accepted=1, res_data=auction)
 
     def initial_data_callback(self, buff_data):
-        sender_id = buff_data.msg_header.header.frame_id
+        sender_id = buff_data.msg_header.sender_id
         self.process_data({sender_id: buff_data})
         # ============ used during initialization ============
         if self.initial_receipt:
