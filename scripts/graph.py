@@ -735,7 +735,7 @@ class Graph:
 
         # Points on the same line for current_vertex_id
         current_vertex_similar_slope_vertices = self.find_similar_slope_vertices(current_vertex_id)
-        rospy.logerr("current_vertex_similar_slope_vertices {}".format(len(current_vertex_similar_slope_vertices)))
+        #rospy.logerr("current_vertex_similar_slope_vertices {}".format(len(current_vertex_similar_slope_vertices)))
         # If can connect with another end, might be worth to communicate.
         for l_vertex_id in self.leaves:
             if l_vertex_id != current_vertex_id:
@@ -752,7 +752,7 @@ class Graph:
 
 
                     if line_regress[2] < 2.0 and self.latest_map.line_in_unknown(self.graph.vs["coord"][current_vertex_id], self.graph.vs["coord"][l_vertex_id]): # TODO parameter:  
-                        rospy.logerr("line rmse {} {}".format(line_regress[2], np.vstack((current_vertex_similar_slope_vertices, l_vertex_similar_slope_vertices))))
+                        #rospy.logerr("line rmse {} {}".format(line_regress[2], np.vstack((current_vertex_similar_slope_vertices, l_vertex_similar_slope_vertices))))
                         p = [self.graph.vs["coord"][current_vertex_id][0], line_regress[1] + line_regress[0] * self.graph.vs["coord"][current_vertex_id][0]]
                         q = [self.graph.vs["coord"][l_vertex_id][0], line_regress[1] + line_regress[0] * self.graph.vs["coord"][l_vertex_id][0]]
                         self.publish_line(p, q) # TODO disable
