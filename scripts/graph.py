@@ -502,14 +502,11 @@ class Graph:
         m.scale.x = 0.5
         m.scale.y = 0.5
         #m.scale.x = 0.1
-        try: # TODO this shouldn't be necessary, racing condition that changes the graph.
-            p = self.graph.vs["coord"][vertex_id]
-            p_t = self.latest_map.grid_to_pose(p)
-            p_ros = Point(x=p_t[0], y=p_t[1])
-            m.pose.position = p_ros
-            self.marker_pub.publish(m)
-        except IndexError:
-            pass
+        p = self.graph.vs["coord"][vertex_id]
+        p_t = self.latest_map.grid_to_pose(p)
+        p_ros = Point(x=p_t[0], y=p_t[1])
+        m.pose.position = p_ros
+        self.marker_pub.publish(m)
 
 
     def publish_visited_vertices(self):
@@ -571,7 +568,7 @@ class Graph:
         self.marker_pub.publish(m)
 
     def generate_graph(self):
-        # self.lock.acquire()
+        self.lock.acquire()
         start_time = time.clock()
         try:
             self.latest_map = Grid(self.get_map().map)
@@ -581,7 +578,7 @@ class Graph:
         self.min_range_radius = 8 / self.latest_map.resolution # TODO range.
         self.min_edge_length = self.robot_radius / self.latest_map.resolution
         self.compute_gvg()
-        # self.lock.release()
+        self.lock.release()
         now = time.clock()
         t = now - start_time
         self.performance_data.append(
@@ -710,6 +707,7 @@ class Graph:
 
     def should_communicate(self, robot_pose):
         """Return True if should communicate; false otherwise."""
+        self.lock.acquire()
         start_time = time.clock()
 
         #self.merge_similar_edges2()
@@ -723,6 +721,7 @@ class Graph:
         # If at a junction point, might be worth to communicate.
         if self.graph.degree(self.current_vertex_id) > 2:
             rospy.logerr("intersection")
+            self.lock.release()
             return True
         else:
             vertices = np.array(self.intersections.values())
@@ -731,6 +730,7 @@ class Graph:
                 closest_intersection_point, dist = pu.get_closest_point(robot_grid, vertices)
                 if dist < 5:# TODO parameter
                     rospy.logerr("intersection")
+                    self.lock.release()
                     return True
 
         # Points on the same line for current_vertex_id
@@ -756,12 +756,14 @@ class Graph:
                         p = [self.graph.vs["coord"][current_vertex_id][0], line_regress[1] + line_regress[0] * self.graph.vs["coord"][current_vertex_id][0]]
                         q = [self.graph.vs["coord"][l_vertex_id][0], line_regress[1] + line_regress[0] * self.graph.vs["coord"][l_vertex_id][0]]
                         self.publish_line(p, q) # TODO disable
+                        self.lock.release()
                         return True
         end_time = time.clock()
         t = (end_time - start_time)
         rospy.logerr("should_communicate {}".format(t))
         self.performance_data.append(
-            {'time': rospy.Time.now().to_sec(), 'type': 1, 'robot_id': self.robot_id, 'computational_time': t})
+            {'time': rospy.Time.now().to_sec(), 'type': 1, 'robot_id': self.robot_id, 'computational_time': t}) # TODO not done if true
+        self.lock.release()
         return False
 
     #####
