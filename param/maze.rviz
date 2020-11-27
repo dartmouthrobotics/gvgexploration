@@ -94,6 +94,8 @@ Visualization Manager:
           Value: true
         robot_1/odom:
           Value: true
+        robot_1/offset:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
@@ -109,7 +111,12 @@ Visualization Manager:
                     robot_0/base_laser_link:
                       {}
           robot_1/map:
-            {}
+            robot_1/offset:
+              robot_1/odom:
+                robot_1/base_footprint:
+                  robot_1/base_link:
+                    robot_1/base_laser_link:
+                      {}
       Update Interval: 0
       Value: true
     - Class: rviz/Marker
@@ -141,7 +148,7 @@ Visualization Manager:
       Marker Topic: /robot_1/navigator/markers
       Name: NP1:Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -186,6 +193,14 @@ Visualization Manager:
         "": true
       Queue Size: 100
       Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot_1/voronoi
+      Name: Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -201,7 +216,10 @@ Visualization Manager:
     - Class: rviz/FocusCamera
     - Class: rviz/Measure
     - Class: rviz/SetInitialPose
+      Theta std deviation: 0.2617993950843811
       Topic: /initialpose
+      X std deviation: 0.5
+      Y std deviation: 0.5
     - Class: rviz/SetGoal
       Topic: /robot_0/goal
     - Class: rviz/PublishPoint
@@ -220,7 +238,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 15.491049766540527
+      Scale: 10.556716918945312
       Target Frame: dxl_base
       Value: TopDownOrtho (rviz)
       X: 27.265987396240234
@@ -272,5 +290,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1920
-  X: 67
-  Y: 27
+  X: 0
+  Y: 0
