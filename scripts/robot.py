@@ -163,7 +163,7 @@ class Robot:
         rospy.Subscriber("/robot_{}/gvgexplore/feedback".format(self.robot_id), Pose, self.explore_feedback_callback)
         rospy.loginfo("Robot {} Initialized successfully!!".format(self.robot_id))
         rospy.Subscriber("/shutdown",String,self.save_all_data)
-        rospy.Subscriber("/intersection",Pose,self.check_data_sharing_status)
+        rospy.Subscriber("intersection",Pose,self.check_data_sharing_status)
         self.first_message_sent = False
         self.sent_messages = []
         self.received_messages = []
@@ -221,7 +221,7 @@ class Robot:
         return its_time
 
     def check_data_sharing_status(self, data):
-        pu.log_msg(self.robot_id, "Intersec callback..{}".format(data), self.debug_mode)
+        pu.log_msg(self.robot_id, "Intersec callback..{}, session: {}".format(data,self.session_id), self.debug_mode)
         close_devices = self.get_close_devices()
         if close_devices and not self.session_id:  # devices available and you're not in session
             pu.log_msg(self.robot_id, "Before calling intersection: {}".format(self.session_id),self.debug_mode)
@@ -229,6 +229,7 @@ class Robot:
 
 
     def handle_intersection(self, current_devices):
+        pu.log_msg(self.robot_id, "RECEIVED INTERSECTION CALLBACK",self.debug_mode)
         self.cancel_exploration()
         self.is_sender = True
         self.session_id = '{}_{}'.format(self.robot_id, rospy.Time.now().to_sec())
@@ -419,12 +420,13 @@ class Robot:
         return auction
 
     def robots_karto_out_callback(self, data):
-        rospy.logerr("Robot is saving a karto message")
-        for rid in self.candidate_robots:
-            self.add_to_file(rid, [data])
-        # if self.is_initial_data_sharing:
-        #    self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
-        #    self.is_initial_data_sharing = False
+        rospy.logerr("Robot is saving a karto message: {}".format(data.robot_id))
+        if data.robot_id-1 ==self.robot_id:
+            for rid in self.candidate_robots:
+                self.add_to_file(rid, [data])
+            # if self.is_initial_data_sharing:
+            #    self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
+            #    self.is_initial_data_sharing = False
 
     def push_messages_to_receiver(self, receiver_ids, session_id, is_alert=0, initiator=0):
         for receiver_id in receiver_ids:

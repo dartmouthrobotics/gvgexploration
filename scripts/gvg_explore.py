@@ -67,6 +67,8 @@ class GVGExplore:
         rospy.Subscriber('/robot_{}/gvgexplore/goal'.format(self.robot_id), Pose, self.initial_action_handler)
         rospy.Service('/robot_{}/gvgexplore/cancel'.format(self.robot_id), CancelExploration,
                       self.received_prempt_handler)
+        self.goal_feedback_pub = rospy.Publisher("/robot_{}/gvgexplore/feedback".format(self.robot_id), Pose,
+                                                 queue_size=1)
 
         rospy.loginfo("Robot {}: Exploration server online...".format(self.robot_id))
 
@@ -106,16 +108,17 @@ class GVGExplore:
                     self.current_pose = goal
                 else:
                     self.current_pose = self.get_robot_pose()
-<<<<<<< Updated upstream
                     self.prev_pose += self.path_to_leaf[1:pu.get_closest_point(self.current_pose, np.array(self.path_to_leaf))[0]+1]
                 self.current_state = self.DECISION
-=======
-                    self.prev_pose += self.path_to_leaf[
-                                      1:pu.get_closest_point(self.current_pose, np.array(self.path_to_leaf))[0] + 1]
->>>>>>> Stashed changes
             elif self.current_state == self.MOVE_TO_LEAF:
                 self.current_state = self.DECISION
                 self.current_pose = self.get_robot_pose()
+
+                # publish to feedback
+                pose = Pose()
+                pose.position.x = self.current_pose[INDEX_FOR_X]
+                pose.position.y = self.current_pose[INDEX_FOR_Y]
+                self.goal_feedback_pub.publish(pose)
             # rospy.sleep(1)
 
     def feedback_motion_cb(self, feedback):
