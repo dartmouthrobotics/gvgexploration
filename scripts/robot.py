@@ -101,8 +101,6 @@ class Robot:
         self.exploration_time = rospy.Time.now().to_sec()
         self.last_evaluation_time = rospy.Time.now().to_sec()
         self.candidate_robots = self.frontier_robots + self.base_stations
-        self.frontier_data = []
-        self.interconnection_data = []
         self.rate = rospy.Rate(0.1)
         self.run = rospy.get_param("/run")
         self.termination_metric = rospy.get_param("/termination_metric")
@@ -250,7 +248,7 @@ class Robot:
             else:
                 pu.log_msg(self.robot_id, "Robot {} is in another session".format(rid), self.debug_mode)
         self.process_data(buff_data, session_id=self.session_id, sent_data=local_data_size)
-        rospy.logerr("Received and processed the data")
+        pu.log_msg(self.robot_id,"Received and processed the data",self.debug_mode)
         frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(current_devices) + 1))
         frontier_points = frontier_point_response.frontiers # self.parse_frontier_response(frontier_point_response)
         pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)
@@ -356,8 +354,6 @@ class Robot:
             new_point[pu.INDEX_FOR_X] = self.frontier_ridge.position.x
             new_point[pu.INDEX_FOR_Y] = self.frontier_ridge.position.y
             robot_pose = self.get_robot_pose()
-            self.frontier_data.append(
-                {'time': rospy.Time.now().to_sec(), 'distance_to_frontier': pu.D(robot_pose, new_point)})
             self.start_exploration_action(self.frontier_ridge)
         pu.log_msg(self.robot_id, "Received allocated points", self.debug_mode)
         return SharedFrontierResponse(success=1)
@@ -433,7 +429,7 @@ class Robot:
 
     def robots_karto_out_callback(self, data):
         if data.robot_id-1 ==self.robot_id:
-            rospy.logerr("ROBOT received a message Robot is saving a karto message: {}".format(data.robot_id))
+            pu.log_msg(self.robot_id,"ROBOT received a message Robot is saving a karto message: {}".format(data.robot_id),self.debug_mode)
             for rid in self.candidate_robots:
                 self.add_to_file(rid, [data])
             if self.is_initial_data_sharing:
@@ -473,14 +469,6 @@ class Robot:
             devices.append(str(rs.robot_id))
         return set(devices)
 
-    # def get_close_devices(self):
-    #     devices = []
-    #     hotspots = list(self.signal_strength)
-    #     rospy.logerr("Candidate robtos: {}, hotspots: {}".format(self.candidate_robots,hotspots))
-    #     for h in hotspots:
-    #         if str(h) in self.candidate_robots and self.signal_strength[h] >= self.comm_range:
-    #             devices.append(str(h))
-    #     return set(devices)
 
     def process_data(self, buff_data, session_id=None, sent_data=0):
         #rospy.logerr("data to process: {}".format(buff_data))
@@ -532,7 +520,7 @@ class Robot:
         session_id = data.session_id
         if self.is_sender or not self.session_id or session_id != self.session_id:
             return SharedPointResponse(auction_accepted=0)
-        rospy.logerr("creating auction response")
+        pu.log_msg(self.robot_id,"creating auction response",self.debug_mode)
         sender_id = data.msg_header.sender_id
         poses = data.poses
         if not poses and self.frontier_ridge:
@@ -541,9 +529,9 @@ class Robot:
             return SharedPointResponse(auction_accepted=1, res_data=None)
         received_points = []
         distances = []
-        rospy.logerr("Getting robot pose")
+        pu.log_msg(self.robot_id,"Getting robot pose",self.debug_mode)
         robot_pose = self.get_robot_pose()
-        rospy.logerr("Received robot pose: {}".format(robot_pose))
+        pu.log_msg(self.robot_id,"Received robot pose: {}".format(robot_pose),self.debug_mode)
         p_in_sender = PoseStamped()
         p_in_sender.header = data.msg_header.header
         for p_from_sender in poses:
@@ -589,8 +577,7 @@ class Robot:
                     self.comm_session_time = rospy.Time.now().to_sec()
                     self.waiting_for_response = True
                     close_devices = self.get_close_devices()
-                    rospy.logerr(self.shared_data_srv_map)
-                    rospy.logerr("Close devices {}:".format(close_devices))
+                    pu.log_msg(self.robot_id,"Close devices {}:".format(close_devices),self.debug_mode)
                     if close_devices:
                         self.handle_intersection(close_devices)
                 else:
@@ -656,7 +643,7 @@ class Robot:
                                                                      "robot_{}/base_link".format(self.robot_id),
                                                                      rospy.Time(0))
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
-                rospy.logerr("Robot pose: {}".format(robot_pose))
+                pu.log_msg(self.robot_id,"Robot pose: {}".format(robot_pose),self.debug_mode)
             #except: # TODO: catch proper exceptions.
             #    pass
         return robot_pose
@@ -710,14 +697,6 @@ class Robot:
         return yaw
 
     def save_all_data(self,data):
-        pu.save_data(self.interconnection_data,
-                     '{}/interconnections_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count,
-                                                                        self.run,
-                                                                        self.termination_metric, self.robot_id))
-        pu.save_data(self.frontier_data,
-                     '{}/frontiers_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count,
-                                                                 self.run,
-                                                                 self.termination_metric, self.robot_id))
         rospy.signal_shutdown("Shutting down Robot")
 
 

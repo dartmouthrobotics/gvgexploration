@@ -309,6 +309,8 @@ class Graph:
         rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
         rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_edge_handler)
 
+        rospy.Subscriber('/shutdown', String, self.save_all_data)
+
         rospy.wait_for_service('/robot_{}/static_map'.format(self.robot_id))
         self.get_map = rospy.ServiceProxy('/robot_{}/static_map'.format(self.robot_id), GetMap)
 
@@ -320,7 +322,7 @@ class Graph:
         self.deleted_nodes = {}
         self.deleted_obstacles = {}
         self.last_graph_update_time = rospy.Time.now().to_sec()
-        rospy.on_shutdown(self.save_all_data)
+        # rospy.on_shutdown(self.save_all_data)
         rospy.loginfo('Robot {}: Successfully created graph node'.format(self.robot_id))
 
 
@@ -332,13 +334,13 @@ class Graph:
         # Get only wall cells for the Voronoi.
         obstacles = self.latest_map.wall_cells()
         end_time_clock = time.clock()
-        print("generate obstacles2 {}".format(end_time_clock - start_time_clock))
+        pu.log_msg(self.robot_id,"generate obstacles2 {}".format(end_time_clock - start_time_clock),self.debug_mode)
 
         start_time_clock = time.clock()
         # Get Voronoi diagram.
         vor = Voronoi(obstacles)
         end_time_clock = time.clock()
-        rospy.logerr("voronoi {}".format(end_time_clock - start_time_clock))
+        pu.log_msg(self.robot_id,"voronoi {}".format(end_time_clock - start_time_clock),self.debug_mode)
         start_time_clock = time.clock()
         # Initializing the graph.
         self.graph = igraph.Graph()
@@ -403,7 +405,7 @@ class Graph:
 
         self.prune_leaves()
         end_time_clock = time.clock()
-        rospy.logerr("ridge {}".format(end_time_clock - start_time_clock))
+        pu.log_msg(self.robot_id,"ridge {}".format(end_time_clock - start_time_clock),self.debug_mode)
 
         # Publish GVG.
         self.publish_edges()
@@ -458,7 +460,6 @@ class Graph:
                 if self.graph.degree(current_vertex_id) > 2:
                     self.intersections[current_vertex_id] = self.graph.vs["coord"][current_vertex_id]
                 current_vertex_id += 1
-        rospy.logerr(self.leaves)
         self.publish_leaves()
 
     def publish_edges(self):
@@ -573,7 +574,7 @@ class Graph:
         try:
             self.latest_map = Grid(self.get_map().map)
         except rospy.ServiceException:
-            rospy.logerr("Map didn't update")
+            pu.log_msg(self.robot_id,"Map didn't update",self.debug_mode)
             return
         self.min_range_radius = 8 / self.latest_map.resolution # TODO range.
         self.min_edge_length = self.robot_radius / self.latest_map.resolution
@@ -720,7 +721,7 @@ class Graph:
         self.publish_current_vertex(current_vertex_id, marker_id=5)
         # If at a junction point, might be worth to communicate.
         if self.graph.degree(self.current_vertex_id) > 2:
-            rospy.logerr("intersection")
+            pu.log_msg(self.robot_id,"intersection",self.debug_mode)
             self.lock.release()
             return True
         else:
@@ -729,7 +730,7 @@ class Graph:
             if vertices.size != 0:
                 closest_intersection_point, dist = pu.get_closest_point(robot_grid, vertices)
                 if dist < 5:# TODO parameter
-                    rospy.logerr("intersection")
+                    pu.log_msg(self.robot_id,"intersection",self.debug_mode)
                     self.lock.release()
                     return True
 
@@ -760,7 +761,7 @@ class Graph:
                         return True
         end_time = time.clock()
         t = (end_time - start_time)
-        rospy.logerr("should_communicate {}".format(t))
+        pu.log_msg(self.robot_id,"should_communicate {}".format(t),self.debug_mode)
         self.performance_data.append(
             {'time': rospy.Time.now().to_sec(), 'type': 1, 'robot_id': self.robot_id, 'computational_time': t}) # TODO not done if true
         self.lock.release()
@@ -769,7 +770,7 @@ class Graph:
     #####
 
     def frontier_point_handler(self, request):
-        rospy.logerr("received a request: {}".format(request.count))
+        pu.log_msg(self.robot_id,"received a request: {}".format(request.count),self.debug_mode)
         count = request.count
         self.generate_graph()
         start_time = time.clock()
@@ -787,7 +788,7 @@ class Graph:
         t = (now - start_time)
         self.performance_data.append(
             {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
-        rospy.logerr('COMPUTED FRONTIER RESULTS: {}'.format(frontiers))
+        pu.log_msg(self.robot_id,'COMPUTED FRONTIER RESULTS: {}'.format(frontiers),self.debug_mode)
         return FrontierPointResponse(frontiers=frontiers)
 
     def intersection_handler(self, data):
@@ -814,17 +815,17 @@ class Graph:
 
     def map_callback(self, map_msg):
         """Callback for Occupancy Grid."""
-        rospy.logerr("Received map message")
+        pu.log_msg(self.robot_id,"Received map message",self.debug_mode)
         start_time_clock = time.clock()
         # Create a 2D grid.
         self.latest_map = Grid(map_msg)
         # Adjust min distance between obstacles in cells.
         self.min_edge_length = self.robot_radius / self.latest_map.resolution
         end_time_clock = time.clock()
-        rospy.logerr("generate obstacles1 {}".format(end_time_clock - start_time_clock))
+        pu.log_msg(self.robot_id,"generate obstacles1 {}".format(end_time_clock - start_time_clock),self.debug_mode)
         # just for testing
         self.generate_graph()
-        rospy.logerr("should comm {}".format(self.should_communicate(self.get_robot_pose())))
+        pu.log_msg(self.robot_id,"should comm {}".format(self.should_communicate(self.get_robot_pose())),self.debug_mode)
         """
         if not self.plot_data_active:
             self.plot_data([], is_initial=True)
@@ -839,7 +840,7 @@ class Graph:
                 #    self.generate_graph()
                 r.sleep()
             except Exception as e:
-                rospy.logerr('Robot {}: Graph node interrupted!: {}'.format(self.robot_id, e))
+                pu.log_msg(self.robot_id,'Robot {}: Graph node interrupted!: {}'.format(self.robot_id, e),self.debug_mode)
 
 
     def is_same_intersection(self, intersec, robot_pose):
@@ -1073,7 +1074,7 @@ class Graph:
             self.link_edges(edge_pair, self.old_edges, self.edges)
             self.get_adjacency_list(self.edges)
         else:
-            print("empty subtree")
+            pu.log_msg(self.robot_id,"empty subtree",self.debug_mode)
 
 
 
@@ -1518,7 +1519,7 @@ class Graph:
 
     def compute_new_information(self):
         self.new_information.clear()
-        rospy.logerr("leaves: {}".format(self.leaf_edges))
+        pu.log_msg(self.robot_id,"leaves: {}".format(self.leaf_edges),self.debug_mode)
         leaf_obstacles = copy.deepcopy(self.leaf_obstacles)
         leaf_edges = copy.deepcopy(self.leaf_edges)
         polygons, start_end, points, unknown_points, marker_points = self.get_leaf_region(leaf_edges,
@@ -1648,7 +1649,7 @@ class Graph:
         return known_points, unknown_points
 
     def plot_data(self, frontiers, is_initial=False, vertext=None):
-        rospy.logerr("Creating plot started")
+        pu.log_msg(self.robot_id,"Creating plot started",self.debug_mode)
         self.plot_data_active = True
         plt.figure(figsize=(12, 9))
         ax = plt.subplot(111)
@@ -1676,7 +1677,7 @@ class Graph:
             xr, yr = zip(*obstacles)
             ax.scatter(xr, yr, color='black', marker="1")
             x_pairs, y_pairs = pu.process_edges(self.edges)
-            rospy.logerr("looping " + str(len(x_pairs)))
+            pu.log_msg(self.robot_id,"looping " + str(len(x_pairs)),self.debug_mode)
             for i in range(len(x_pairs)):
                 x = x_pairs[i]
                 y = y_pairs[i]
@@ -1696,11 +1697,11 @@ class Graph:
         #except:
         #    pass
         # plt.axis('off')
-        rospy.logerr("looping " + str(self.method))
+        pu.log_msg(self.robot_id,"looping " + str(self.method),self.debug_mode)
         plt.savefig("{}/plot_{}_{}_{}.png".format(self.method, self.robot_id, time.time(), self.run))
         plt.close()
         # plt.show()
-        rospy.logerr("Creating plot completed")
+        pu.log_msg(self.robot_id,"Creating plot completed",self.debug_mode)
         self.plot_data_active = False
 
     def plot_intersections(self, ax, ridge, intersections, point):
@@ -1742,7 +1743,7 @@ class Graph:
         self.plot_intersection_active = False
 
 
-    def save_all_data(self):
+    def save_all_data(self,data):
         save_data(self.performance_data,
                   "{}/performance_{}_{}_{}_{}_{}.pickle".format(self.method, self.environment, self.robot_count,
                                                                 self.run,

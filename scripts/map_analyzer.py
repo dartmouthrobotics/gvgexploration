@@ -47,6 +47,7 @@ class MapAnalyzer:
 
         self.coverage_pub = rospy.Publisher("/coverage", Coverage, queue_size=10)
         self.shutdown_pub=rospy.Publisher('/shutdown', String,queue_size=2 )
+        rospy.Subscriber('/shutdown', String,self.save_all_data)
 
         # rospy.on_shutdown(self.save_all_data)
 
@@ -85,7 +86,7 @@ class MapAnalyzer:
             {'time': rospy.Time.now().to_sec(), 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
              'expected_coverage': self.free_area_ratio})
         if cov_ratio >= self.max_coverage:
-            self.save_all_data()
+            self.shutdown_exploration()
 
     def get_explored_region(self, rid):
         try:
@@ -144,10 +145,10 @@ class MapAnalyzer:
             print(line)
             os.kill(int(pid), signal.SIGKILL)
 
-    def save_all_data(self):
-        save_data(self.all_coverage_data,
-                  '{}/coverage_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count, self.run,
-                                                          self.termination_metric))
+    def save_all_data(self,data):
+        save_data(self.all_coverage_data,'{}/coverage_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count, self.run,self.termination_metric))
+
+    def shutdown_exploration(self):
         tstr = String()
         tstr.data = "shutdown"
         self.shutdown_pub.publish(tstr)
