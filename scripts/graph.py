@@ -246,7 +246,6 @@ class Grid:
                     p_in_sender.point.y = p[1]
 
                     p_in_common_ref_frame = self.tf_listener.transformPoint("robot_0/map", p_in_sender).point
-
                     poses.append([nearest_multiple(p_in_common_ref_frame.x), nearest_multiple(p_in_common_ref_frame.y)])
         return poses
 

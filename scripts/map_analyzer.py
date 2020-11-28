@@ -14,6 +14,7 @@ from std_msgs.msg import String
 from graph import Grid
 from nav_msgs.msg import OccupancyGrid
 import rosnode
+import tf
 
 
 class MapAnalyzer:
@@ -101,7 +102,7 @@ class MapAnalyzer:
                     point=tuple(p)
                     self.all_maps[rid].add(point)
                     self.all_explored_points.add(point)
-        except Exception as e:
+        except tf.LookupException as e:
             rospy.logerr(e)
 
     def get_common_area(self, common_points):
