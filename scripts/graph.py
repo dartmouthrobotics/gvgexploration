@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import rospy
 from threading import Lock
 from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Pose, PointStamped
 from gvgexploration.msg import *
 from gvgexploration.srv import *
 import project_utils as pu
@@ -223,12 +223,25 @@ class Grid:
 
     def get_explored_region(self):
         """ Get all the explored cells on the grid map"""
+
+        # TODO refactor the code, right now hardcoded to quickly solve the problem of non-common areas.
+        # TODO more in general use matrices.
+        def nearest_multiple(number, res=0.2):
+            return np.round(res*np.floor(round(number / res, 2)),1)
+
+        p_in_sender = PointStamped()
+        p_in_sender.header = self.header
+        
         poses=[]
         for x in range(self.grid.shape[1]):
             for y in range(self.grid.shape[0]):
                 if self.is_free(x,y):
                     p=self.grid_to_pose((x,y))
-                    poses.append(p)
+                    p_in_sender.point.x = p[0]
+                    p_in_sender.point.y = p[1]
+                    p_in_common_ref_frame = self.tf_listener.transformPoint("robot_0/map", p_in_sender).point
+                    
+                    poses.append([nearest_multiple(p_in_common_ref_frame.x), nearest_multiple(p_in_common_ref_frame)])
         return poses
 
 
