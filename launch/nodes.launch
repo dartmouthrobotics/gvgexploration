@@ -8,7 +8,7 @@
 
 <rosparam command="load" file="$(find gvgexploration)/param/ros.yaml" subst_value="true"/>
 
-<arg name="map_offset" value="$(eval arg('robot_id') * 50)"/>
+<arg name="map_offset" value="$(eval arg('robot_id') * 0)"/>
 <node name="map_align" pkg="tf" type="static_transform_publisher" args="$(arg map_offset) 0 0 0 0 0 /map /robot_$(arg robot_id)/map 100"/>
 
 <node name="scan_filter" pkg="gvgexploration" type="scan_filter.py">

@@ -231,17 +231,23 @@ class Grid:
 
         p_in_sender = PointStamped()
         p_in_sender.header = self.header
+
         
         poses=[]
+        self.tf_listener.waitForTransform("robot_0/map",
+                                   self.header.frame_id, rospy.Time(),
+                                   rospy.Duration(4.0))
+        p_in_sender.header.stamp = rospy.Time()
         for x in range(self.grid.shape[1]):
             for y in range(self.grid.shape[0]):
                 if self.is_free(x,y):
                     p=self.grid_to_pose((x,y))
                     p_in_sender.point.x = p[0]
                     p_in_sender.point.y = p[1]
+
                     p_in_common_ref_frame = self.tf_listener.transformPoint("robot_0/map", p_in_sender).point
-                    
-                    poses.append([nearest_multiple(p_in_common_ref_frame.x), nearest_multiple(p_in_common_ref_frame)])
+
+                    poses.append([nearest_multiple(p_in_common_ref_frame.x), nearest_multiple(p_in_common_ref_frame.y)])
         return poses
 
 
