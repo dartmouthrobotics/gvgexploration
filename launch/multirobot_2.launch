@@ -40,6 +40,7 @@
         </include>
     </group>
 
+
     <node name="roscbt" pkg="gvgexploration" type="roscbt.py">
         <rosparam file="$(find gvgexploration)/param/roscbt_config$(arg robot_count).yaml"/>
     </node>

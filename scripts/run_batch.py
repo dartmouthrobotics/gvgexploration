@@ -9,7 +9,7 @@ import numpy
 import rospy
 import rosgraph
 
-nrobots_all = [2, 4, 6]
+nrobots_all =[2] # [2, 4, 6]
 methods = ["gvgexploration","recurrent_connectivity", "continuous_connectivity"]
 runs = range(5)
 envs = {"office": [4.0, 10.0], "cave": [4.0, 10.0], "city": [4.0, 10.0]}

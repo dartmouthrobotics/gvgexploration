@@ -1,128 +1,73 @@
 <launch>
-    <!-- Some general parameters -->
+    <arg name="world" default="maze"/>
+    <arg name="robot_count" default="2"/>
+    <arg name="run" default="0"/>
+    <arg name="method" default="gvg"/>
+    <arg name="bs_pose" default="0,0"/>
+    <arg name="environment"  default=''/>
+
     <param name="use_sim_time" value="true" />
-    <node name="Stage" pkg="stage_ros" type="stageros" args="$(find gvgexploration)/world/office4.world">
+
+    <node name="Stage" pkg="stage_ros" type="stageros" args="$(find gvgexploration)/world/$(arg world).world">
         <param name="base_watchdog_timeout" value="0" />
     </node>
-    <node name="R0_MapAlign" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /robot_0/map 100"/>
-    <node name="R1_MapAlign" pkg="tf" type="static_transform_publisher" args="100 0 0 0 0 0 /map /robot_1/map 100"/>
-    <node name="R2_MapAlign" pkg="tf" type="static_transform_publisher" args="200 0 0 0 0 0 /map /robot_2/map 100"/>
-    <node name="R3_MapAlign" pkg="tf" type="static_transform_publisher" args="300 0 0 0 0 0 /map /robot_3/map 100"/>
 
+    <param name="robot_count" value="$(arg robot_count)" />
+    <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
     <group ns="robot_0">
-        <param name="robot_id" value="1" />
-        <param name="tf_prefix" type="string" value="robot_0"/>
-        <rosparam command="load" file="ros_robot.yaml" subst_value="true"/>
-        <node pkg="nav2d_operator" type="operator" name="operator" output="screen">
-            <rosparam command="load" file="operator_robot.yaml" subst_value="true"/>
-            <rosparam command="load" file="costmap1_robot.yaml" ns="local_map" subst_value="true"/>
-            <param name="robot_frame" value="base_link"/>
-            <param name="odometry_frame" value="odom"/>
-        </node>
-        <node pkg="nav2d_navigator" type="navigator" name="navigator">
-            <rosparam command="load" file="navigator_robot.yaml" subst_value="true"/>
-            <param name="robot_id" value="1"/>
-        </node>
-        <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
-        <node name="SetGoal" pkg="nav2d_navigator" type="set_goal_client" />
-        <node name="scan_filter" pkg="gvgexploration" type="scan_filter.py">
-            <param name="robot_id" value="0" />
-            <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
-        </node>
+        <include file="$(find gvgexploration)/launch/nodes.launch">
+            <arg name="robot_name" value="1"/>
+        </include>
+
         <include file="$(find gvgexploration)/launch/robot.launch">
-            <arg name="robot_name" value="0" />
+            <arg name="robot_id" value="0" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="1,2,3" />
         </include>
-
     </group>
 
     <group ns="robot_1">
-        <param name="robot_id" value="2" />
-        <param name="tf_prefix" type="string" value="robot_1"/>
-        <rosparam command="load" file="ros_robot.yaml" subst_value="true"/>
-        <node pkg="nav2d_operator" type="operator" name="operator" output="screen">
-            <rosparam command="load" file="operator_robot.yaml" subst_value="true"/>
-            <rosparam command="load" file="costmap2_robot.yaml" ns="local_map" subst_value="true"/>
-            <param name="robot_frame" value="base_link"/>
-            <param name="odometry_frame" value="odom"/>
-        </node>
-        <node pkg="nav2d_navigator" type="navigator" name="navigator">
-            <rosparam command="load" file="navigator_robot.yaml" subst_value="true"/>
-            <param name="robot_id" value="2"/>
-        </node>
-        <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
-        <node name="SetGoal" pkg="nav2d_navigator" type="set_goal_client" />
-        <node name="scan_filter" pkg="gvgexploration" type="scan_filter.py">
-            <param name="robot_id" value="1" />
-            <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
-        </node>
+        <include file="$(find gvgexploration)/launch/nodes.launch">
+            <arg name="robot_name" value="2"/>
+        </include>
 
         <include file="$(find gvgexploration)/launch/robot.launch">
-            <arg name="robot_name" value="1" />
+            <arg name="robot_id" value="1" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="0,2,3" />
         </include>
     </group>
 
     <group ns="robot_2">
-        <param name="robot_id" value="3" />
-        <param name="tf_prefix" type="string" value="robot_2"/>
-        <rosparam command="load" file="ros_robot.yaml" subst_value="true"/>
-        <node pkg="nav2d_operator" type="operator" name="operator" output="screen">
-            <rosparam command="load" file="operator_robot.yaml" subst_value="true"/>
-            <rosparam command="load" file="$(find gvgexploration)/param/costmap3.yaml" ns="local_map" subst_value="true"/>
-            <param name="robot_frame" value="base_link"/>
-            <param name="odometry_frame" value="odom"/>
-        </node>
-        <node pkg="nav2d_navigator" type="navigator" name="navigator">
-            <rosparam command="load" file="navigator_robot.yaml" subst_value="true"/>
-            <param name="robot_id" value="3"/>
-        </node>
-        <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
-        <node name="SetGoal" pkg="nav2d_navigator" type="set_goal_client" />
-        <node name="scan_filter" pkg="gvgexploration" type="scan_filter.py">
-            <param name="robot_id" value="2" />
-            <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
-        </node>
+        <include file="$(find gvgexploration)/launch/nodes.launch">
+            <arg name="robot_name" value="3"/>
+        </include>
+
         <include file="$(find gvgexploration)/launch/robot.launch">
-            <arg name="robot_name" value="2" />
+            <arg name="robot_id" value="2" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="0,1,3" />
         </include>
     </group>
 
     <group ns="robot_3">
-        <param name="robot_id" value="4" />
-        <param name="tf_prefix" type="string" value="robot_3"/>
-        <rosparam command="load" file="ros_robot.yaml" subst_value="true"/>
-        <node pkg="nav2d_operator" type="operator" name="operator" output="screen">
-            <rosparam command="load" file="operator_robot.yaml" subst_value="true"/>
-            <rosparam command="load" file="$(find gvgexploration)/param/costmap4.yaml" ns="local_map" subst_value="true"/>
-            <param name="robot_frame" value="base_link"/>
-            <param name="odometry_frame" value="odom"/>
-        </node>
-        <node pkg="nav2d_navigator" type="navigator" name="navigator">
-            <rosparam command="load" file="navigator_robot.yaml" subst_value="true"/>
-            <param name="robot_id" value="4"/>
-        </node>
-        <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
-        <node name="SetGoal" pkg="nav2d_navigator" type="set_goal_client" />
-        <node name="scan_filter" pkg="gvgexploration" type="scan_filter.py">
-            <param name="robot_id" value="3" />
-            <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
-        </node>
+        <include file="$(find gvgexploration)/launch/nodes.launch">
+            <arg name="robot_name" value="4"/>
+        </include>
+
         <include file="$(find gvgexploration)/launch/robot.launch">
-            <arg name="robot_name" value="3" />
+            <arg name="robot_id" value="3" />
             <arg name="robot_type" value="2" />
             <arg name="base_stations" value="0,1,2" />
         </include>
     </group>
 
-    <node name="roscbt" pkg="gvgexploration" type="roscbt.py" respawn="true">
-        <rosparam file="$(find gvgexploration)/param/roscbt_config4.yaml"/>
-        <rosparam file="$(find gvgexploration)/param/gvg_config.yaml"/>
+    <node name="roscbt" pkg="gvgexploration" type="roscbt.py">
+        <rosparam file="$(find gvgexploration)/param/roscbt_config$(arg robot_count).yaml"/>
     </node>
+
+    <node name="localizer" pkg="gvgexploration" type="$(arg world)_localize.sh" />
+    <node name="map_analyzer" pkg="gvgexploration" type="map_analyzer.py"/>
 
     <!-- RVIZ to view the visualization -->
     <node name="RVIZ" pkg="rviz" type="rviz" args=" -d $(find gvgexploration)/param/gvgexploration.rviz" output="screen" />
