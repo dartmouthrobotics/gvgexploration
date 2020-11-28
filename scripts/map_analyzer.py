@@ -70,10 +70,11 @@ class MapAnalyzer:
             self.get_explored_region(rid)
             common_points.append(self.all_maps[rid])
         common_area = set.intersection(*common_points)
-        common_area_size = len(common_area) / self.map_area
-        explored_area = len(self.all_explored_points) / self.map_area
-        cov_ratio = explored_area / self.free_area_ratio
-        common_coverage = common_area_size / self.free_area_ratio
+        # TODO cleanup
+        common_area_size = len(common_area) #/ self.map_area
+        explored_area = len(self.all_explored_points) #/ self.map_area
+        cov_ratio = explored_area / self.total_free_area
+        common_coverage = common_area_size / self.total_free_area
         rospy.logerr("Total points: {}, explored area: {}, common area: {}".format(self.total_free_area, cov_ratio,
                                                                                    common_coverage))
         cov_msg = Coverage()
@@ -93,6 +94,7 @@ class MapAnalyzer:
             if rid in self.raw_maps:
                 grid=Grid(self.raw_maps[rid])
                 poses = grid.get_explored_region()
+                rospy.logerr("len of poses for {} is {}".format(rid, len(poses)))
                 self.all_maps[rid].clear()
                 self.all_explored_points.clear()
                 for p in poses:
@@ -110,6 +112,8 @@ class MapAnalyzer:
         return whole_cells
 
     def read_raw_image(self):
+        # TODO reading from the yaml file.
+        # TODO adjust according to the same resolution as the grid, so that calculations are correct.
         if self.map_file_name:
             im = Image.open(self.map_file_name, 'r')
             pixelMap = im.load()
