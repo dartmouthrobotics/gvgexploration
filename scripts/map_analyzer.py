@@ -67,6 +67,7 @@ class MapAnalyzer:
 
     def publish_coverage(self):
         common_points = []
+        self.all_explored_points.clear()
         for rid in range(self.robot_count):
             self.get_explored_region(rid)
             common_points.append(self.all_maps[rid])
@@ -97,11 +98,8 @@ class MapAnalyzer:
                 poses = grid.get_explored_region()
                 rospy.logerr("len of poses for {} is {}".format(rid, len(poses)))
                 self.all_maps[rid].clear()
-                self.all_explored_points.clear()
-                for p in poses:
-                    point=tuple(p)
-                    self.all_maps[rid].add(point)
-                    self.all_explored_points.add(point)
+                self.all_maps[rid].update(poses)
+                self.all_explored_points.update(poses)
         except tf.LookupException as e:
             rospy.logerr(e)
 
