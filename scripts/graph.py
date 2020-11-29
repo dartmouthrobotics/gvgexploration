@@ -612,6 +612,7 @@ class Graph:
         return pu.get_closest_point(robot_grid, vertices)
 
     def get_successors(self, robot_pose, previous_pose=None):
+        self.lock.acquire()
         # Get current vertex.
         self.current_vertex_id, distance_current_vertex = self.get_closest_vertex(robot_pose)
         current_vertex_id = self.current_vertex_id
@@ -688,6 +689,8 @@ class Graph:
             for v in paths_to_leaves[path_to_leaf]:
                 full_path.append(self.latest_map.grid_to_pose(
                     self.graph.vs["coord"][v]))
+
+        self.lock.release()
         return full_path
 
 
