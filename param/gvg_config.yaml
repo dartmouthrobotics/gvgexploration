@@ -22,7 +22,7 @@ graph_scale: 1.0     # scale of the map
 bs_pose: $(arg bs_pose)  # basic
 map_inflation_radius: 1   # inflation radius of the robot
 map_file: '$(find gvgexploration)/world/$(arg environment).png'    # environment file
-target_distance: 1.0
+target_distance: 1.4
 target_angle: 1.57
 environment: $(arg environment)
 max_wait_time: 120 # secs

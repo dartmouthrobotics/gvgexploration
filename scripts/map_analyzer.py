@@ -29,6 +29,7 @@ class MapAnalyzer:
         self.termination_metric = rospy.get_param("/termination_metric")
         self.environment = rospy.get_param("/environment")
         self.method = rospy.get_param("/method")
+        self.max_exploration_time=rospy.get_param('/max_exploration_time')
         self.is_active = False
         self.total_free_area = 0
         self.free_area_ratio = 0
@@ -39,6 +40,8 @@ class MapAnalyzer:
         self.explored_region = {}
         self.pixel_desc = {}
         self.raw_maps= {}
+
+        self.exploration_start_time=rospy.Time.now().to_sec()
 
         for i in range(self.robot_count):
             exec("def a_{0}(self, data): self.raw_maps[{0}] = data".format(i))
@@ -56,11 +59,16 @@ class MapAnalyzer:
         r = rospy.Rate(0.2)
         self.read_raw_image()
         while not rospy.is_shutdown():
+
             try:
                 if not self.is_active:
                     self.is_active = True
                     self.publish_coverage()
                     self.is_active = False
+
+                if (rospy.Time.now().to_sec() - self.exploration_start_time) >= self.max_exploration_time*60:
+                    self.shutdown_exploration()
+
             except Exception as e:
                 rospy.logerr("Got this result:::::::: {}".format(e))
             r.sleep()
@@ -88,8 +96,8 @@ class MapAnalyzer:
         self.all_coverage_data.append(
             {'time': rospy.Time.now().to_sec(), 'explored_ratio': cov_ratio, 'common_coverage': common_coverage,
              'expected_coverage': self.free_area_ratio})
-        if cov_ratio >= self.max_coverage:
-            self.shutdown_exploration()
+        # if cov_ratio >= self.max_coverage:
+        #     self.shutdown_exploration()
 
     def get_explored_region(self, rid):
         try:

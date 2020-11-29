@@ -12,7 +12,7 @@ import rosgraph
 nrobots_all =[2] # [2, 4, 6]
 methods = ["gvgexploration","recurrent_connectivity", "continuous_connectivity"]
 runs = range(5)
-envs = {"office": [4.0, 10.0], "cave": [4.0, 10.0], "city": [4.0, 10.0]}
+envs =  {"office": [4.0, 10.0]} #{"office": [4.0, 10.0], "cave": [4.0, 10.0], "city": [4.0, 10.0]}
 catkinws_path='/home/masaba/stage_ws'
 package_path='{}/src/gvgexploration'.format(catkinws_path)
 karto_pkg='gvgexplore'
@@ -40,7 +40,7 @@ for nrobots in nrobots_all:
                 main_process = subprocess.Popen(launcher_args)
                 main_process.wait()
                 check_kill_process("ros")
-                break
+                # break
             break
         break
     break
