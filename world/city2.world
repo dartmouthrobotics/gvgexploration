@@ -32,7 +32,7 @@ window
 floorplan
 (
   name "tutorial"
-  bitmap "city.png"
+  bitmap "city_na.png"
   size [ 65.0 65.0 10.0 ]
   pose [  32.75  32.75 0.0 0.0 ]
 )
@@ -41,7 +41,7 @@ pioneer3at
 (
   name "robot1"
   color "purple"
-  pose [12.0 4.0 0.0 1.0]
+  pose [25.0 4.0 0.0 1.0]
 )
 
 # Put two robots into the world
@@ -49,5 +49,5 @@ pioneer3at
 (
   name "robot2"
   color "purple"
-  pose [12.0 6.0 0.0 0.0]
+  pose [25.0 6.0 0.0 0.0]
 )

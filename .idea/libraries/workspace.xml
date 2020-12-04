@@ -4,6 +4,7 @@
       <root url="file://$PROJECT_DIR$/.." />
       <root url="file:///opt/ros/melodic/share" />
     </CLASSES>
+    <JAVADOC />
     <SOURCES>
       <root url="file://$PROJECT_DIR$/../.." />
     </SOURCES>

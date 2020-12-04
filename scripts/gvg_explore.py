@@ -52,6 +52,7 @@ class GVGExplore:
         self.termination_metric = rospy.get_param("/termination_metric")
         self.environment=rospy.get_param("/environment")
         self.robot_count=rospy.get_param("/robot_count")
+        self.max_target_info_ratio=rospy.get_param("/max_target_info_ratio")
         self.run=rospy.get_param("/run")
 
         self.previous_point=[]
@@ -218,8 +219,8 @@ class GVGExplore:
 
     def save_all_data(self, data):
         """ Save data and kill yourself"""
-        pu.save_data(self.explore_computation, '{}/explore_computation_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment,self.robot_count,self.run,self.termination_metric,self.robot_id))
-        pu.save_data(self.traveled_distance,'{}/traveled_distance_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment,self.robot_count,self.run,self.termination_metric,self.robot_id))
+        pu.save_data(self.explore_computation, '{}/explore_computation_{}_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment,self.robot_count,self.run,self.termination_metric,self.robot_id,self.max_target_info_ratio))
+        pu.save_data(self.traveled_distance,'{}/traveled_distance_{}_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment,self.robot_count,self.run,self.termination_metric,self.robot_id,self.max_target_info_ratio))
         rospy.signal_shutdown("Shutting down GVG explore")
 
     def initial_action_handler(self, leaf):

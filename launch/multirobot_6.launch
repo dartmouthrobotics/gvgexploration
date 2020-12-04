@@ -2,13 +2,13 @@
     <arg name="world" default="maze"/>
     <arg name="robot_count" default="2"/>
     <arg name="run" default="0"/>
-    <arg name="method" default="gvgexploration"/>
+    <arg name="method" default="gvg"/>
     <arg name="bs_pose" default="0,0"/>
     <arg name="environment"  default=''/>
 
-
     <param name="use_sim_time" value="true" />
-    <node name="Stage" pkg="stage_ros" type="stageros" args="$(find gvgexploration)/world/office6.world">
+
+    <node name="Stage" pkg="stage_ros" type="stageros" args="$(find gvgexploration)/world/$(arg world).world">
         <param name="base_watchdog_timeout" value="0" />
     </node>
 

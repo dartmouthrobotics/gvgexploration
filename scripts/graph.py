@@ -259,6 +259,8 @@ class Graph:
         self.robot_count = rospy.get_param("/robot_count")
         self.environment = rospy.get_param("/environment")
         self.run = rospy.get_param("/run")
+        self.bs_pose = rospy.get_param("/bs_pose")
+        self.img_res = rospy.get_param("/image_resolution")
 
         # Physical parameters of the robot.
         self.robot_radius = rospy.get_param('/robot_{}/robot_radius'.format(self.robot_id)) # meter.
@@ -651,6 +653,7 @@ class Graph:
         
         # If current vertex is a leaf, then continue in that direction.
         if current_vertex_id in non_visited_leaves:
+            self.lock.release()
             return [self.latest_map.grid_to_pose(
                             self.graph.vs["coord"][current_vertex_id])]
 
@@ -927,17 +930,12 @@ class Graph:
     def fetch_rendezvous_points_handler(self, data):
         count = data.count
         rendezvous_points = []
-        map_msg = self.latest_map
-        self.compute_graph(map_msg)
-        all_points = list(self.pixel_desc)
-        robot_pose = self.get_robot_pose()
-        origin = pu.scale_up(robot_pose, self.graph_scale)
-
-        free_points = [p for p in all_points if self.pixel_desc[p] == FREE and pu.D(origin, p) <= self.comm_range]
+        all_points = self.latest_map.get_explored_region()
+        origin = self.get_robot_pose()
+        free_points = [p for p in all_points if pu.D(origin, p) <= self.comm_range]
         if free_points:
             hull, boundary_points = graham_scan(free_points, count, False)
-            for b in boundary_points:
-                ap = pu.scale_down(b, self.graph_scale)
+            for ap in boundary_points:
                 pose = Pose()
                 pose.position.x = ap[INDEX_FOR_X]
                 pose.position.y = ap[INDEX_FOR_Y]

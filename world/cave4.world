@@ -33,15 +33,15 @@ floorplan
 (
   name "tutorial"
   bitmap "cave.png"
-  size [ 32.0 28.6 2.0 ]
-  pose [  20.0  18.00 0.0 0.0 ]
+  size [ 64.0 57.2 2.0 ]
+   pose [  32.0  28.6 0.0 0.0 ]
 )
 
 pioneer3at
 (
   name "robot1"
   color "purple"
-  pose [16.0 6.25 0.0 0.0]
+  pose [20.0 6.25 0.0 0.0]
 )
 
 # Put two robots into the world
@@ -49,18 +49,18 @@ pioneer3at
 (
   name "robot2"
   color "purple"
-  pose [18.0 8.0 0.0 0.0]
+  pose [20.0 8.0 0.0 0.0]
 )
 pioneer3at
 (
   name "robot3"
   color "purple"
-  pose [20.0 6.0 0.0 0.0]
+  pose [22.0 6.0 0.0 0.0]
 )
 
 pioneer3at
 (
   name "robot4"
   color "purple"
-  pose [22.0 8.0 0.0 0.0]
+  pose [28.0 8.0 0.0 0.0]
 )

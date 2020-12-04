@@ -27,6 +27,8 @@ class MapAnalyzer:
         self.debug_mode = rospy.get_param("/debug_mode")
         self.max_coverage=rospy.get_param("/max_coverage")
         self.termination_metric = rospy.get_param("/termination_metric")
+        self.max_target_info_ratio = rospy.get_param("/max_target_info_ratio")
+
         self.environment = rospy.get_param("/environment")
         self.method = rospy.get_param("/method")
         self.max_exploration_time=rospy.get_param('/max_exploration_time')
@@ -81,6 +83,7 @@ class MapAnalyzer:
             common_points.append(self.all_maps[rid])
         common_area = set.intersection(*common_points)
         # TODO cleanup
+        rospy.logerr("size 1: {}, size2: {}".format(len(common_points[0]),len(common_points[1])))
         common_area_size = len(common_area) #/ self.map_area
         explored_area = len(self.all_explored_points) #/ self.map_area
         cov_ratio = explored_area / self.total_free_area
@@ -157,7 +160,12 @@ class MapAnalyzer:
             os.kill(int(pid), signal.SIGKILL)
 
     def save_all_data(self,data):
-        save_data(self.all_coverage_data,'{}/coverage_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count, self.run,self.termination_metric))
+        save_data(self.all_coverage_data,'{}/coverage_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count, self.run,self.termination_metric,self.max_target_info_ratio))
+        count=self.robot_count
+        if self.method=='recurrent_connectivity':
+            count+=1
+
+
 
     def shutdown_exploration(self):
         tstr = String()
@@ -166,8 +174,13 @@ class MapAnalyzer:
         sleep(5)
         self.check_kill_process(self.environment)
         all_nodes=[]
-        for i in range(self.robot_count):
+        count=self.robot_count
+        if self.method=='recurrent_connectivity':
+            count+=1
+        for i in range(count):
             all_nodes+=['/robot_{}/GetMap'.format(i),'/robot_{}/Mapper'.format(i),'/robot_{}/map_align'.format(i),'/robot_{}/navigator'.format(i),'/robot_{}/operator'.format(i),'/robot_{}/SetGoal'.format(i)]
+            if self.method !="gvgexploration":
+                all_nodes+=['/robot_{}/explore_client'.format(i),'/robot_{}/graph'.format(i)]
 
         all_nodes+=['/rosout','/RVIZ','/Stage','/rostopic*']
         rosnode.kill_nodes(all_nodes)

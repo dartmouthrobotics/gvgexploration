@@ -118,8 +118,7 @@ class Robot:
         self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,self.shared_data_handler)
         self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,self.shared_point_handler)
         self.alloc_point_srv = rospy.Service("/robot_{}/allocated_point".format(self.robot_id), SharedFrontier,self.shared_frontier_handler)
-        rospy.Subscriber('/robot_{}/initial_data'.format(self.robot_id), BufferedData,
-                         self.initial_data_callback)  # just for initial data *
+        rospy.Subscriber('/robot_{}/initial_data'.format(self.robot_id), BufferedData,self.initial_data_callback)  # just for initial data *
         self.karto_pub = rospy.Publisher("/robot_{}/karto_in".format(self.robot_id), LocalizedScan, queue_size=10)
         self.signal_strength_srv = rospy.ServiceProxy("/signal_strength".format(self.robot_id), HotSpot)
         self.signal_strength_srv.wait_for_service()

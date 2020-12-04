@@ -78,6 +78,7 @@ class roscbt:
         self.shared_topics = rospy.get_param("~shared_topics", {})
 
         self.termination_metric = rospy.get_param("/termination_metric")
+        self.max_target_info_ratio = rospy.get_param("/max_target_info_ratio")
         self.robot_count = rospy.get_param("/robot_count")
         self.environment = rospy.get_param("/environment")
         self.comm_range = rospy.get_param("/comm_range")
@@ -314,11 +315,11 @@ class roscbt:
 
     def save_all_data(self,data):
         save_data(self.exploration_data,
-                  '{}/exploration_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count, self.run,
-                                                             self.termination_metric))
+                  '{}/exploration_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count, self.run,
+                                                             self.termination_metric,self.max_target_info_ratio))
         save_data(self.shared_data_size,
-                  '{}/roscbt_data_shared_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count,
-                                                                    self.run, self.termination_metric))
+                  '{}/roscbt_data_shared_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count,
+                                                                    self.run, self.termination_metric,self.max_target_info_ratio))
 
         rospy.signal_shutdown("Shutting down ROSCBT")
 
