@@ -9,7 +9,7 @@ import numpy
 import rospy
 import rosgraph
 
-nrobots_all =[2, 4] #[2, 4, 6]
+nrobots_all =[6] #[2, 4, 6]
 methods = ["gvgexploration"]
 runs = [0,1,2,3,4]
 envs = {"office": [33.0, 20.0]} #,"cave": [20.0, 8.0],

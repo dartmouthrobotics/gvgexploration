@@ -313,6 +313,7 @@ class Graph:
         self.map_scale = rospy.get_param('/map_scale')
         self.graph_scale = rospy.get_param("/graph_scale")
         self.termination_metric = rospy.get_param("/termination_metric")
+        self.max_target_info_ratio=rospy.get_param("/max_target_info_ratio")
         self.frontier_threshold = rospy.get_param("/frontier_threshold")
         self.min_hallway_width = rospy.get_param("/min_hallway_width") * self.graph_scale
         self.comm_range = rospy.get_param("/comm_range") * self.graph_scale
@@ -1764,9 +1765,9 @@ class Graph:
 
     def save_all_data(self,data):
         save_data(self.performance_data,
-                  "{}/performance_{}_{}_{}_{}_{}.pickle".format(self.method, self.environment, self.robot_count,
+                  "{}/performance_{}_{}_{}_{}_{}_{}.pickle".format(self.method, self.environment, self.robot_count,
                                                                 self.run,
-                                                                self.termination_metric, self.robot_id))
+                                                                self.termination_metric, self.robot_id,self.max_target_info_ratio))
 
 
     def get_robot_pose(self):
