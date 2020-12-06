@@ -616,6 +616,7 @@ class Graph:
 
     def get_successors(self, robot_pose, previous_pose=None):
         self.lock.acquire()
+        start_time = time.clock()
         # Get current vertex.
         self.current_vertex_id, distance_current_vertex = self.get_closest_vertex(robot_pose)
         current_vertex_id = self.current_vertex_id
@@ -641,7 +642,6 @@ class Graph:
                 to=current_vertex_id, weights=self.graph.es["weight"], 
                 mode=igraph.ALL)
             self.visited_vertices.update(path_prev_current[0][:-1])
-
         self.publish_visited_vertices()        
 
 
@@ -693,7 +693,9 @@ class Graph:
             for v in paths_to_leaves[path_to_leaf]:
                 full_path.append(self.latest_map.grid_to_pose(
                     self.graph.vs["coord"][v]))
-
+        end_time = time.clock()
+        t= end_time -start_time
+        self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
         self.lock.release()
         return full_path
 
@@ -811,9 +813,7 @@ class Graph:
                 break
         now = time.clock()
         t = (now - start_time)
-        self.performance_data.append(
-            {'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
-        pu.log_msg(self.robot_id,'COMPUTED FRONTIER RESULTS: {}'.format(frontiers),self.debug_mode)
+        # pu.log_msg(self.robot_id,'COMPUTED FRONTIER RESULTS: {}'.format(frontiers),self.debug_mode)
         return FrontierPointResponse(frontiers=frontiers)
 
     def intersection_handler(self, data):
