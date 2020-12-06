@@ -164,13 +164,7 @@ class MapAnalyzer:
         if self.method=='recurrent_connectivity':
             count+=1
 
-
-
-    def shutdown_exploration(self):
-        tstr = String()
-        tstr.data = "shutdown"
-        self.shutdown_pub.publish(tstr)
-        sleep(5)
+        sleep(10)
         self.check_kill_process(self.environment)
         all_nodes=[]
         count=self.robot_count
@@ -184,6 +178,13 @@ class MapAnalyzer:
         all_nodes+=['/rosout','/RVIZ','/Stage','/rostopic*']
         rosnode.kill_nodes(all_nodes)
         rospy.signal_shutdown("Exploration complete! Shutting down")
+
+
+
+    def shutdown_exploration(self):
+        tstr = String()
+        tstr.data = "shutdown"
+        self.shutdown_pub.publish(tstr)
 
 
 
