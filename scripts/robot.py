@@ -39,8 +39,6 @@ SUCCEEDED = 3  # The goal was achieved successfully by the action server (Termin
 ABORTED = 4  # The goal was aborted during execution by the action server due to some failure (Terminal State)
 LOST = 9  # An action client can determine that a goal is LOST. This should not be sent over the wire by an action
 TURNING_ANGLE = np.deg2rad(45)
-from wifi_node.msg import WifiStrength
-from multimaster_msgs_fkie.msg import LinkStatesStamped
 
 
 class Robot:

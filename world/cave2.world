@@ -32,7 +32,7 @@ window
 floorplan
 (
   name "tutorial"
-  bitmap "cave_v2.png"
+  bitmap "cave_na.png"
   size [ 64.0 57.2 2.0 ]
   pose [  32.0  28.6 0.0 0.0 ]
 )

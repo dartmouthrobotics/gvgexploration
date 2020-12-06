@@ -32,7 +32,7 @@ window
 floorplan
 (
   name "tutorial"
-  bitmap "city.png"
+  bitmap "city_na.png"
   size [ 65.0 65.0 10.0 ]
   pose [  20.0  14.00 0.0 0.0 ]
 )

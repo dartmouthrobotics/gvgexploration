@@ -18,7 +18,7 @@ max_particles: 10000
 # For a full list of available parameters and their
 # corresponding default values, see OpenKarto/OpenMapper.h
 
-MinimumTravelDistance: 0.5
+MinimumTravelDistance: 1.0
 MinimumTravelHeading: 1.57
 UseScanBarycenter: false
 UseScanMatching: false
@@ -33,3 +33,7 @@ LoopSearchMaximumDistance: 100.0
 ###########################################################
 
 
+### updates @Kizito ########################################
+traveled_distance: 1.0
+rotation: 1.57
+############################################################
