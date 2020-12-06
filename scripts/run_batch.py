@@ -8,16 +8,18 @@ import sys
 import numpy
 import rospy
 import rosgraph
+import rospkg
 
-nrobots_all =[4] #[2, 4, 6]
-methods =["recurrent_connectivity"] #["gvgexploration","continuous_connectivity","recurrent_connectivity"]
-runs = [1,2,3,4]
-envs = {"cave":[20.0, 8.0]} #{"city":[25.0,4.0]} #{"office": [33.0, 20.0],"cave": [20.0, 8.0]}
+nrobots_all =[2] #[2, 4, 6]
+methods = ["gvgexploration"]  #["gvgexploration","continuous_connectivity","recurrent_connectivity"]
+runs = [0]#,1,2,3,4]
+envs = {"office": [33.0, 20.0]} #,"cave": [20.0, 8.0],
 target_ratios=[0.05,0.5]
-catkinws_path='/home/kmasaba/catkin_ws'
-package_path='{}/src/gvgexploration'.format(catkinws_path)
+rospack = rospkg.RosPack()
+package_path = rospack.get_path('gvgexploration') + "/log/errors.log" 
+
 def num_errors():
-    f = open("{}/log/errors.log".format(package_path), "r")
+    f = open(package_path, "r")
     lines = f.readlines()
     f.close()
     num = len(lines)
