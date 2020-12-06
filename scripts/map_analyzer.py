@@ -34,6 +34,7 @@ class MapAnalyzer:
         self.is_active = False
         self.total_free_area = 0
         self.free_area_ratio = 0
+        self.current_explored_ratio=0
         self.map_area = 0
         self.all_coverage_data = []
         self.all_explored_points = set()
@@ -67,7 +68,7 @@ class MapAnalyzer:
                     self.publish_coverage()
                     self.is_active = False
 
-                if (rospy.Time.now().to_sec() - self.exploration_start_time) >= self.max_exploration_time*60:
+                if self.current_explored_ratio>=self.max_coverage  or (rospy.Time.now().to_sec() - self.exploration_start_time) >= self.max_exploration_time*60:
                     self.shutdown_exploration()
 
             except Exception as e:
@@ -87,6 +88,7 @@ class MapAnalyzer:
         explored_area = len(self.all_explored_points) #/ self.map_area
         cov_ratio = explored_area / self.total_free_area
         common_coverage = common_area_size / self.total_free_area
+        self.current_explored_ratio=cov_ratio
         rospy.logerr("Total points: {}, explored area: {}, common area: {}".format(self.total_free_area, cov_ratio,
                                                                                    common_coverage))
         cov_msg = Coverage()
