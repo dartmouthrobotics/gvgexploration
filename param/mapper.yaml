@@ -4,7 +4,7 @@ grid_resolution: 0.2
 range_threshold: 10.0 #5.9999999999999999
 map_update_rate: 5
 publish_pose_graph: false
-max_covariance: 0.00
+max_covariance: 0.01
 transform_publish_period: 0.05
 min_map_size: 3
 
@@ -22,18 +22,13 @@ MinimumTravelDistance: 1.0
 MinimumTravelHeading: 1.57
 UseScanBarycenter: false
 UseScanMatching: false
-ScanBufferSize: 2
-DistanceVariancePenalty: 0.0
-AngleVariancePenalty: 0.0
-LinkScanMaximumDistance: 1.0
-LoopSearchMaximumDistance: 100.0
+#ScanBufferSize: 2
+#DistanceVariancePenalty: 0.01
+#AngleVariancePenalty: 0.01
+#LinkScanMaximumDistance: 1.0
+#LoopSearchMaximumDistance: 100.0
 #LinkMatchMinimumResponseFine: 1.0
 
 #LoopMatchMinimumChainSize: 10000000
 ###########################################################
 
-
-### updates @Kizito ########################################
-traveled_distance: 1.0
-rotation: 1.57
-############################################################
