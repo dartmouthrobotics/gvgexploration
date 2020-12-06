@@ -475,9 +475,9 @@ class Robot:
             data_vals = rdata.data
             for scan in data_vals:
                 self.karto_pub.publish(scan)
-            for sid in self.candidate_robots:
-                if sid != rid:
-                    self.add_to_file(sid, data_vals)
+            # for sid in self.candidate_robots:
+            #     if sid != rid:
+            #         self.add_to_file(sid, data_vals)
             sent_data += len(data_vals)
         self.map_updating = False
         if session_id:
