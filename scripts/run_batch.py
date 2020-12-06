@@ -8,16 +8,17 @@ import sys
 import numpy
 import rospy
 import rosgraph
+import rospkg
 
-nrobots_all =[6] #[2, 4, 6]
+nrobots_all =[2] #[2, 4, 6]
 methods = ["gvgexploration"]
-runs = [0,1,2,3,4]
+runs = [0]#,1,2,3,4]
 envs = {"office": [33.0, 20.0]} #,"cave": [20.0, 8.0],
 target_ratios=[0.05,0.5]
-catkinws_path='/home/masaba/stage_ws'
-package_path='{}/src/gvgexploration'.format(catkinws_path)
+rospack = rospkg.RosPack()
+package_path = rospack.get_path('gvgexploration') + "/log/errors.log" 
 def num_errors():
-    f = open("{}/log/errors.log".format(package_path), "r")
+    f = open(package_path, "r")
     lines = f.readlines()
     f.close()
     num = len(lines)
