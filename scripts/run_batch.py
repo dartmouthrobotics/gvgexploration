@@ -10,7 +10,7 @@ import rospy
 import rosgraph
 import rospkg
 
-nrobots_all =[2] #[2, 4, 6]
+nrobots_all =[2, 4, 6]
 
 methods = ["continuous_connectivity", "recurrent_connectivity"] #"gvgexploration","recurrent_connectivity",
 runs = [0,1,2,3,4]
@@ -42,16 +42,15 @@ def start_simulation(launcher_args):
     time.sleep(10)
 
 
-for nrobots in nrobots_all:
-    for package in methods:
-        i = 0
-        for run in runs:
+for run in runs:
+    for nrobots in nrobots_all:
+        for package in methods:
             for world, bs_pose in envs.items():
                 launcher_args = ['roslaunch', package, 'multirobot_{}.launch'.format(nrobots), "world:={}{}".format(world,nrobots) , "robot_count:={}".format(nrobots),"run:={}".format(run),"method:={}".format(package),"environment:={}".format(world),"bs_pose:={},{}".format(bs_pose[0],bs_pose[1])]
-                launcher_args.append("max_target_info_ratio:={}".format(target_ratios[i]))
+                launcher_args.append("max_target_info_ratio:={}".format(target_ratios[0]))
                 if package=='recurrent_connectivity':
                     for t in target_ratios:
-                        launcher_args[-1] = "max_target_info_ratio:={}".format(target_ratios[i])
+                        launcher_args[-1] = "max_target_info_ratio:={}".format(t)
                         start_simulation(launcher_args)
                 else:
                     start_simulation(launcher_args)
