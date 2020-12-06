@@ -655,6 +655,8 @@ class Graph:
         # If current vertex is a leaf, then continue in that direction.
         if current_vertex_id in non_visited_leaves:
             self.lock.release()
+            t= end_time -start_time
+            self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
             return [self.latest_map.grid_to_pose(
                             self.graph.vs["coord"][current_vertex_id])]
 
