@@ -655,9 +655,6 @@ class Graph:
         # If current vertex is a leaf, then continue in that direction.
         if current_vertex_id in non_visited_leaves:
             self.lock.release()
-            end_time = time.clock()
-            t= end_time -start_time
-            self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
             return [self.latest_map.grid_to_pose(
                             self.graph.vs["coord"][current_vertex_id])]
 
@@ -696,9 +693,6 @@ class Graph:
             for v in paths_to_leaves[path_to_leaf]:
                 full_path.append(self.latest_map.grid_to_pose(
                     self.graph.vs["coord"][v]))
-        end_time = time.clock()
-        t= end_time -start_time
-        self.performance_data.append({'time': rospy.Time.now().to_sec(), 'type': 2, 'robot_id': self.robot_id, 'computational_time': t})
         self.lock.release()
         return full_path
 

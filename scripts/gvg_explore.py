@@ -199,8 +199,8 @@ class GVGExplore:
                                                               self.prev_pose)
                 end_time_clock = time.clock()
                 gvg_time=end_time_clock - start_time_clock
-                pu.log_msg(self.robot_id,"next path time {}".format(gvg_time),self.debug_mode)
-                self.explore_computation.append({'time': rospy.Time.now().to_sec(), 'gvg_compute': gvg_time})
+                pu.log_msg(self.robot_id,"next path time {}".format(gvg_time),1-self.debug_mode)
+                self.explore_computation.append({'time': rospy.Time.now().to_sec(),'robot_id':self.robot_id,'gvg_compute': gvg_time})
                 if self.path_to_leaf:
                     if len(self.path_to_leaf) > 1:
                         prev_pose = self.path_to_leaf[-2]
