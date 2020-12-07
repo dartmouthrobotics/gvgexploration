@@ -485,9 +485,6 @@ class Robot:
             self.add_to_file(rid,[scan])
         return should_save
 
-
-
-
     def process_data(self, buff_data, session_id=None, sent_data=0):
         #rospy.logerr("data to process: {}".format(buff_data))
         # self.lock.acquire()
