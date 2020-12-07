@@ -595,6 +595,7 @@ class Graph:
         try:
             self.latest_map = Grid(self.get_map().map)
         except rospy.ServiceException:
+            self.lock.release()
             pu.log_msg(self.robot_id,"Map didn't update",self.debug_mode)
             return
         self.min_range_radius = 8 / self.latest_map.resolution # TODO range.
