@@ -10,12 +10,15 @@ import rospy
 import rosgraph
 import rospkg
 
-nrobots_all =[6]
+nrobots_all =[2]#, 6]
 
-methods = ["gvgexploration"] #"gvgexploration","recurrent_connectivity",continuous_connectivity
-runs = [2,3,4]
+methods = ["recurrent_connectivity"] #["continuous_connectivity"]
+runs = [3,4,5]
 envs = {"office": [33.0, 20.0],"cave": [20.0, 8.0],"city": [25.0, 4.0]}
-target_ratios=[0.05,0.5]
+#envs = {"office": [33.0, 20.0], "cave": [20.0, 8.0], "city": [25.0, 4.0]}
+#envs = {"city": [25.0, 4.0]}
+#envs = {"cave": [20.0, 8.0]}
+target_ratios=[0.05, 0.5]
 rospack = rospkg.RosPack()
 package_path = rospack.get_path('gvgexploration') + "/log/errors.log" 
 
@@ -31,7 +34,10 @@ def check_kill_process(pstring):
         fields = line.split()
         pid = fields[0]
         print(line)
-        os.kill(int(pid), signal.SIGKILL)
+        try:
+            os.kill(int(pid), signal.SIGKILL)
+        except OSError:
+            print("No process")
 
 def start_simulation(launcher_args):
     errors_before = num_errors()
@@ -50,7 +56,11 @@ for run in runs:
                 launcher_args.append("max_target_info_ratio:={}".format(target_ratios[0]))
                 if package=='recurrent_connectivity':
                     for t in target_ratios:
+                        if os.path.exists("/home/albertoq/.ros/" + package + "/coverage_" + world + "_" + str(nrobots) + "_" + str(run) + "_1_" + str(t) + ".pickle"):
+                            continue
                         launcher_args[-1] = "max_target_info_ratio:={}".format(t)
                         start_simulation(launcher_args)
                 else:
+                    if os.path.exists("/home/albertoq/.ros/" + package + "/coverage_" + world + "_" + str(nrobots) + "_" + str(run) + "_1_0.05.pickle"):
+                        continue
                     start_simulation(launcher_args)
