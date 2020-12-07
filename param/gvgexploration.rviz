@@ -139,6 +139,42 @@ Visualization Manager:
           Value: true
         robot_2/offset:
           Value: true
+        robot_3/base_footprint:
+          Value: true
+        robot_3/base_laser_link:
+          Value: true
+        robot_3/base_link:
+          Value: true
+        robot_3/map:
+          Value: true
+        robot_3/odom:
+          Value: true
+        robot_3/offset:
+          Value: true
+        robot_4/base_footprint:
+          Value: true
+        robot_4/base_laser_link:
+          Value: true
+        robot_4/base_link:
+          Value: true
+        robot_4/map:
+          Value: true
+        robot_4/odom:
+          Value: true
+        robot_4/offset:
+          Value: true
+        robot_5/base_footprint:
+          Value: true
+        robot_5/base_laser_link:
+          Value: true
+        robot_5/base_link:
+          Value: true
+        robot_5/map:
+          Value: true
+        robot_5/odom:
+          Value: true
+        robot_5/offset:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
@@ -166,6 +202,27 @@ Visualization Manager:
                 robot_2/base_footprint:
                   robot_2/base_link:
                     robot_2/base_laser_link:
+                      {}
+          robot_3/map:
+            robot_3/offset:
+              robot_3/odom:
+                robot_3/base_footprint:
+                  robot_3/base_link:
+                    robot_3/base_laser_link:
+                      {}
+          robot_4/map:
+            robot_4/offset:
+              robot_4/odom:
+                robot_4/base_footprint:
+                  robot_4/base_link:
+                    robot_4/base_laser_link:
+                      {}
+          robot_5/map:
+            robot_5/offset:
+              robot_5/odom:
+                robot_5/base_footprint:
+                  robot_5/base_link:
+                    robot_5/base_laser_link:
                       {}
       Update Interval: 0
       Value: true

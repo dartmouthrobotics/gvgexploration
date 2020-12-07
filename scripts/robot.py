@@ -469,7 +469,7 @@ class Robot:
 
     def process_data(self, buff_data, session_id=None, sent_data=0):
         #rospy.logerr("data to process: {}".format(buff_data))
-        self.lock.acquire()
+        # self.lock.acquire()
         self.map_updating = True
         for rid, rdata in buff_data.items():
             data_vals = rdata.data
@@ -487,7 +487,7 @@ class Robot:
             data_size.size = sent_data
             data_size.session_id = session_id
             self.data_size_pub.publish(data_size)
-        self.lock.release()
+        # self.lock.release()
 
     def get_message_size(self, msgs):
         size = 0
@@ -505,8 +505,9 @@ class Robot:
         message_data = self.load_data_for_id(sender_id)
         self.cancel_exploration()
         self.session_id = session_id
-        thread = Thread(target=self.process_data, args=(received_data,))
-        thread.start()
+        self.process_data(received_data)
+        # thread = Thread(target=self.process_data, args=(received_data,))
+        # thread.start()
         buff_data = self.create_buffered_data_msg(message_data, session_id, sender_id)
         self.delete_data_for_id(sender_id)
         return SharedDataResponse(in_session=0, res_data=buff_data)
@@ -669,10 +670,10 @@ class Robot:
         return message_data
 
     def delete_data_for_id(self, rid):
-        self.lock.acquire()
+        # self.lock.acquire()
         if rid in self.karto_messages:
             del self.karto_messages[rid]
-        self.lock.release()
+        # self.lock.release()
         return True
 
     def theta(self, p, q):
