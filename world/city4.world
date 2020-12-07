@@ -4,7 +4,7 @@ pioneer3at
 (
   name "robot1"
   color "purple"
-  pose [25.0 4.0 0.0 1.0]
+  pose [25.0 4.0 0.0 0.0]
 )
 
 # Put two robots into the world
