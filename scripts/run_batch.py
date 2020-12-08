@@ -10,10 +10,10 @@ import rospy
 import rosgraph
 import rospkg
 
-nrobots_all =[2]#, 6]
+nrobots_all =[2,4,6]
 
-methods = ["recurrent_connectivity"] #["continuous_connectivity"]
-runs = [3,4,5]
+methods = ["gvgexploration"] #"gvgexploration","recurrent_connectivity",continuous_connectivity
+runs = [0,1,2,3,4]
 envs = {"office": [33.0, 20.0],"cave": [20.0, 8.0],"city": [25.0, 4.0]}
 #envs = {"office": [33.0, 20.0], "cave": [20.0, 8.0], "city": [25.0, 4.0]}
 #envs = {"city": [25.0, 4.0]}

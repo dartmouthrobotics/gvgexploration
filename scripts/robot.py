@@ -162,7 +162,9 @@ class Robot:
         self.first_message_sent = False
         self.sent_messages = []
         self.received_messages = []
-        self.master_links = set()
+        self.newest_msg_ts = 0
+        self.received_msgs_ts={}
+        self.last_saved_msg_ts={}
 
     def spin(self):
         r = rospy.Rate(0.1)
@@ -427,6 +429,7 @@ class Robot:
     def robots_karto_out_callback(self, data):
         if data.robot_id-1 ==self.robot_id:
             pu.log_msg(self.robot_id,"ROBOT received a message Robot is saving a karto message: {}".format(data.robot_id),self.debug_mode)
+            self.newest_msg_ts=data.header.stamp.nsecs
             for rid in self.candidate_robots:
                 self.add_to_file(rid, [data])
             if self.is_initial_data_sharing:
@@ -467,6 +470,21 @@ class Robot:
         return set(devices)
 
 
+    def save_message(self,scan):
+        rid = scan.robot_id -1
+        ts = scan.header.stamp.to_sec()
+        should_save=False
+        if rid not in self.received_msgs_ts:
+            self.received_msgs_ts[rid]=ts
+            should_save=True
+        else:
+            if self.received_msgs_ts[rid]<ts:
+                self.received_msgs_ts[rid]=ts
+                should_save=True
+        if should_save:
+            self.add_to_file(rid,[scan])
+        return should_save
+
     def process_data(self, buff_data, session_id=None, sent_data=0):
         #rospy.logerr("data to process: {}".format(buff_data))
         # self.lock.acquire()
@@ -474,10 +492,8 @@ class Robot:
         for rid, rdata in buff_data.items():
             data_vals = rdata.data
             for scan in data_vals:
-                self.karto_pub.publish(scan)
-            # for sid in self.candidate_robots:
-            #     if sid != rid:
-            #         self.add_to_file(sid, data_vals)
+                if self.save_message(scan):
+                    self.karto_pub.publish(scan)
             sent_data += len(data_vals)
         self.map_updating = False
         if session_id:
