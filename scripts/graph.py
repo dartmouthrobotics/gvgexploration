@@ -431,6 +431,12 @@ class Graph:
         # Publish GVG.
         self.publish_edges()
 
+
+    def count_path_vertices(self, vid1,vid2):
+        result=self.graph.shortest_paths(source=[vid1], target=[vid2])
+        # pu.log_msg(self.robot_id,"Edge connectivity between {} and {}: {}".format(vid1,vid2,result),self.debug_mode)
+        return result[0][0]
+
     def merge_similar_edges2(self):
         current_vertex_id = 0 # traversing graph from vertex 0.
 
@@ -799,19 +805,36 @@ class Graph:
         count = request.count
         self.generate_graph()
         start_time = time.clock()
+        if (self.leaves):
+            best_leaf= max(self.leaves,key=self.leaves.get)
+            rospy.logerr(best_leaf)
+            selected_leaves = [best_leaf]
+            scount=0
+            while scount <= count:
+                if len(selected_leaves)==len(self.leaves):
+                    break
+                for lid,area in self.leaves.items():
+                    if lid not in selected_leaves:
+                        v_dict ={}
+                        for slid in selected_leaves:
+                            v_count=self.count_path_vertices(lid,slid)
+                            v_dict[v_count]=lid
+                if v_dict:
+                    max_val=max(list(v_dict))
+                    max_lid = v_dict[max_val]
+                    selected_leaves.append(max_lid)
+                scount+=1
 
         frontiers = []
-        for leaf_id, new_area in sorted(self.leaves.items(), key=lambda kv:(kv[1], kv[0]), reverse=True):
+        for leaf_id in selected_leaves:
             p = self.latest_map.grid_to_pose(self.graph.vs["coord"][leaf_id])
             p_ros = Pose()
             p_ros.position.x = p[0]
             p_ros.position.y = p[1]
             frontiers.append(p_ros)
-            if len(frontiers) == count:
-                break
         now = time.clock()
         t = (now - start_time)
-        # pu.log_msg(self.robot_id,'COMPUTED FRONTIER RESULTS: {}'.format(frontiers),self.debug_mode)
+        pu.log_msg(self.robot_id,'COMPUTED FRONTIER RESULTS: {}'.format(frontiers),self.debug_mode)
         return FrontierPointResponse(frontiers=frontiers)
 
     def intersection_handler(self, data):

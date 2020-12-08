@@ -1,5 +1,6 @@
 #!/bin/bash
 
+sleep 5
 rostopic pub -1 /robot_1/initialpose geometry_msgs/PoseWithCovarianceStamped "header:
   seq: 0
   stamp:

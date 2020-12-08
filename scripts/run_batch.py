@@ -12,7 +12,7 @@ import rospkg
 
 nrobots_all =[6] #,4,6
 
-methods = ["gvgexploration"] #"gvgexploration","recurrent_connectivity",continuous_connectivity
+methods = ["continuous_connectivity"] #"gvgexploration","recurrent_connectivity",continuous_connectivity
 runs = [0,1,2,3,4]
 envs = {"office": [33.0, 20.0],"cave": [20.0, 8.0],"city": [25.0, 4.0]}
 #envs = {"office": [33.0, 20.0], "cave": [20.0, 8.0], "city": [25.0, 4.0]}

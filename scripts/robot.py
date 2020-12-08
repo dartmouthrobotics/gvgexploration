@@ -251,7 +251,7 @@ class Robot:
         pu.log_msg(self.robot_id,"Received and processed the data",self.debug_mode)
         frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(current_devices) + 1))
         frontier_points = frontier_point_response.frontiers # self.parse_frontier_response(frontier_point_response)
-        pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)
+        pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), 1-self.debug_mode)
         taken_poses = []
         pu.log_msg(self.robot_id, "Received frontier points: {}".format(len(frontier_points)), self.debug_mode)
         if frontier_points:
@@ -259,23 +259,25 @@ class Robot:
                 auction = self.create_auction(frontier_points)
                 auction_feedback = {}
                 pu.log_msg(self.robot_id, "session devices: {}".format(session_devices), self.debug_mode)
+                taken_points=[]
                 for rid in session_devices:
                     pu.log_msg(self.robot_id, "Action Request to Robot {}".format(rid), self.debug_mode)
                     auction_response = self.shared_point_srv_map[rid](SharedPointRequest(req_data=auction))
-                    # pu.log_msg(self.robot_id, "Action Response: {}".format(auction_response), self.debug_mode)
-                    if auction_response.auction_accepted:
+                    if auction_response.auction_accepted==1:
                         data = auction_response.res_data
                         self.all_feedbacks[rid] = data
                         m = len(data.distances)
                         min_dist = max(data.distances)
-                        min_pose = None
+                        min_pose = Pose()
                         for i in range(m):
-                            if min_dist >= data.distances[i]:
+                            if min_dist >= data.distances[i] and (data.poses[i].position.x,data.poses[i].position.y) not in taken_poses:
                                 min_pose = data.poses[i]
                                 min_dist = data.distances[i]
+                        rospy.logerr("current session device: {}".format(rid))
+                        taken_points.append((min_pose.position.x,min_pose.position.y))
                         auction_feedback[rid] = (min_dist, min_pose)
                         pu.log_msg(self.robot_id, "received auction feedback", self.debug_mode)
-
+                pu.log_msg(self.robot_id, "All received auction feedbacks: {}".format(auction_feedback), 1-self.debug_mode)
                 taken_poses = self.compute_and_share_auction_points(auction_feedback, frontier_points)
             else:
                 pu.log_msg(self.robot_id, "All robots are busy..", self.debug_mode)
@@ -292,9 +294,9 @@ class Robot:
         ridge = self.compute_next_frontier(taken_poses, frontier_points) # TODO renaming
         if ridge:
             self.frontier_ridge = ridge
-        pu.log_msg(self.robot_id, "Going to new frontier now: {}".format(frontier_points), self.debug_mode)
         if not self.frontier_ridge and frontier_points:
             self.frontier_ridge = frontier_points[0]
+            pu.log_msg(self.robot_id, "Going to new frontier now: {}".format((self.frontier_ridge.position.x,self.frontier_ridge.position.y)), 1-self.debug_mode)
 
         self.start_exploration_action(self.frontier_ridge)
         pu.log_msg(self.robot_id, "Action sent to gvgexplore", self.debug_mode)
@@ -340,7 +342,7 @@ class Robot:
 
     def shared_frontier_handler(self, req):
         data = req.frontier
-        pu.log_msg(self.robot_id, "Received new frontier point", self.debug_mode)
+        pu.log_msg(self.robot_id, "Received new frontier point: {}".format((data.frontier.position.x,data.frontier.position.y)), 1-self.debug_mode)
         if not self.is_sender and data.session_id == self.session_id:
             # reset waiting for frontier point flags
             self.waiting_for_frontier_point = False
@@ -360,7 +362,7 @@ class Robot:
 
     def compute_and_share_auction_points(self, auction_feedback, frontier_points):
         all_robots = list(auction_feedback)
-        # pu.log_msg(self.robot_id, "All robots: {}".format(auction_feedback), self.debug_mode)
+        pu.log_msg(self.robot_id, "All robots: {}".format(auction_feedback), self.debug_mode)
         taken_poses = []
         for i in all_robots:
             pose_i = (auction_feedback[i][1].position.x, auction_feedback[i][1].position.y)
@@ -668,11 +670,15 @@ class Robot:
     def cancel_exploration(self):
         self.intersections_requested = True
         if self.is_exploring:
-            result = self.goal_cancel_srv(CancelExplorationRequest(req=1))
+            try:
+                result = self.goal_cancel_srv(CancelExplorationRequest(req=1))
+                pu.log_msg(self.robot_id, "Canceling exploration ...", self.debug_mode)
+            except:
+                  pu.log_msg(self.robot_id,"Error while cancelling..",self.debug_mode)
             self.is_exploring = False
-            pu.log_msg(self.robot_id, "Canceling exploration ...", self.debug_mode)
 
     def add_to_file(self, rid, data):
+        # self.lock.acquire()
         # self.lock.acquire()
         if rid in self.karto_messages:
             self.karto_messages[rid] += data

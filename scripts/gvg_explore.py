@@ -54,7 +54,7 @@ class GVGExplore:
         self.robot_count=rospy.get_param("/robot_count")
         self.max_target_info_ratio=rospy.get_param("/max_target_info_ratio")
         self.run=rospy.get_param("/run")
-
+        self.current_pose=None
         self.previous_point=[]
         # nav2d MoveTo action.
         self.client_motion = actionlib.SimpleActionClient("/robot_{}/MoveTo".format(self.robot_id),
@@ -226,6 +226,9 @@ class GVGExplore:
     def initial_action_handler(self, leaf):
         pu.log_msg(self.robot_id,"GVGExplore received new goal",self.debug_mode)
         self.graph.generate_graph()
+        # if not self.current_pose:
+        #     self.current_pose = self.get_robot_pose()
+
         self.prev_goal_grid = self.graph.latest_map.pose_to_grid(self.current_pose)
         self.goal_grid = self.graph.latest_map.pose_to_grid(np.array([leaf.position.x, leaf.position.y]))
         self.current_state = self.MOVE_TO_LEAF

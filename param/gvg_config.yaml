@@ -1,4 +1,4 @@
-debug_mode: 1
+debug_mode: 0
 method: $(arg method) # method that is running
 data_share_threshold: 10
 max_target_info_ratio: $(arg max_target_info_ratio) #0.5
