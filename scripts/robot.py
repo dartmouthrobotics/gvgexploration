@@ -113,6 +113,13 @@ class Robot:
         # self.mac_id = rospy.get_param("/mac_id")
         self.comm_range = rospy.get_param("/comm_range")
 
+        self.first_message_sent = False
+        self.sent_messages = []
+        self.received_messages = []
+        self.newest_msg_ts = 0
+        self.received_msgs_ts={}
+        self.last_saved_msg_ts={}
+
         self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,self.shared_data_handler)
         self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,self.shared_point_handler)
         self.alloc_point_srv = rospy.Service("/robot_{}/allocated_point".format(self.robot_id), SharedFrontier,self.shared_frontier_handler)
@@ -159,12 +166,6 @@ class Robot:
         rospy.loginfo("Robot {} Initialized successfully!!".format(self.robot_id))
         rospy.Subscriber("/shutdown",String,self.save_all_data)
         rospy.Subscriber("intersection",Pose,self.check_data_sharing_status)
-        self.first_message_sent = False
-        self.sent_messages = []
-        self.received_messages = []
-        self.newest_msg_ts = 0
-        self.received_msgs_ts={}
-        self.last_saved_msg_ts={}
 
     def spin(self):
         r = rospy.Rate(0.1)
@@ -429,7 +430,6 @@ class Robot:
     def robots_karto_out_callback(self, data):
         if data.robot_id-1 ==self.robot_id:
             pu.log_msg(self.robot_id,"ROBOT received a message Robot is saving a karto message: {}".format(data.robot_id),self.debug_mode)
-            self.newest_msg_ts=data.header.stamp.nsecs
             for rid in self.candidate_robots:
                 self.add_to_file(rid, [data])
             if self.is_initial_data_sharing:
@@ -472,7 +472,7 @@ class Robot:
 
     def save_message(self,scan):
         rid = scan.robot_id -1
-        ts = scan.header.stamp.to_sec()
+        ts = scan.scan.header.stamp.to_sec()
         should_save=False
         if rid not in self.received_msgs_ts:
             self.received_msgs_ts[rid]=ts

@@ -52,11 +52,12 @@ class ScanFilter:
         ats = TimeSynchronizer([self.base_pose_subscriber, self.scan_subscriber], 1)#, 0.01)
         ats.registerCallback(self.pose_scan_callback)
 
-        rospy.Subscriber('/shutdown', String, self.save_all_data)
-
         # Publisher of the filtered scan.
         self.scan_pub = rospy.Publisher('filtered_scan', LaserScan, queue_size=1)
         # Creation of the message.
+
+        rospy.Subscriber('/shutdown', String, self.save_all_data)
+
 
 
     def pose_scan_callback(self, pose_msg, scan_msg):
