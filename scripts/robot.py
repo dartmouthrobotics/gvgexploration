@@ -251,7 +251,7 @@ class Robot:
         pu.log_msg(self.robot_id,"Received and processed the data",self.debug_mode)
         frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(current_devices) + 1))
         frontier_points = frontier_point_response.frontiers # self.parse_frontier_response(frontier_point_response)
-        pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), 1-self.debug_mode)
+        pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)
         taken_poses = []
         pu.log_msg(self.robot_id, "Received frontier points: {}".format(len(frontier_points)), self.debug_mode)
         if frontier_points:
@@ -277,7 +277,7 @@ class Robot:
                         taken_points.append((min_pose.position.x,min_pose.position.y))
                         auction_feedback[rid] = (min_dist, min_pose)
                         pu.log_msg(self.robot_id, "received auction feedback", self.debug_mode)
-                pu.log_msg(self.robot_id, "All received auction feedbacks: {}".format(auction_feedback), 1-self.debug_mode)
+                pu.log_msg(self.robot_id, "All received auction feedbacks: {}".format(auction_feedback), self.debug_mode)
                 taken_poses = self.compute_and_share_auction_points(auction_feedback, frontier_points)
             else:
                 pu.log_msg(self.robot_id, "All robots are busy..", self.debug_mode)
@@ -296,7 +296,7 @@ class Robot:
             self.frontier_ridge = ridge
         if not self.frontier_ridge and frontier_points:
             self.frontier_ridge = frontier_points[0]
-            pu.log_msg(self.robot_id, "Going to new frontier now: {}".format((self.frontier_ridge.position.x,self.frontier_ridge.position.y)), 1-self.debug_mode)
+            pu.log_msg(self.robot_id, "Going to new frontier now: {}".format((self.frontier_ridge.position.x,self.frontier_ridge.position.y)), self.debug_mode)
 
         self.start_exploration_action(self.frontier_ridge)
         pu.log_msg(self.robot_id, "Action sent to gvgexplore", self.debug_mode)
@@ -342,7 +342,7 @@ class Robot:
 
     def shared_frontier_handler(self, req):
         data = req.frontier
-        pu.log_msg(self.robot_id, "Received new frontier point: {}".format((data.frontier.position.x,data.frontier.position.y)), 1-self.debug_mode)
+        pu.log_msg(self.robot_id, "Received new frontier point: {}".format((data.frontier.position.x,data.frontier.position.y)), self.debug_mode)
         if not self.is_sender and data.session_id == self.session_id:
             # reset waiting for frontier point flags
             self.waiting_for_frontier_point = False

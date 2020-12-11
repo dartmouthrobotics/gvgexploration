@@ -329,7 +329,7 @@ class Graph:
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
         rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
         rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_edge_handler)
-
+        # rospy.Subscriber('/robot_{}/map'.format(self.robot_id),OccupancyGrid, self.map_callback)
         rospy.Subscriber('/shutdown', String, self.save_all_data)
 
         rospy.wait_for_service('/robot_{}/static_map'.format(self.robot_id))
@@ -627,7 +627,7 @@ class Graph:
         # Get current vertex.
         self.current_vertex_id, distance_current_vertex = self.get_closest_vertex(robot_pose)
         current_vertex_id = self.current_vertex_id
-        #self.publish_current_vertex(self.current_vertex_id)
+        self.publish_current_vertex(self.current_vertex_id)
 
 
         # find visited vertices
@@ -649,7 +649,7 @@ class Graph:
                 to=current_vertex_id, weights=self.graph.es["weight"], 
                 mode=igraph.ALL)
             self.visited_vertices.update(path_prev_current[0][:-1])
-        self.publish_visited_vertices()        
+        self.publish_visited_vertices()
 
 
 
@@ -749,7 +749,7 @@ class Graph:
         current_vertex_id = self.current_vertex_id
         robot_grid = self.graph.vs["coord"][current_vertex_id]
 
-        self.publish_current_vertex(current_vertex_id, marker_id=5)
+        # self.publish_current_vertex(current_vertex_id, marker_id=5)
         # If at a junction point, might be worth to communicate.
         if self.graph.degree(self.current_vertex_id) > 2:
             pu.log_msg(self.robot_id,"intersection",self.debug_mode)
@@ -772,7 +772,7 @@ class Graph:
         for l_vertex_id in self.leaves:
             if l_vertex_id != current_vertex_id:
                 rospy.sleep(0.01)
-                self.publish_current_vertex(l_vertex_id, marker_id=6) # TODO disable
+                # self.publish_current_vertex(l_vertex_id, marker_id=6) # TODO disable
 
                 if pu.euclidean_distance(self.graph.vs["coord"][current_vertex_id], self.graph.vs["coord"][l_vertex_id]) < 30 / self.latest_map.resolution: # TODO parameter for communication range
                     l_vertex_similar_slope_vertices = self.find_similar_slope_vertices(l_vertex_id)

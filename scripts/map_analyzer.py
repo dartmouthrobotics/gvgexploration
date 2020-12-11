@@ -69,7 +69,7 @@ class MapAnalyzer:
                     self.is_active = False
 
                 if self.current_explored_ratio>=self.max_coverage  or (rospy.Time.now().to_sec() - self.exploration_start_time) >= self.max_exploration_time*60:
-                    self.shutdown_exploration()
+                   self.shutdown_exploration()
 
             except Exception as e:
                 rospy.logerr("Got this result:::::::: {}".format(e))
