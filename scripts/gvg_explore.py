@@ -8,10 +8,10 @@ import time  # clock.
 import rospy
 
 import tf  # for TransformListener
-
+import heapq
 import actionlib
 from actionlib_msgs.msg import GoalStatus
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Pose,Point
 from std_srvs.srv import Trigger, TriggerResponse
 from nav2d_navigator.msg import MoveToPosition2DAction, MoveToPosition2DGoal
 from std_msgs.msg import String
@@ -23,6 +23,20 @@ from project_utils import INDEX_FOR_X, INDEX_FOR_Y, save_data
 from gvgexploration.msg import *
 from gvgexploration.srv import *
 
+
+class PQueue:
+    def __init__(self):
+        self._data = []
+        self._index = 0
+    def push(self, item, priority):
+        heapq.heappush(self._data, (-priority, self._index, item))
+        self._index += 1
+    def pop(self):
+        return heapq.heappop(self._data)[-1]
+    def size(self):
+        return len(self._data)
+    def items(self):
+        return [d[-1] for d in self._data]
 
 class GVGExplore:
     # States of the node
@@ -55,7 +69,12 @@ class GVGExplore:
         self.max_target_info_ratio=rospy.get_param("/max_target_info_ratio")
         self.run=rospy.get_param("/run")
         self.current_pose=None
+        self.other_leaves=[]
+        self.explored_leaves=[]
+        self.current_explored_leaf=None
         self.previous_point=[]
+
+        self.gate_poses=[]
         # nav2d MoveTo action.
         self.client_motion = actionlib.SimpleActionClient("/robot_{}/MoveTo".format(self.robot_id),
                                                           MoveToPosition2DAction)
@@ -76,11 +95,15 @@ class GVGExplore:
         rospy.Subscriber('/shutdown', String, self.save_all_data)
         self.intersec_pub = rospy.Publisher('intersection', Pose, queue_size=0)
         # Topics for robot.py # TODO restructure it.
-        rospy.Subscriber('/robot_{}/gvgexplore/goal'.format(self.robot_id), Pose, self.initial_action_handler)
+        rospy.Subscriber('/robot_{}/gvgexplore/goal'.format(self.robot_id), Frontier, self.initial_action_handler)
         rospy.Service('/robot_{}/gvgexplore/cancel'.format(self.robot_id), CancelExploration,
                       self.received_prempt_handler)
+        rospy.Service('/robot_{}/gvgexplore/goal_path'.format(self.robot_id), CancelExploration,self.goal_path_handler)
         self.goal_feedback_pub = rospy.Publisher("/robot_{}/gvgexplore/feedback".format(self.robot_id), Pose,
                                                  queue_size=1)
+
+        self.idle_feedback_pub = rospy.Publisher("/robot_{}/gvgexplore/idle".format(self.robot_id), Pose,queue_size=1)
+
 
         rospy.loginfo("Robot {}: Exploration server online...".format(self.robot_id))
 
@@ -196,7 +219,7 @@ class GVGExplore:
 
                 start_time_clock = time.clock()
                 self.path_to_leaf = self.graph.get_successors(self.current_pose,
-                                                              self.prev_pose)
+                                                              self.prev_pose,self.gate_poses)
                 end_time_clock = time.clock()
                 gvg_time=end_time_clock - start_time_clock
                 pu.log_msg(self.robot_id,"next path time {}".format(gvg_time),self.debug_mode)
@@ -214,6 +237,12 @@ class GVGExplore:
                 else:
                     pu.log_msg(self.robot_id,"no more leaves",self.debug_mode)
                     self.current_state = self.IDLE
+                    # Added by @Kizito: Robot creates a new gate and go else where
+                    if len(self.explored_leaves)<=len(self.other_leaves):
+                       self.create_new_gate()
+                    else:
+                        pu.log_msg(self.robot_id,"Exploration is complete",1-self.debug_mode)
+
 
             r.sleep()
 
@@ -223,22 +252,66 @@ class GVGExplore:
         pu.save_data(self.traveled_distance,'{}/traveled_distance_{}_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment,self.robot_count,self.run,self.termination_metric,self.robot_id,self.max_target_info_ratio))
         rospy.signal_shutdown("Shutting down GVG explore")
 
-    def initial_action_handler(self, leaf):
+
+    def create_new_gate(self):
+        """ Create a new gate when the robot has exhaustively explored the assigned region"""
+        cpose=self.get_robot_pose()
+        cp = Pose()
+        cp.position.x = cpose[INDEX_FOR_X]
+        cp.position.x = cpose[INDEX_FOR_X]
+        self.intersec_pub.publish(cp)
+
+        pq = PQueue()
+        self.explored_leaves.append(self.current_explored_leaf)
+        pu.log_msg(self.robot_id,"Current region leaf: {}".format(self.current_explored_leaf),self.debug_mode)
+        for l in self.other_leaves:
+            if l not in self.explored_leaves:
+                psize=len(self.graph.localize_gate([self.current_pose,l]))
+                pq.push(l,psize)
+        if pq.size()>0:
+            new_leaf=pq.pop()
+            self.current_explored_leaf=new_leaf
+            pu.log_msg(self.robot_id,"New region leaf: {}".format(pq.items()),self.debug_mode)
+            self.gate_poses=self.graph.get_new_gate(self.current_explored_leaf,self.gate_poses)
+            self.prev_goal_grid = self.graph.latest_map.pose_to_grid(self.gate_poses[0])
+            self.goal_grid = self.graph.latest_map.pose_to_grid(self.gate_poses[-1])
+            self.current_state = self.MOVE_TO_LEAF
+            self.move_robot_to_goal(self.gate_poses[-1])
+
+    def initial_action_handler(self, req):
+        leaf =req.frontier
+        self.other_leaves=[(l.position.x, l.position.y) for l in req.other_frontiers]
+        self.current_explored_leaf=(leaf.position.x, leaf.position.y)
+
         pu.log_msg(self.robot_id,"GVGExplore received new goal",self.debug_mode)
         self.graph.generate_graph()
         # if not self.current_pose:
         #     self.current_pose = self.get_robot_pose()
 
+
         self.prev_goal_grid = self.graph.latest_map.pose_to_grid(self.current_pose)
         self.goal_grid = self.graph.latest_map.pose_to_grid(np.array([leaf.position.x, leaf.position.y]))
+
+        if not len(self.gate_poses):
+            self.gate_poses=self.graph.get_graph_path_to_leaf(self.current_pose,[leaf.position.x, leaf.position.y])
+
         self.current_state = self.MOVE_TO_LEAF
         self.move_robot_to_goal(np.array([leaf.position.x, leaf.position.y]))
+
 
     def received_prempt_handler(self, data):
         pu.log_msg(self.robot_id,"GVGExplore action preempted",self.debug_mode)
         self.client_motion.cancel_goal()
         self.current_state = self.IDLE
-        return CancelExplorationResponse(result=1)
+
+        current_path_to_leaf = self.graph.get_successors(self.current_pose,self.prev_pose,self.gate_poses)
+        poses_to_leaf=[Pose(position=Point(x=p[INDEX_FOR_X],y=p[INDEX_FOR_Y])) for p in current_path_to_leaf]
+        return CancelExplorationResponse(path_to_next_leaf=poses_to_leaf)
+
+    def goal_path_handler(self,req):
+        current_path_to_leaf = self.graph.get_successors(self.current_pose,self.prev_pose,self.gate_poses)
+        poses_to_leaf=[Pose(position=Point(x=p[INDEX_FOR_X],y=p[INDEX_FOR_Y])) for p in current_path_to_leaf]
+        return CancelExplorationResponse(path_to_next_leaf=poses_to_leaf)
 
 
 if __name__ == "__main__":

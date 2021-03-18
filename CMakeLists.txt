@@ -69,6 +69,7 @@ add_message_files(
    Ridge.msg
    MessageHeader.msg
    DataSize.msg
+   GoalPath.msg
  )
 
 ## Generate services in the 'action' folder

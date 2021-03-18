@@ -2,10 +2,10 @@
 
 from datetime import time
 
-from matplotlib import pyplot as plt  # for plotting
+# from matplotlib import pyplot as plt  # for plotting
 from random import randint  # for sorting and creating data pts
 from math import atan2  # for computing polar angle
-
+import numpy as np
 
 # Returns a list of (x,y) coordinates of length 'num_points',
 # each x and y coordinate is chosen randomly from the range
@@ -139,9 +139,14 @@ def benchmark(sizes=[10, 100, 1000, 10000, 100000]):
             tot += (time() - t0)
         print("size %d time: %0.5f" % (s, tot / 3.0))
 
-# if __name__=='__main__':
+if __name__=='__main__':
 #     pts=create_points(10)
 #     print ("Points:",pts)
 #     hull=graham_scan(pts,True)
 #     print ("Hull:",hull)
 #     scatter_plot(pts,hull)
+      r = np.arange(4)
+      p = np.array([ 33.49430242,25.53466627,0.,0.,0.70066318,0.71349219])
+      print(p)
+      print(np.repeat(p,[6]*len(p),axis=0).reshape(-1,6).T)
+

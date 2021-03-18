@@ -1,4 +1,4 @@
 int32 count
+gvgexploration/GoalPath[] current_paths
 ---
-#gvgexploration/Ridge[] ridges
 geometry_msgs/Pose[] frontiers

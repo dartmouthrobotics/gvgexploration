@@ -6,13 +6,15 @@ import numpy as np
 from numpy.linalg import norm
 from sklearn.metrics import mean_squared_error
 from scipy.spatial import Voronoi, voronoi_plot_2d
-
+import tf
+from message_filters import TimeSynchronizer
+import message_filters
 import igraph
 from bresenham import bresenham
 
 import copy
 import matplotlib
-
+import heapq
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -42,6 +44,11 @@ from scipy.ndimage import minimum_filter
 
 from nav_msgs.srv import GetMap
 
+from nav_msgs.msg import Odometry
+from sensor_msgs.msg import LaserScan
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
+
+
 INF = 100000
 SCALE = 10
 FREE = 0.0
@@ -50,6 +57,19 @@ UNKNOWN = -1.0
 SMALL = 0.000000000001
 FONT_SIZE = 16
 MARKER_SIZE = 12
+
+
+class PQueue:
+    def __init__(self):
+        self._data = []
+        self._index = 0
+    def push(self, item, priority):
+        heapq.heappush(self._data, (-priority, self._index, item))
+        self._index += 1
+    def pop(self):
+        return heapq.heappop(self._data)[-1]
+    def size(self):
+        return len(self._data)
 
 class Grid:
     """Occupancy Grid."""
@@ -163,6 +183,33 @@ class Grid:
                 return False
         return False
 
+
+    def get_newinfo(self, previous_cell, current_cell,distance):
+        """Number of unknown cells in the region  @Kizito"""
+        v = previous_cell - current_cell
+        u = v/np.linalg.norm(v)
+        end_cell = current_cell - distance * u
+        x1, y1 = current_cell.astype(int)
+        x2, y2 = end_cell.astype(int)
+        unknown_cells=0
+        all_cells=1.0
+        for p in list(bresenham(x1, y1, x2, y2)):
+            all_cells+=1
+            if self.is_unknown(*p):
+                unknown_cells+=1
+        return unknown_cells/all_cells
+
+
+    def get_path_obstacles(self, start_cell, end_cell):
+        """Number of unknown cells in the region  @Kizito"""
+        x1, y1 = start_cell.astype(int)
+        x2, y2 = end_cell.astype(int)
+        obstacle_cells=0
+        for p in list(bresenham(x1, y1, x2, y2)):
+            if self.is_obstacle(*p):
+                obstacle_cells+=1
+        return obstacle_cells
+
     def line_in_unknown(self, start_cell, end_cell):
         x1, y1 = start_cell.astype(int)
         x2, y2 = end_cell.astype(int)
@@ -261,6 +308,7 @@ class Graph:
         self.run = rospy.get_param("/run")
         self.bs_pose = rospy.get_param("/bs_pose")
         self.img_res = rospy.get_param("/image_resolution")
+        self.target_distance=rospy.get_param("/target_distance")
 
         # Physical parameters of the robot.
         self.robot_radius = rospy.get_param('/robot_{}/robot_radius'.format(self.robot_id)) # meter.
@@ -272,6 +320,8 @@ class Graph:
 
         # ROS publisher
         self.marker_pub = rospy.Publisher('voronoi', Marker, queue_size=0) # log.
+        self.scan_marker_pub = rospy.Publisher('scan_voronoi', Marker, queue_size=0) # log.
+        self.gate_marker_pub = rospy.Publisher('gate', Marker, queue_size=0) # log.
 
         # TO CHECK WHAT IS NEEDED.
         self.min_hallway_width = None
@@ -315,29 +365,45 @@ class Graph:
         self.termination_metric = rospy.get_param("/termination_metric")
         self.max_target_info_ratio=rospy.get_param("/max_target_info_ratio")
         self.frontier_threshold = rospy.get_param("/frontier_threshold")
-        self.min_hallway_width = rospy.get_param("/min_hallway_width") * self.graph_scale
-        self.comm_range = rospy.get_param("/comm_range") * self.graph_scale
+        self.min_hallway_width = rospy.get_param("/min_hallway_width") #* self.graph_scale
+        self.comm_range = rospy.get_param("/comm_range") #* self.graph_scale
         self.point_precision = rospy.get_param("/point_precision")
 
-        self.lidar_scan_radius = rospy.get_param("/lidar_scan_radius") * self.graph_scale
+        self.scan_subscriber = message_filters.Subscriber('filtered_scan', LaserScan)
+        self.obstacle_pose_pub=rospy.Publisher('laser_obstacles', Marker, queue_size=0)
+
+        self.lidar_scan_radius = rospy.get_param("/lidar_scan_radius") #* self.graph_scale
         self.lidar_fov = rospy.get_param("/lidar_fov")
         self.slope_bias = rospy.get_param("/slope_bias")
-        self.separation_bias = rospy.get_param("/separation_bias") * self.graph_scale
+        self.separation_bias = rospy.get_param("/separation_bias") #* self.graph_scale
         self.opposite_vector_bias = rospy.get_param("/opposite_vector_bias")
         rospy.Service('/robot_{}/rendezvous'.format(self.robot_id), RendezvousPoints,self.fetch_rendezvous_points_handler)
         rospy.Service('/robot_{}/explored_region'.format(self.robot_id), ExploredRegion,self.fetch_explored_region_handler)
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
-        rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
-        rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_edge_handler)
+        # rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
+        # rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_edge_handler)
+
         # rospy.Subscriber('/robot_{}/map'.format(self.robot_id),OccupancyGrid, self.map_callback)
         rospy.Subscriber('/shutdown', String, self.save_all_data)
 
         rospy.wait_for_service('/robot_{}/static_map'.format(self.robot_id))
         self.get_map = rospy.ServiceProxy('/robot_{}/static_map'.format(self.robot_id), GetMap)
 
+        # for online gvg generation @Kizito
+        self.base_pose_subscriber = message_filters.Subscriber('base_pose_ground_truth', Odometry)
+        self.scan_subscriber = message_filters.Subscriber('filtered_scan', LaserScan)
+        self.obstacle_pose_pub=rospy.Publisher('laser_obstacles', Marker, queue_size=0)
+        ats = TimeSynchronizer([self.base_pose_subscriber, self.scan_subscriber], 1)#, 0.01)
+        ats.registerCallback(self.pose_scan_callback)
+        # ====== ends here ========== @Kizito
+
 
         self.already_shutdown = False
         self.robot_pose = None
+
+        self.assigned_frontier_leaves=PQueue()
+        self.assigned_visited_leaves={}
+        self.assigned_visited_leaves={}
 
         # edges
         self.deleted_nodes = {}
@@ -403,8 +469,7 @@ class Graph:
                     if ridge_vertex[point_id] not in voronoi_graph_correspondance:
                         # if not existing, add new vertex.
                         graph_vertex_ids[point_id] = self.graph.vcount()
-                        self.graph.add_vertex(
-                            coord=vertices[ridge_vertex[point_id]])
+                        self.graph.add_vertex(coord=vertices[ridge_vertex[point_id]],name=graph_vertex_ids[point_id])
                         voronoi_graph_correspondance[ridge_vertex[point_id]] = graph_vertex_ids[point_id]
                     else:
                         # Otherwise, already added before.
@@ -423,13 +488,14 @@ class Graph:
 
         # self.get_adjacency_list(self.edges)
         # self.connect_subtrees()
-
         self.prune_leaves()
+
         end_time_clock = time.clock()
         pu.log_msg(self.robot_id,"ridge {}".format(end_time_clock - start_time_clock),self.debug_mode)
 
         # Publish GVG.
         self.publish_edges()
+       
 
 
     def count_path_vertices(self, vid1,vid2):
@@ -467,6 +533,82 @@ class Graph:
                 if self.graph.degree(current_vertex_id) == 1:
                     self.leaves[current_vertex_id] = self.latest_map.unknown_area_approximate(current_vertex)
                 current_vertex_id += 1
+
+
+
+
+
+    # Un referenced method being modified by Kizito.
+    def prune_leaves2(self,graph):
+        # self.leaves = {}
+        # self.intersections = {}
+        # current_vertex_id=0
+        for v in  graph.vs:
+            current_vertex_id=v.index
+            if graph.degree(current_vertex_id) == 1:
+                neighbor_id = graph.neighbors(current_vertex_id)[0]
+                neighbor = graph.vs["coord"][neighbor_id]
+                current_vertex = graph.vs["coord"][current_vertex_id]
+                if not self.latest_map.is_frontier(
+                        neighbor, current_vertex, self.min_range_radius): # TODO parameter.
+                    self.graph.delete_vertices(current_vertex_id)
+                # else:
+                #     self.leaves[current_vertex_id] = self.latest_map.unknown_area_approximate(current_vertex)
+            # else:
+            #     if graph.degree(current_vertex_id) > 2:
+            #         self.intersections[current_vertex_id] = graph.vs["coord"][current_vertex_id]
+        self.publish_leaves()
+
+    def merge_similar_edges(self):
+        graph_cp=copy.deepcopy(self.graph)
+        def _vid(v_name):
+            return list(graph_cp.vs(name=v_name))[0].index
+        def _vname(vid):
+            return graph_cp.vs["name"][vid]
+        def _vcoord(vname):
+            return graph_cp.vs["coord"][_vid(vname)]
+        first_node =_vname(list(graph_cp.vs)[0].index)
+        parents = {first_node: None}
+        neis=graph_cp.neighbors(_vid(first_node))
+        if len(neis)>1:
+            parents[first_node]=_vname(neis[0])
+            parents[parents[first_node]]=None
+        deleted_nodes = {}
+        S = [first_node]
+        visited = {}
+        while len(S) > 0:
+            u = S.pop()
+            if u not in deleted_nodes:
+                all_neis = graph_cp.neighbors(_vid(u))
+                neighbors = [_vname(k) for k in all_neis if _vname(k) != parents[u]]
+                if len(neighbors) == 1:
+                    v = neighbors[0]
+                    if v not in visited:
+                        S.append(v)
+                        if parents[u]:
+                            us = pu.get_vector(_vcoord(parents[u]),  _vcoord(u))
+                            ps = pu.get_vector( _vcoord(u),  _vcoord(v))
+                            cos_theta, separation = pu.compute_similarity(us, ps, (_vcoord(parents[u]),  _vcoord(u)), (_vcoord(u),  _vcoord(v)))
+                            if 1 - self.opposite_vector_bias <= cos_theta <= 1:
+                                parents[v] = parents[u]
+                                deleted_nodes[u] = None
+                                graph_cp.add_edges([(_vid(parents[u]),_vid(v))])
+                                graph_cp.delete_edges([(_vid(u),_vid(v))])
+                                graph_cp.delete_edges([(_vid(parents[u]),_vid(u))])
+                                rospy.logerr("Deleted edge..")
+                            else:
+                                parents[v] = u
+                                # rospy.logerr("Parents: {}".format(parents))
+                        else:
+                            parents[v] = u
+                else:
+                    for v in neighbors:
+                        if v not in visited:
+                            S.append(v)
+                            parents[v] = u
+                visited[u] = None
+        return graph_cp
+
 
     def prune_leaves(self):
         current_vertex_id = 0 # traversing graph from vertex 0.
@@ -516,6 +658,34 @@ class Graph:
         self.marker_pub.publish(m)
 
 
+    def publish_edges2(self,graph): # Kizito testing updated graph
+        """For debug, publishing of GVG."""
+
+        # Marker that will contain line sequences.
+        m = Marker()
+        m.id = 0
+        m.header.frame_id = self.latest_map.header.frame_id
+        m.type = Marker.LINE_LIST
+        # TODO constant values set at the top.
+        m.color.a = 1.0
+        m.color.r = 1.0
+        m.scale.x = 0.1
+
+        # Plot each edge.
+        for edge in graph.get_edgelist():
+            for vertex_id in edge:
+                # Grid coordinate for the vertex.
+                p = graph.vs["coord"][vertex_id]
+                p_t = self.latest_map.grid_to_pose(p)
+                p_ros = Point(x=p_t[0], y=p_t[1])
+
+                m.points.append(p_ros)
+
+        # Publish marker.
+        self.marker_pub.publish(m)
+
+
+
     def publish_current_vertex(self, vertex_id, marker_id=1):
         # Publish current vertex
         m = Marker()
@@ -545,8 +715,10 @@ class Graph:
         m.header.frame_id = self.latest_map.header.frame_id
         m.type = Marker.POINTS
         # TODO constant values set at the top.
-        m.color.a = 1.0
-        m.color.b = 1.0
+        m.color.a = 0.5
+        m.color.b = 0.5
+        if self.robot_id==1:
+            m.color.g = 1.0
         m.scale.x = 0.5
         m.scale.y = 0.5
         for vertex_id in self.visited_vertices:
@@ -556,6 +728,30 @@ class Graph:
             p_ros = Point(x=p_t[0], y=p_t[1])
             m.points.append(p_ros)
         self.marker_pub.publish(m)
+
+
+    def publish_gate_vertices(self,gate):
+        # Publish visited vertices
+        m = Marker()
+        m.id = 2
+        m.header.frame_id = self.latest_map.header.frame_id
+        m.type = Marker.POINTS
+        # TODO constant values set at the top.
+        m.color.a = 1.0
+        m.color.b = 0.5
+        if self.robot_id==0:
+            m.color.b = 0.5
+        elif self.robot_id==1:
+            m.color.g = 0.5
+        m.scale.x = 1.0
+        m.scale.y = 1.0
+        for vertex_id in gate:
+            # Grid coordinate for the vertex.
+            p = self.graph.vs["coord"][vertex_id]
+            p_t = self.latest_map.grid_to_pose(p)
+            p_ros = Point(x=p_t[0], y=p_t[1])
+            m.points.append(p_ros)
+        self.gate_marker_pub.publish(m)
 
     def publish_leaves(self):
         # Publish leaves
@@ -604,7 +800,7 @@ class Graph:
             self.lock.release()
             pu.log_msg(self.robot_id,"Map didn't update",self.debug_mode)
             return
-        self.min_range_radius = 8 / self.latest_map.resolution # TODO range.
+        self.min_range_radius = self.lidar_scan_radius / self.latest_map.resolution # TODO range.
         self.min_edge_length = self.robot_radius / self.latest_map.resolution
         self.compute_gvg()
         self.lock.release()
@@ -621,7 +817,109 @@ class Graph:
 
         return pu.get_closest_point(robot_grid, vertices)
 
-    def get_successors(self, robot_pose, previous_pose=None):
+
+    def find_shortest_path(self, s, t, gate=[]):
+        """
+        Run DFS search from node s to t without traversing nodes in the gate
+        :param s:
+        :param t:
+        :param gate:
+        :return path from s to t:
+        """
+        if s==t:
+            return [t]
+        def _get_path(tar,par):
+            path=[tar]
+            p=tar
+            while par[p]:
+                p=par[p]
+                path.append(p)
+            return list(reversed(path))
+
+        Q=PQueue()
+        Q.push(s,0)
+        parent={s:None}
+        visited=copy.deepcopy(gate)
+        while Q.size()>0:
+            u = Q.pop()
+            if u==t:
+               return _get_path(u,parent)
+            neis = self.graph.neighbors(u, mode="out")
+            for v in neis:
+                if v not in visited:
+                    Q.push(v,1)
+                    # Q.push(v,self.graph.es["weight"][self.graph.get_eid(u, v)])
+                    parent[v]=u
+            visited.append(u)
+        return []
+
+    def get_graph_path_to_leaf(self,robot_pose,leaf_pose):
+        """
+        Find the path (on the GVG) from a given pose in the world to a leaf. This defines the initial gate
+        :param robot_pose:
+        :param leaf_pose:
+        :return (array of poses representing the gate):
+        """
+        gate_vids=[]
+        source_id, distance_source = self.get_closest_vertex(robot_pose)
+        first_leaf_id, distance_leaf = self.get_closest_vertex(leaf_pose)
+        gate_vids= self.graph.get_shortest_paths(source_id,to=first_leaf_id, weights=self.graph.es["weight"],mode=igraph.ALL)[0]
+        rospy.logerr(gate_vids)
+        gate_poses =[self.latest_map.grid_to_pose(self.graph.vs["coord"][vid]) for vid in gate_vids]
+        return gate_poses
+
+    def localize_gate(self,gate_poses):
+        """
+        Given the previous gate poses, localize them on the new graph
+        :param gate_poses : array of (x,y):
+        :return vertex_ids for the all nodes on the gate: array of (x,y)
+        """
+        gate_vids=[]
+        source_id, distance_source = self.get_closest_vertex(gate_poses[0])
+        first_leaf_id, distance_leaf = self.get_closest_vertex(gate_poses[-1])
+        pu.log_msg(self.robot_id,"gate ids: {}".format(gate_vids),self.debug_mode)
+        gate_vids= self.graph.get_shortest_paths(source_id,to=first_leaf_id, weights=self.graph.es["weight"],mode=igraph.ALL)[0]
+        self.publish_gate_vertices(gate_vids)
+        return gate_vids
+
+    def leaf_in_assigned_region(self,k,gate):
+        """
+        Check if a given leaf lies in the region defined by a given gate
+        :param k vertex_id (int):
+        :param gate (array of vertex_ids):
+        :return boolean:
+        """
+        s = gate[0]
+        t=gate[-1]
+        psk = set(self.graph.get_shortest_paths(s,to=k, weights=self.graph.es["weight"],mode=igraph.ALL)[0])
+        ptk = set(self.graph.get_shortest_paths(t,to=k, weights=self.graph.es["weight"],mode=igraph.ALL)[0])
+        gate_set=set(gate)
+        in_region=False
+        if len(ptk)<len(psk):
+            in_region= len(gate_set.intersection(ptk))==1
+        else:
+            m=ptk.intersection(psk)
+            in_region=len(m.intersection(gate))==0
+        return in_region
+
+
+    def get_new_gate(self, frontier_pose, old_gate):
+        """
+        Find the closest gate to current robot pose. Leaves to every gate are saved at the start of exploratino
+        :param frontier_pose:
+        :param old_gate:
+        :return new_gate (array of poses):
+        """
+        source,dvertext = self.get_closest_vertex(old_gate[0])
+        gate_leaf,dvertext = self.get_closest_vertex(frontier_pose)
+        new_gate=self.graph.get_shortest_paths(source,to=gate_leaf, weights=self.graph.es["weight"],mode=igraph.ALL)[0]
+        self.publish_gate_vertices(new_gate)
+        new_gate_poses =[self.latest_map.grid_to_pose(self.graph.vs["coord"][vid]) for vid in new_gate]
+        return new_gate_poses
+
+
+
+    def get_successors(self, robot_pose, previous_pose=None, gate_poses=[]):
         self.lock.acquire()
         start_time = time.clock()
         # Get current vertex.
@@ -662,13 +960,19 @@ class Graph:
         # If current vertex is a leaf, then continue in that direction.
         if current_vertex_id in non_visited_leaves:
             self.lock.release()
-            return [self.latest_map.grid_to_pose(
-                            self.graph.vs["coord"][current_vertex_id])]
+            return [self.latest_map.grid_to_pose(self.graph.vs["coord"][current_vertex_id])]
 
         # Find other leaves to visit
-        paths_to_leaves = self.graph.get_shortest_paths(current_vertex_id, 
+        paths_to_all_leaves = self.graph.get_shortest_paths(current_vertex_id,
             to=non_visited_leaves, weights=self.graph.es["weight"], 
             mode=igraph.ALL)
+
+        # Pick out those in assigned region TODO @Kizito
+        if gate_poses:
+            gate=self.localize_gate(gate_poses)
+            paths_to_leaves=[path for path in paths_to_all_leaves if self.leaf_in_assigned_region(path[-1],gate)]
+        else:
+            paths_to_leaves=paths_to_all_leaves
 
         full_path = []
         if paths_to_leaves:
@@ -760,7 +1064,7 @@ class Graph:
 
             if vertices.size != 0:
                 closest_intersection_point, dist = pu.get_closest_point(robot_grid, vertices)
-                if dist < 5:# TODO parameter
+                if dist < self.target_distance:# TODO parameter
                     pu.log_msg(self.robot_id,"intersection",self.debug_mode)
                     self.lock.release()
                     return True
@@ -774,7 +1078,7 @@ class Graph:
                 rospy.sleep(0.01)
                 # self.publish_current_vertex(l_vertex_id, marker_id=6) # TODO disable
 
-                if pu.euclidean_distance(self.graph.vs["coord"][current_vertex_id], self.graph.vs["coord"][l_vertex_id]) < 30 / self.latest_map.resolution: # TODO parameter for communication range
+                if pu.euclidean_distance(self.graph.vs["coord"][current_vertex_id], self.graph.vs["coord"][l_vertex_id]) < self.comm_range / self.latest_map.resolution: # TODO parameter for communication range
                     l_vertex_similar_slope_vertices = self.find_similar_slope_vertices(l_vertex_id)
 
                     try:
@@ -803,14 +1107,16 @@ class Graph:
     def frontier_point_handler(self, request):
         pu.log_msg(self.robot_id,"received a request: {}".format(request.count),self.debug_mode)
         count = request.count
+        current_goal_paths = request.current_paths
         self.generate_graph()
+
         start_time = time.clock()
-        if (self.leaves):
+        if len(self.leaves):
             best_leaf= max(self.leaves,key=self.leaves.get)
-            rospy.logerr(best_leaf)
             selected_leaves = [best_leaf]
             scount=0
-            while scount <= count:
+            lcount=len(self.leaves)
+            while scount <= lcount: # UPDATE: Returning all leaves instead of just a few
                 if len(selected_leaves)==len(self.leaves):
                     break
                 for lid,area in self.leaves.items():
@@ -837,16 +1143,76 @@ class Graph:
         pu.log_msg(self.robot_id,'COMPUTED FRONTIER RESULTS: {}'.format(frontiers),self.debug_mode)
         return FrontierPointResponse(frontiers=frontiers)
 
-    def intersection_handler(self, data):
-        pose_data = data.pose
-        pu.log_msg(self.robot_id, "Received Intersection request", self.debug_mode)
-        if not self.edges or self.enough_delay():
-            self.generate_graph()
-        robot_pose = [0.0] * 2
-        robot_pose[INDEX_FOR_X] = pose_data.position.x
-        robot_pose[INDEX_FOR_Y] = pose_data.position.y
-        result = self.should_communicate(np.array(robot_pose))
-        return IntersectionsResponse(result=result)
+
+
+    def get_leaf_path(self,p1,p2):
+        v1=self.get_closest_vertex(p1)
+        v2=self.get_closest_vertex((p2))
+        p12 = self.graph.shortest_paths_dijkstra(source=v1[0],  target=v2[0])
+        return p12[0][0]
+
+    def get_frontier_leaf_info(self):
+        info={}
+        lcoord={}
+        for v in  self.graph.vs:
+            current_vertex_id=v.index
+            if self.graph.degree(current_vertex_id) == 1:
+                neighbor_id = self.graph.neighbors(current_vertex_id)[0]
+                neighbor = self.graph.vs["coord"][neighbor_id]
+                current_vertex = self.graph.vs["coord"][current_vertex_id]
+                if not self.latest_map.is_frontier(neighbor, current_vertex, self.min_range_radius):
+                    info[current_vertex_id]=self.latest_map.get_newinfo(neighbor,current_vertex,self.min_range_radius)
+                    lcoord[current_vertex_id]=current_vertex
+        return info,lcoord
+
+    def compute_new_goals(self, current_paths):
+        robot_vids = {rid:self.get_closest_vertex((p[0].position.x,p[0].position.y))[0] for rid,p in current_paths.items()}
+        leaf_info,leaf_coord=self.get_frontier_leaf_info()
+        leaves=list(leaf_info)
+        weights={rid:{} for rid,vid in robot_vids.items()}
+        for lv1 in leaves:
+            obs=0
+            for lv2 in leaves:
+                if lv1 != lv2:
+                    obs+=self.latest_map.get_path_obstacles(leaf_coord[lv1],leaf_coord[lv2])
+            for r,rvid in robot_vids.items():
+                plen=self.graph.shortest_paths_dijkstra(source=rvid,  target=lv1)
+                w=obs*leaf_info[lv1]/(plen[0][0]+1)
+                weights[r][w]=lv1
+
+        next_goals={}
+        chosen_leaves=[]
+        goal_coordinates=[Pose()]*(max(list(robot_vids))+1)
+        for rid,all_leaf_weights in weights.items():
+            count=len(all_leaf_weights)
+            while rid not in next_goals and count>=0:
+                bw =max(list(all_leaf_weights))
+                best_leaf = all_leaf_weights[bw]
+                if best_leaf not in chosen_leaves:
+                    next_goals[rid]=best_leaf
+                    grid_coord=leaf_coord[best_leaf]
+                    pose=self.latest_map.grid_to_pose(grid_coord)
+                    goal_coordinates[rid].position.x=pose[0]
+                    goal_coordinates[rid].position.y=pose[1]
+                    chosen_leaves.append(best_leaf)
+                    break
+                count -=1
+                del all_leaf_weights[bw]
+
+        return goal_coordinates
+
+    def are_valid_paths(self, goal_paths):
+        goal_coords = {rid:self.graph.vs["coord"][self.get_closest_vertex((p[1].position.x,p[1].position.y))[0]] for rid,p in goal_paths.items()}
+        obstacle_exists_all=[True]
+        for rid1,gc1 in goal_coords.items():
+            for rid2,gc2 in goal_coords.items():
+                if rid1!=rid2:
+                    if self.latest_map.get_path_obstacles(gc1,gc2) ==0:  #pu.D(self.latest_map.grid_to_pose(gc1),self.latest_map.grid_to_pose(gc2))<=self.lidar_scan_radius or
+                        obstacle_exists_all.append(False)
+                    else:
+                        obstacle_exists_all.append(True)
+        return all(obstacle_exists_all)
+
 
     def fetch_explored_region_handler(self, data):
         '''
@@ -900,54 +1266,6 @@ class Graph:
                 is_same = False
         return is_same
 
-    def fetch_edge_handler(self, data):
-        self.generate_graph()
-        pose = [0.0] * 2
-        pose[INDEX_FOR_X] = data.pose.position.x
-        pose[INDEX_FOR_Y] = data.pose.position.y
-        robot_pose = pu.scale_up(pose, self.graph_scale)
-        edgelist = self.create_edge_list(robot_pose)
-        return FetchGraphResponse(edgelist=edgelist)
-
-
-
-
-    def enough_delay(self):
-        return rospy.Time.now().to_sec() - self.last_graph_update_time > 30  # updated last 20 secs
-
-
-
-    def create_edge_list(self, robot_pose):
-        alledges = list(self.edges)
-        edgelist = EdgeList()
-        edgelist.header.stamp = rospy.Time.now()
-        edgelist.header.frame_id = str(self.robot_id)
-        edgelist.ridges = []
-        edgelist.pixels = []
-        edge_dists = {}
-        for e in alledges:
-            if e in self.edges:
-                obs = self.edges[e]
-                ridge = self.create_ridge((e, obs))
-                edgelist.ridges.append(ridge)
-                if self.in_line_with_previous_edge(self.prev_ridge, (e, obs)):
-                    d = pu.D(robot_pose, e[1])  # min([pu.D(robot_pose, e[0]), pu.D(robot_pose, e[1])])
-                    edge_dists[(e, obs)] = d
-        if edge_dists:
-            new_close_ridge = min(edge_dists, key=edge_dists.get)
-        else:
-            new_close_ridge = ((self.prev_ridge[0][1], self.prev_ridge[0][0]), self.prev_ridge[1])
-        new_closest_ridge = self.create_ridge(new_close_ridge)
-        edgelist.close_ridge = new_closest_ridge
-        self.prev_ridge = new_close_ridge
-        for k, v in self.pixel_desc.items():
-            if v != FREE:
-                pix = Pixel()
-                pix.pose.position.x = k[INDEX_FOR_X]
-                pix.pose.position.y = k[INDEX_FOR_Y]
-                pix.desc = v
-                edgelist.pixels.append(pix)
-        return edgelist
 
     def fetch_rendezvous_points_handler(self, data):
         count = data.count
@@ -964,245 +1282,6 @@ class Graph:
                 rendezvous_points.append(pose)
         return RendezvousPointsResponse(poses=rendezvous_points)
 
-    def get_closest_edge(self, robot_pose, close_edges):
-        linear_edge = {}
-        chosen_edge = None
-        for e in close_edges:
-            if self.in_line_with_previous_edge(self.prev_ridge, e):
-                d = pu.D(robot_pose, e[0][1])
-                linear_edge[d] = e
-        if linear_edge:
-            chosen_edge = linear_edge[min(linear_edge.keys())]
-        return chosen_edge
-
-
-
-
-    # def round_point(self, p):
-    #     xc = round(p[INDEX_FOR_X], 2)
-    #     yc = round(p[INDEX_FOR_Y], 2)
-    #     new_p = [0.0] * 2
-    #     new_p[INDEX_FOR_X] = xc
-    #     new_p[INDEX_FOR_Y] = yc
-    #     new_p = tuple(new_p)
-    #     return new_p
-
-
-    def distance_to_line(self, p1, p2, pose):
-        p2_p1_vec = pu.get_vector(p1, p2)
-        pose_p1_vec = pu.get_vector(p1, pose)
-        if p2_p1_vec[0] != 0 and p2_p1_vec[1] != 0:
-            d = norm(np.cross(p2_p1_vec, pose_p1_vec)) / norm(p2_p1_vec)
-        else:
-            d = INF
-        return d
-
-
-
-    def get_pairs_with_unknown_area(self, edge_pairs):
-        edge_boxes = {}
-        pair_dist = {}
-        intersections = []
-        for dist, pair in edge_pairs.items():
-            p1 = pair[0][1]
-            p2 = pair[1][1]
-            x_min = min([p1[INDEX_FOR_X], p2[INDEX_FOR_X]])
-            y_min = min([p1[INDEX_FOR_Y], p2[INDEX_FOR_Y]])
-            x_max = max([p1[INDEX_FOR_X], p2[INDEX_FOR_X]])
-            y_max = max([p1[INDEX_FOR_Y], p2[INDEX_FOR_Y]])
-            min_points = max([abs(x_max - x_min), abs(y_max - y_min)])
-            bbox = sg.box(x_min, y_min, x_max, y_max)
-            edge_boxes[pair] = (bbox, min_points)
-            pair_dist[pair] = dist
-        if edge_boxes:
-            actual_pairs = {}
-            actual_intersecs = {}
-            for p, v in self.pixel_desc.items():
-                if v == UNKNOWN:
-                    point = sg.Point(p[INDEX_FOR_X], p[INDEX_FOR_Y])
-                    for pair, values in edge_boxes.items():
-                        if values[0].contains(point):
-                            if pair not in actual_intersecs:
-                                actual_intersecs[pair] = 1
-                            else:
-                                actual_intersecs[pair] += 1
-            for pair, count in actual_intersecs.items():
-                if count >= edge_boxes[pair][1]:
-                    actual_pairs[pair_dist[pair]] = pair
-            if actual_pairs:
-                min_dist = min(actual_pairs.keys())
-                intersections.append(actual_pairs[min_dist])
-        return intersections
-
-    def get_intersection(self, robot_pose, e1, e2, o1, o2):
-        p1 = e1[0]
-        p2 = e1[1]
-        v1 = pu.get_vector(p1, p2)
-        width1 = pu.D(o1[0], o1[1])
-        p3 = e2[0]
-        p4 = e2[1]
-        width2 = pu.D(o2[0], o2[1])
-        v2 = pu.get_vector(p3, p4)
-        intersec = None
-        if self.lidar_scan_radius < pu.D(p2, p4) < self.comm_range:
-            if pu.there_is_unknown_region(p2, p4, self.pixel_desc):
-                if pu.collinear(p1, p2, p4, width1, self.slope_bias):
-                    cos_theta, separation = pu.compute_similarity(v1, v2, e1, e2)
-                    if -1 <= cos_theta <= -1 + self.opposite_vector_bias and abs(
-                            separation - width1) < self.separation_bias:
-                        intersec = (e1, e2)
-                    else:
-                        pass
-                else:
-                    pass
-            else:
-                pass
-        return intersec
-
-
-
-    def has_unknown_points(self, p1,p2):
-        line_points= self.get_line(p1[INDEX_FOR_X],p1[INDEX_FOR_Y],p2[INDEX_FOR_X],p2[INDEX_FOR_Y])
-        for p in line_points:
-            if not self.is_free(p):
-                return True
-        return False
-
-    def get_line(self,x1, y1, x2, y2):
-        x1=int(round(x1))
-        y1=int(round(y1))
-        x2=int(round(x2))
-        y2=int(round(y2))
-        points = []
-        issteep = abs(y2-y1) > abs(x2-x1)
-        if issteep:
-            x1, y1 = y1, x1
-            x2, y2 = y2, x2
-        rev = False
-        if x1 > x2:
-            x1, x2 = x2, x1
-            y1, y2 = y2, y1
-            rev = True
-        deltax = x2 - x1
-        deltay = abs(y2-y1)
-        error = int(deltax / 2)
-        y = y1
-        ystep = None
-        if y1 < y2:
-            ystep = 1
-        else:
-            ystep = -1
-        for x in range(x1, x2 + 1):
-            if issteep:
-                points.append((y, x))
-            else:
-                points.append((x, y))
-            error -= deltay
-            if error < 0:
-                y += ystep
-                error += deltax
-        if rev:
-            points.reverse()
-        return points
-
-    def merge_graphs(self):
-        if self.old_edges and self.edges:
-            edge1, subtree1, parents1 = self.localize_robot(self.robot_pose, self.old_adj_list, self.old_edges)
-            edge2, subtree2, parents2 = self.localize_robot(self.robot_pose, self.adj_list, self.edges)
-            edge_pair = (edge1, edge2)
-            self.remove_subtrees(edge1, self.old_edges, self.old_adj_list)
-            self.remove_subtrees(edge2, self.edges, self.adj_list)
-            self.link_edges(edge_pair, self.old_edges, self.edges)
-            self.get_adjacency_list(self.edges)
-        else:
-            pu.log_msg(self.robot_id,"empty subtree",self.debug_mode)
-
-
-
-    def already_exists(self, p):
-        pose = [0.0] * 2
-        pose[INDEX_FOR_X] = round(p[INDEX_FOR_X])
-        pose[INDEX_FOR_Y] = round(p[INDEX_FOR_Y])
-        pose = tuple(pose)
-        return pose in self.deleted_nodes
-
-    def localize_robot(self, robot_pose, adj_list, edges):
-        dists = {}
-        s = list(adj_list.keys())[0]
-        visited = {}
-        parents = {s: None}
-        S = [s]
-        while len(S) > 0:
-            u = S.pop()
-            neighbors = adj_list[u]
-            for v in neighbors:
-                if v not in visited:
-                    S.append(v)
-                    parents[v] = u
-                    dists[pu.D(robot_pose, v)] = (u, v)
-            visited[u] = None
-        close_edge = dists[min(dists.keys())]
-        subtree, parents = self.get_subtree(close_edge, adj_list)
-        return close_edge, subtree, parents
-
-    def remove_subtrees(self, close_edge, edges, adj_list):
-        visited = [close_edge[0]]
-        S = [close_edge[1]]
-        while len(S) > 0:
-            u = S.pop()
-            neighbors = adj_list[u]
-            for v in neighbors:
-                if v not in visited:
-                    S.append(v)
-                    e = (u, v)
-                    if e != close_edge:
-                        if e in edges:
-                            del edges[e]
-            visited.append(u)
-
-    def link_edges(self, edge_pair, edges1, edges2):
-        e1 = edge_pair[0]
-        e2 = edge_pair[1]
-        if e1 in edges1:
-            obs1 = edges1[e1]
-        else:
-            obs1 = edges1[(e1[1], e1[0])]
-        if e2 in edges2:
-            obs2 = edges2[e2]
-        else:
-            obs2 = edges2[(e2[1], e2[0])]
-        obs = obs1
-        w1 = pu.D(obs1[0], obs1[1])
-        w2 = pu.D(obs2[0], obs2[1])
-        if w2 > w1:
-            obs = obs2
-
-        new_edge = (e1[1], e2[1])
-        del edges1[e1]
-        del edges2[e2]
-        edges2[new_edge] = obs
-        edges2.update(edges1)
-
-    def get_subtree(self, edge, adj_list):
-        S = [edge[1]]
-        visited = [edge[0]]
-        parents = {edge[1]: edge[0]}
-        leaves = set()
-        while len(S) > 0:
-            u = S.pop()
-            neighbors = adj_list[u]
-            if len(neighbors) <= 1:
-                leaves.add(u)
-            for v in neighbors:
-                if v not in visited:
-                    S.append(v)
-                    parents[v] = u
-            visited.append(u)
-        tree = set()
-        for l in leaves:
-            self.get_path(l, parents[l], parents, tree)
-        subtree = list(tree)
-        return subtree, parents
 
     def get_path(self, leaf, parent, parents, tree):
         l = leaf
@@ -1211,122 +1290,6 @@ class Graph:
             tree.add(l)
         tree.add(l)
 
-    def merge_records(self):
-        old_nodes = list(self.adj_list)
-        new_leaves = list(self.leaf_slope)
-        dist_leaf = {}
-        obstacle_dict = {}
-        for n in old_nodes:
-            neighbors = self.adj_list[n]
-            obs = None
-            for a in neighbors:
-                if (n, a) in self.edges:
-                    obs = self.edges[(n, a)]
-                    break
-            if obs:
-                obstacle_dict[n] = obs
-                for nl in new_leaves:
-                    if nl in dist_leaf:
-                        dist_leaf[nl][pu.D(nl, n)] = n
-                    else:
-                        dist_leaf[nl] = {pu.D(nl, n): n}
-        neighbor_distance = {}
-        obs_dict = {}
-        for k, v in dist_leaf.items():
-            dist = np.min(v.keys())
-            neighbor_distance[(v[dist], k)] = dist
-            obs_dict[(v[dist], k)] = obstacle_dict[v[dist]]
-        if neighbor_distance:
-            min_dist_key = min(neighbor_distance, key=neighbor_distance.get)
-            self.edges[min_dist_key] = obs_dict[min_dist_key]
-            self.get_adjacency_list(self.edges)
-
-    def connect_subtrees(self, count=0):
-        N = len(self.adj_list)
-        self.get_deeepest_tree_source()
-        if not N:
-            return
-        if N == len(self.adj_dict[self.longest]):  # or count == 10:
-            self.get_adjacency_list(self.edges)
-            return
-        allnodes = []  # all leaves for every search
-        for k, v in self.leave_dict.items():
-            allnodes += v
-        allnodes = list(set(allnodes))  # deal with only unique leaves
-        for leaf, adj in self.adj_dict.items():
-            adj_leaves = self.leave_dict[leaf]
-            leaf_dist = {}
-            for l in adj_leaves:
-                dist_dict = {}
-                for n2 in allnodes:
-                    if n2 not in adj and n2 not in adj_leaves:
-                        dist_dict[n2] = pu.D(l, n2)
-                if dist_dict:
-                    nei = min(dist_dict, key=dist_dict.get)
-                    leaf_dist[l] = nei
-            longest_dist = {k: pu.D(k, v) for k, v in leaf_dist.items()}
-            if longest_dist:
-                closest = min(longest_dist, key=longest_dist.get)
-                close_node = leaf_dist[closest]
-                cl_n = self.adj_list[close_node]
-                cls_n = self.adj_list[closest]
-                self.adj_list[closest].add(close_node)
-                self.adj_list[close_node].add(closest)
-                w1 = 0
-                w2 = 0
-                clw1 = None
-                clw2 = None
-                for cl in cl_n:
-                    clw1 = (close_node, cl)
-                    if clw1 in self.edges:
-                        cd = self.edges[(close_node, cl)]
-                        w1 = pu.D(cd[0], cd[1])
-                        break
-                for ad in cls_n:
-                    clw2 = (closest, ad)
-                    if (closest, ad) in self.edges:
-                        cd1 = self.edges[(closest, ad)]
-
-                        w2 = pu.D(cd1[0], cd1[1])
-                        break
-                if w1 > w2:
-                    self.edges[(close_node, closest)] = clw1
-                else:
-                    self.edges[(close_node, closest)] = clw2
-            else:
-                self.get_adjacency_list(self.edges)
-                return
-        self.get_adjacency_list(self.edges)
-        return self.connect_subtrees(count=count + 1)
-
-    def get_adjacency_list(self, edge_dict):
-        edge_list = list(edge_dict)
-        self.adj_list.clear()
-        self.leaf_slope.clear()
-        self.global_leaves.clear()
-        self.leaf_edges.clear()
-        for e in edge_list:
-            first = e[0]
-            second = e[1]
-            if first != second:
-                if first in self.adj_list:
-                    self.adj_list[first].add(second)
-                else:
-                    self.adj_list[first] = {second}
-                if second in self.adj_list:
-                    self.adj_list[second].add(first)
-                else:
-                    self.adj_list[second] = {first}
-            else:
-                del edge_dict[e]
-        for k, v in self.adj_list.items():
-            if len(v) == 1:
-                parent = list(v)[0]
-                self.leaf_slope[k] = pu.theta(parent, k)
-                self.global_leaves[k] = parent
-                if (parent, k) in self.edges:
-                    self.leaf_edges[k] = (parent, k)
-                    self.leaf_obstacles[k] = self.edges[(parent, k)]
 
     def is_free(self, p):
         xc = int(np.round(p[INDEX_FOR_X]))
@@ -1336,249 +1299,6 @@ class Graph:
         new_p[INDEX_FOR_Y] = yc
         new_p = tuple(new_p)
         return new_p in self.pixel_desc and self.pixel_desc[new_p] == FREE
-
-    def get_edge(self, ridge):
-        edge = {}
-        try:
-            p1 = [0.0] * 2
-            p1[INDEX_FOR_X] = ridge.nodes[0][INDEX_FOR_X]
-            p1[INDEX_FOR_Y] = ridge.nodes[0][INDEX_FOR_Y]
-            p1 = tuple(p1)
-            p2 = [0.0] * 2
-            p2[INDEX_FOR_X] = ridge.nodes[1][INDEX_FOR_X]
-            p2[INDEX_FOR_Y] = ridge.nodes[1][INDEX_FOR_Y]
-            p2 = tuple(p2)
-            q1 = [0.0] * 2
-            q1[INDEX_FOR_X] = ridge.obstacles[0][INDEX_FOR_X]
-            q1[INDEX_FOR_Y] = ridge.obstacles[0][INDEX_FOR_Y]
-            q1 = tuple(q1)
-            q2 = [0.0] * 2
-            q2[INDEX_FOR_X] = ridge.obstacles[1][INDEX_FOR_X]
-            q2[INDEX_FOR_Y] = ridge.obstacles[1][INDEX_FOR_Y]
-            q2 = tuple(q2)
-            P = (p1, p2)
-            Q = (q1, q2)
-            edge[P] = Q
-        except:
-            pu.log_msg(self.robot_id, "Invalid goal", self.debug_mode)
-
-        return edge
-
-    def create_ridge(self, ridge):
-        p1 = Pose()
-        p1.position.x = ridge[0][0][INDEX_FOR_X]
-        p1.position.y = ridge[0][0][INDEX_FOR_Y]
-
-        p2 = Pose()
-        p2.position.x = ridge[0][1][INDEX_FOR_X]
-        p2.position.y = ridge[0][1][INDEX_FOR_Y]
-
-        q1 = Pose()
-        q1.position.x = ridge[1][0][INDEX_FOR_X]
-        q1.position.y = ridge[1][0][INDEX_FOR_Y]
-
-        q2 = Pose()
-        q2.position.x = ridge[1][1][INDEX_FOR_X]
-        q2.position.y = ridge[1][1][INDEX_FOR_Y]
-
-        ridge = Ridge()
-        ridge.nodes = [p1, p2]
-        ridge.obstacles = [q1, q2]
-        ridge.scale = self.graph_scale
-
-        return ridge
-
-    def in_line_with_previous_edge(self, prev_ridge, current_edge):
-        in_line = False
-        if not prev_ridge:
-            in_line = True
-        else:
-            edge1 = prev_ridge[0]
-            edge2 = current_edge[1]
-            v1 = pu.get_vector(edge1[0], edge1[1])
-            v2 = pu.get_vector(edge2[0], edge2[1])
-            cos_theta, separation = pu.compute_similarity(v1, v2, edge1, edge2)
-            if cos_theta >= 0:
-                in_line = True
-        return in_line
-
-    def scatter_plot(self):
-        plt.figure(figsize=(12, 9))
-        ax = plt.subplot(111)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.get_xaxis().tick_bottom()
-        ax.get_yaxis().tick_left()
-        plt.xticks(fontsize=FONT_SIZE)
-        plt.yticks(fontsize=FONT_SIZE)
-        ax.set_xlabel("X", fontsize=FONT_SIZE)
-        ax.set_ylabel("Y", fontsize=FONT_SIZE)
-        ax.tick_params(labelsize=FONT_SIZE)
-        obstacles = list(self.obstacles)
-
-        xr = [v[INDEX_FOR_Y] for v in obstacles]
-        yr = [v[INDEX_FOR_X] for v in obstacles]
-        ax.scatter(xr, yr, color='black', marker="1")
-        x_pairs, y_pairs = pu.process_edges(self.edges)
-        for i in range(len(x_pairs)):
-            x = x_pairs[i]
-            y = y_pairs[i]
-            ax.plot(y, x, "g-o")
-        plt.grid()
-        plt.axis('off')
-        plt.savefig("{}/map_update_{}_{}_{}.png".format(self.method, self.robot_id, time.time(), self.run))
-
-        plt.close()
-        # plt.show()
-
-    def get_deeepest_tree_source(self):
-        self.leave_dict.clear()
-        self.adj_dict.clear()
-        self.tree_size.clear()
-        self.parent_dict.clear()
-        leaves = list(self.leaf_slope)
-        for s in leaves:
-            S = [s]
-            visited = {}
-            parents = {s: None}
-            lf = []
-            node_adjlist = {}
-            while len(S) > 0:
-                u = S.pop()
-                if u in self.adj_list:
-                    neighbors = self.adj_list[u]
-                    if u not in node_adjlist:
-                        node_adjlist[u] = neighbors
-                    if len(neighbors) == 1:
-                        lf.append(u)
-                    for v in neighbors:
-                        if v not in visited:
-                            S.append(v)
-                            parents[v] = u
-                    visited[u] = None
-            self.adj_dict[s] = node_adjlist
-            self.tree_size[s] = len(visited)
-            self.leave_dict[s] = lf
-            self.parent_dict[s] = parents
-        if self.tree_size:
-            self.longest = max(self.tree_size, key=self.tree_size.get)
-
-    def merge_similar_edges(self):
-        parents = {self.longest: None}
-        deleted_nodes = {}
-        S = [self.longest]
-        visited = {}
-        while len(S) > 0:
-            u = S.pop()
-            if u not in deleted_nodes:
-                all_neis = []
-                if u in self.adj_list:
-                    all_neis = self.adj_list[u]
-                neighbors = [k for k in all_neis if k != parents[u]]
-                if len(neighbors) == 1:
-                    v = neighbors[0]
-                    if v not in visited:
-                        S.append(v)
-                        if parents[u]:
-                            us = pu.get_vector(parents[u], u)
-                            ps = pu.get_vector(u, v)
-                            cos_theta, separation = pu.compute_similarity(us, ps, (parents[u], u), (u, v))
-                            if 1 - self.opposite_vector_bias <= cos_theta <= 1:
-                                parents[v] = parents[u]
-                                deleted_nodes[u] = None
-                                self.adj_list[v].remove(u)
-                                self.adj_list[v].add(parents[u])
-                                self.adj_list[parents[u]].add(v)
-                                if (u, parents[u]) in self.edges:
-                                    self.edges[(parents[u], v)] = self.edges[(u, parents[u])]
-                                else:
-                                    self.edges[(parents[u], v)] = self.edges[(parents[u], u)]
-                                del self.adj_list[u]
-                            else:
-                                parents[v] = u
-                        else:
-                            parents[v] = u
-                else:
-                    for v in neighbors:
-                        if v not in visited:
-                            S.append(v)
-                            parents[v] = u
-                visited[u] = None
-
-        new_adj_list = {}
-        edges = {}
-        for k, v in self.adj_list.items():
-            if k not in new_adj_list:
-                new_adj_list[k] = []
-            for l in v:
-                if l not in deleted_nodes:
-                    new_adj_list[k].append(l)
-                    if (k, l) in self.edges:
-                        edges[(k, l)] = self.edges[(k, l)]
-                    else:
-                        edges[(k, l)] = self.edges[(l, k)]
-
-        for k, v in new_adj_list.items():
-            if len(v) == 1:
-                self.leaf_slope[k] = pu.theta(k, list(v)[0])
-        self.adj_list = new_adj_list
-        self.edges = edges
-        self.save_deleted_nodes(deleted_nodes)
-
-    def save_deleted_nodes(self, deleted_nodes):
-        for v, _ in deleted_nodes.items():
-            pose = [0.0] * 2
-            pose[INDEX_FOR_X] = round(v[INDEX_FOR_X])
-            pose[INDEX_FOR_Y] = round(v[INDEX_FOR_Y])
-            pose = tuple(pose)
-            self.deleted_nodes[pose] = None  # add all the new deleted nodes
-
-    def add_edge(self, edge, new_edges):
-        obst = ((0, 0), (0, 0))
-        p1 = edge[0]
-        neighbors = self.adj_list[p1]
-        for n in neighbors:
-            if (p1, n) in self.edges:
-                o = self.edges[(p1, n)]
-                new_edges[edge] = o
-                obst = 0
-                break
-            if (n, p1) in self.edges:
-                o = self.edges[(n, p1)]
-                new_edges[edge] = o
-                obst = o
-                break
-        return obst
-
-    def get_free_points(self):
-        points = list(self.pixel_desc)
-        return [p for p in points if self.pixel_desc[p] == FREE]
-
-    def get_obstacles(self):
-        points = list(self.pixel_desc)
-        return [p for p in points if self.pixel_desc[p] == OCCUPIED]
-
-    def compute_new_information(self):
-        self.new_information.clear()
-        pu.log_msg(self.robot_id,"leaves: {}".format(self.leaf_edges),self.debug_mode)
-        leaf_obstacles = copy.deepcopy(self.leaf_obstacles)
-        leaf_edges = copy.deepcopy(self.leaf_edges)
-        polygons, start_end, points, unknown_points, marker_points = self.get_leaf_region(leaf_edges,
-                                                                                          leaf_obstacles)
-        for leaf, edge in leaf_edges.items():
-            if self.is_frontier({leaf: edge[0]}, points[leaf]):
-                edge = leaf_edges[leaf]
-                obs = leaf_obstacles[leaf]
-                self.new_information[(edge, obs)] = unknown_points[leaf]
-
-    def is_frontier(self, edge, leaf_region):
-        leaf = list(edge.keys())[0]
-        leaf = pu.get_point(leaf)
-        full_cells = {pu.get_point(p): self.pixel_desc[p] for p in leaf_region}
-        full_cells[leaf] = FREE
-        frontiers = {}
-        self.flood_fill(full_cells, None, leaf, [], frontiers)
-        return len(frontiers) > 0
 
     def flood_fill(self, cells, prev_point, new_point, visited, frontiers):
         if new_point not in cells or new_point in visited:
@@ -1603,185 +1323,143 @@ class Graph:
         self.flood_fill(cells, prev_point, tuple(south_p), visited, frontiers)
         self.flood_fill(cells, prev_point, tuple(west_p), visited, frontiers)
 
-    def get_leaf_region(self, leaf_edges, leaf_obstacles):
-        polygons = {}
-        start_end = {}
-        for leaf, edge in leaf_edges.items():
-            parent = edge[0]
-            obs = leaf_obstacles[leaf]
-            width = pu.D(obs[0], obs[1])
-            radius = self.lidar_scan_radius
+    def pose_scan_callback(self, pose_msg, scan_msg):
+        """Publishing poses of obstacles in the laser scans.
 
-            x = leaf[0]
-            y = leaf[1]
+        Args:
+            robot_pose (x,y,quaternion)
+            scan_msg (LaserScan)
+        """
+        robot_pose = (pose_msg.pose.pose.position.x, pose_msg.pose.pose.position.y, (pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y, pose_msg.pose.pose.orientation.z,pose_msg.pose.pose.orientation.w))
+        scan_msg_stamp = scan_msg.header.stamp.to_sec()
+        scan_time = scan_msg.scan_time
+        ranges = scan_msg.ranges
+        n=len(ranges)
+        (roll, pitch, yaw) = euler_from_quaternion (robot_pose[2])
+        angles = np.array([scan_msg.angle_min+yaw]*n)+np.arange(n)*scan_msg.angle_increment
+        pose_vals = np.array([robot_pose[0],robot_pose[1],robot_pose[2][0], robot_pose[2][1], robot_pose[2][2],robot_pose[2][3]])
+        robot_poses=np.repeat(pose_vals,[n]*len(pose_vals),axis=0).reshape(-1,n).T
+        obstacle_poses = np.concatenate((np.multiply(ranges,np.cos(angles)).reshape(-1,1),np.multiply(ranges,np.sin(angles)).reshape(-1,1),np.zeros((n,4))), axis=1)
+        scan_positions=robot_poses+obstacle_poses
+        scan_poses=np.array([(scan_positions[i,0],scan_positions[i,1]) for i in range(n) if scan_msg.range_min<=ranges[i]<scan_msg.range_max])
+        self.publish_obstacles(scan_poses)
+        if self.latest_map:
+            obstacles=[self.latest_map.pose_to_grid(scan_poses[i]) for i in range(len(scan_poses))]
+        try:
+            self.generate_gvg(obstacles)
+        except:
+            rospy.logerr("Error while processing graph")
 
-            opp = width / 2.0
-            adj = radius
-            hyp = np.sqrt(opp ** 2 + adj ** 2)
-            theta1 = pu.theta(parent, leaf)
-            angle_sum = (np.pi / 2) + theta1
-            cos_val = opp * np.cos(angle_sum)
-            sin_val = opp * np.sin(angle_sum)
 
-            top_left_x = x + cos_val
-            top_left_y = y + sin_val
 
-            bottom_left_x = x - cos_val
-            bottom_left_y = y - sin_val
+    def generate_gvg(self,obstacles):
+        """
+        Generates a voronoi diagram that is induced by given obstables
+        :param obstacles:
+        :return voronoi graph:
+        """
+        vor = Voronoi(obstacles)
+        # Initializing the graph.
+        graph = igraph.Graph()
+        # Correspondance between graph vertex and Voronoi vertex IDs.
+        voronoi_graph_correspondance = {}
 
-            lx = x + hyp * np.cos(theta1)
-            ly = y + hyp * np.sin(theta1)
+        # Simplifying access of Voronoi data structures.
+        vertices = vor.vertices
+        ridge_vertices = vor.ridge_vertices
+        ridge_points = vor.ridge_points
 
-            top_right_x = lx + cos_val
-            top_right_y = ly + sin_val
+        edges = []
+        weights = []
+        # Create a graph based on ridges.
+        for i in xrange(len(ridge_vertices)):
+            ridge_vertex = ridge_vertices[i]
+            # If any of the ridge vertices go to infinity, then don't add.
+            if ridge_vertex[0] == -1 or ridge_vertex[1] == -1:
+                continue
+            p1 = vertices[ridge_vertex[0]]
+            p2 = vertices[ridge_vertex[1]]
 
-            bottom_right_x = lx - cos_val
-            bottom_right_y = ly - sin_val
+            # Obstacle points determining the ridge.
+            ridge_point = ridge_points[i]
+            q1 = obstacles[ridge_point[0]]
+            q2 = obstacles[ridge_point[1]]
 
-            polygon = Polygon([(bottom_left_x, bottom_left_y), (top_left_x, top_left_y), (top_right_x, top_right_y),
-                               (bottom_right_x, bottom_right_y)])
+            # If the vertices on the ridge are in the free space
+            # and distance between obstacle points is large enough for the robot
+            if self.latest_map.is_free(p1[INDEX_FOR_X], p1[INDEX_FOR_Y]) and \
+                    self.latest_map.is_free(p2[INDEX_FOR_X], p2[INDEX_FOR_Y]) and \
+                    euclidean_distance(q1, q2) > self.min_edge_length:
 
-            polygons[leaf] = polygon
-            start_end[leaf] = (leaf, (lx, ly))
+                # Add vertex and edge.
+                graph_vertex_ids = [-1, -1] # temporary for finding verted IDs.
 
-        points = {}
-        unknown_points = {}
-        leaf_keys = leaf_edges.keys()
-        marker_points = []
-        for pose, value in self.pixel_desc.items():
-            point = sg.Point(pose[INDEX_FOR_X], pose[INDEX_FOR_Y])
-            for leaf in leaf_keys:
-                if polygons[leaf].contains(point):
-                    marker_points.append(pose)
-                    if leaf not in points:
-                        points[leaf] = [pose]
+                # Determining graph vertex ID if existing or not.
+                for point_id in xrange(len(graph_vertex_ids)):
+                    if ridge_vertex[point_id] not in voronoi_graph_correspondance:
+                        # if not existing, add new vertex.
+                        graph_vertex_ids[point_id] = graph.vcount()
+                        graph.add_vertex(coord=vertices[ridge_vertex[point_id]],name=graph_vertex_ids[point_id])
+                        voronoi_graph_correspondance[ridge_vertex[point_id]] = graph_vertex_ids[point_id]
                     else:
-                        points[leaf].append(pose)
-                    if value == UNKNOWN:
-                        if leaf not in unknown_points:
-                            unknown_points[leaf] = 1
-                        else:
-                            unknown_points[leaf] += 1
-        return polygons, start_end, points, unknown_points, marker_points
+                        # Otherwise, already added before.
+                        graph_vertex_ids[point_id] = voronoi_graph_correspondance[ridge_vertex[point_id]]
 
-    def area(self, point, orientation, radius):
-        known_points = []
-        unknown_points = []
-        if radius > self.lidar_scan_radius:
-            radius = self.lidar_scan_radius
-        radius = int(round(radius))
-        for d in np.arange(0, radius, 1):
-            distance_points = []
-            for theta in range(-1 * self.lidar_fov // 2, self.lidar_fov + 1):
-                angle = np.deg2rad(theta) + orientation
-                x = point[INDEX_FOR_X] + d * np.cos(angle)
-                y = point[INDEX_FOR_Y] + d * np.sin(angle)
-                pt = [0.0] * 2
-                pt[INDEX_FOR_X] = x
-                pt[INDEX_FOR_Y] = y
-                pt = pu.get_point(pt)
-                distance_points.append(pt)
-            unique_points = set(distance_points)
-            for p in unique_points:
-                if not pu.is_unknown(p, self.pixel_desc):
-                    known_points.append(p)
-                else:
-                    unknown_points.append(p)
-        return known_points, unknown_points
+                # Add edge.
+                graph.add_edge(graph_vertex_ids[0], graph_vertex_ids[1],
+                                    weight=euclidean_distance(p1, p2))
+            else:
+                # Otherwise, edge not added.
+                continue
 
-    def plot_data(self, frontiers, is_initial=False, vertext=None):
-        pu.log_msg(self.robot_id,"Creating plot started",self.debug_mode)
-        self.plot_data_active = True
-        plt.figure(figsize=(12, 9))
-        ax = plt.subplot(111)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.get_xaxis().tick_bottom()
-        ax.get_yaxis().tick_left()
-        plt.xticks(fontsize=FONT_SIZE)
-        plt.yticks(fontsize=FONT_SIZE)
-        ax.set_xlabel("X", fontsize=FONT_SIZE)
-        ax.set_ylabel("Y", fontsize=FONT_SIZE)
-        ax.tick_params(labelsize=FONT_SIZE)
+        # Take only the largest component.
+        cl = graph.clusters()
+        graph = cl.giant()
+        # Publish GVG.
+        self.publish_scan_edges(graph)
 
-        unknown_points = []
-        pixels = list(self.pixel_desc)
-        for p in pixels:
-            v = self.pixel_desc[p]
-            if v != FREE and v != OCCUPIED:
-                unknown_points.append(p)
-        if True:
-            if unknown_points:
-                UX, UY = zip(*unknown_points)
-                ax.scatter(UX, UY, marker='1', color='gray')
-            obstacles = list(self.obstacles)
-            xr, yr = zip(*obstacles)
-            ax.scatter(xr, yr, color='black', marker="1")
-            x_pairs, y_pairs = pu.process_edges(self.edges)
-            pu.log_msg(self.robot_id,"looping " + str(len(x_pairs)),self.debug_mode)
-            for i in range(len(x_pairs)):
-                x = x_pairs[i]
-                y = y_pairs[i]
-                ax.plot(x, y, "g-.")
-            leaves = list(self.leaf_slope)
-            """
-            lx, ly = zip(*leaves)
-            ax.scatter(lx, ly, color='red', marker='*', s=MARKER_SIZE)
+    def publish_obstacles(self,scan_poses):
+        # Publish visited vertices
+        m = Marker()
+        m.id = 2
+        m.header.frame_id = "robot_{}/map".format(self.robot_id)
+        m.type = Marker.POINTS
+        # TODO constant values set at the top.
+        m.color.a = 1.0
+        m.color.g = 0.5
+        if self.robot_id==0:
+            m.color.b = 0.5
+        elif self.robot_id==1:
+            m.color.g = 0.5
+        m.scale.x = 0.2
+        m.scale.y = 0.2
+        for pose in scan_poses:
+            p_ros = Point(x=pose[0], y=pose[1])
+            m.points.append(p_ros)
+        self.obstacle_pose_pub.publish(m)
 
-            fx, fy = zip(*frontiers)
-            ax.scatter(fx, fy, color='goldenrod', marker="D", s=MARKER_SIZE + 4)
-            pose = self.get_robot_pose()
-            point = pu.scale_up(pose, self.graph_scale)
-            ax.scatter(point[INDEX_FOR_X], point[INDEX_FOR_Y], color='green', marker="D", s=MARKER_SIZE + 4)
-            """
-            plt.grid()
-        #except:
-        #    pass
-        # plt.axis('off')
-        pu.log_msg(self.robot_id,"looping " + str(self.method),self.debug_mode)
-        plt.savefig("{}/plot_{}_{}_{}.png".format(self.method, self.robot_id, time.time(), self.run))
-        plt.close()
-        # plt.show()
-        pu.log_msg(self.robot_id,"Creating plot completed",self.debug_mode)
-        self.plot_data_active = False
 
-    def plot_intersections(self, ax, ridge, intersections, point):
-        self.plot_intersection_active = True
-        obstacles = list(self.obstacles)
-        fig, ax = plt.subplots(figsize=(16, 10))
+    def publish_scan_edges(self, graph):
+        """For debug, publishing of GVG."""
+        # Marker that will contain line sequences.
+        m = Marker()
+        m.id = 0
+        m.header.frame_id = self.latest_map.header.frame_id
+        m.type = Marker.LINE_LIST
+        m.color.a = 1.0
+        m.scale.x = 0.1
+        if self.robot_id==0:
+            m.color.b = 0.5
+        elif self.robot_id==1:
+            m.color.g = 0.5
 
-        ox = [v[INDEX_FOR_X] for v in obstacles]
-        oy = [v[INDEX_FOR_Y] for v in obstacles]
-        current_x = []
-        current_y = []
-        if ridge:
-            current_x = [ridge[0][INDEX_FOR_X], ridge[1][INDEX_FOR_X]]
-            current_y = [ridge[0][INDEX_FOR_Y], ridge[1][INDEX_FOR_Y]]
-        target_x = []
-        target_y = []
-        for section in intersections:
-            Q = section[1]
-            target_x += [Q[0][INDEX_FOR_X], Q[1][INDEX_FOR_X]]
-            target_y += [Q[0][INDEX_FOR_Y], Q[1][INDEX_FOR_Y]]
-        for i in range(len(target_x)):
-            ax.plot(target_x[i], target_y[i], "r-d")
-
-        for i in range(len(current_x)):
-            ax.plot(current_x[i], current_y[i], "m-d")
-
-        ax.scatter(point[INDEX_FOR_X], point[INDEX_FOR_Y], marker='*', color='purple')
-        ax.scatter(ox, oy, color='black', marker='s')
-
-        x_pairs, y_pairs = pu.process_edges(self.edges)
-        for i in range(len(x_pairs)):
-            x = x_pairs[i]
-            y = y_pairs[i]
-            ax.plot(x, y, "g-.")
-        plt.grid()
-        plt.savefig("{}/intersections_{}_{}_{}.png".format(self.method, self.robot_id, time.time(),
-                                                           self.run))  # TODO consistent time.
-        plt.close(fig)
-        self.plot_intersection_active = False
+        for edge in graph.get_edgelist():
+            for vertex_id in edge:
+                p = graph.vs["coord"][vertex_id]
+                p_t = self.latest_map.grid_to_pose(p)
+                p_ros = Point(x=p_t[0], y=p_t[1])
+                m.points.append(p_ros)
+        self.scan_marker_pub.publish(m)
 
 
     def save_all_data(self,data):

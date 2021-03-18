@@ -5,7 +5,7 @@ max_target_info_ratio: $(arg max_target_info_ratio) #0.5
 frontier_threshold: 10
 robot_count: $(arg robot_count)    # number of robots on the team
 min_hallway_width: 1.0 # allowed minimum separation between two pixels on the graph
-comm_range: 10  # communication range
+comm_range: 8  # communication range
 point_precision: 1   # allowed precision of the poses
 min_edge_length: 1.0   #  allowed edge length
 lidar_scan_radius: 6  # radius of the range finder
@@ -23,7 +23,7 @@ image_resolution: 0.05     # scale of the map
 bs_pose: $(arg bs_pose)  # basic
 map_inflation_radius: 1   # inflation radius of the robot
 map_file: '$(find gvgexploration)/world/$(arg environment).png'    # environment file
-target_distance: 2.0
+target_distance: 0.5
 target_angle: 1.57
 environment: $(arg environment)
 max_wait_time: 120 # secs
