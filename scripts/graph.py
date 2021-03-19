@@ -380,8 +380,6 @@ class Graph:
         rospy.Service('/robot_{}/rendezvous'.format(self.robot_id), RendezvousPoints,self.fetch_rendezvous_points_handler)
         rospy.Service('/robot_{}/explored_region'.format(self.robot_id), ExploredRegion,self.fetch_explored_region_handler)
         rospy.Service('/robot_{}/frontier_points'.format(self.robot_id), FrontierPoint, self.frontier_point_handler)
-        # rospy.Service('/robot_{}/check_intersections'.format(self.robot_id), Intersections, self.intersection_handler)
-        # rospy.Service('/robot_{}/fetch_graph'.format(self.robot_id), FetchGraph, self.fetch_edge_handler)
 
         # rospy.Subscriber('/robot_{}/map'.format(self.robot_id),OccupancyGrid, self.map_callback)
         rospy.Subscriber('/shutdown', String, self.save_all_data)
@@ -390,11 +388,14 @@ class Graph:
         self.get_map = rospy.ServiceProxy('/robot_{}/static_map'.format(self.robot_id), GetMap)
 
         # for online gvg generation @Kizito
+        self.process_scan=True
+        self.augmented_graph=None
         self.base_pose_subscriber = message_filters.Subscriber('base_pose_ground_truth', Odometry)
         self.scan_subscriber = message_filters.Subscriber('filtered_scan', LaserScan)
         self.obstacle_pose_pub=rospy.Publisher('laser_obstacles', Marker, queue_size=0)
         ats = TimeSynchronizer([self.base_pose_subscriber, self.scan_subscriber], 1)#, 0.01)
         ats.registerCallback(self.pose_scan_callback)
+
         # ====== ends here ========== @Kizito
 
 
@@ -426,6 +427,10 @@ class Graph:
         start_time_clock = time.clock()
         # Get Voronoi diagram.
         vor = Voronoi(obstacles)
+        fig,ax=plt.subplots(figsize=(18,18))
+        voronoi_plot_2d(vor,ax=ax)
+        plt.savefig("/home/masaba/Winter21/voronoi_figures/robot{}_{}.png".format(self.robot_id,rospy.Time.now().to_sec()))
+
         end_time_clock = time.clock()
         pu.log_msg(self.robot_id,"voronoi {}".format(end_time_clock - start_time_clock),self.debug_mode)
         start_time_clock = time.clock()
@@ -1323,6 +1328,79 @@ class Graph:
         self.flood_fill(cells, prev_point, tuple(south_p), visited, frontiers)
         self.flood_fill(cells, prev_point, tuple(west_p), visited, frontiers)
 
+
+    def filter_obstacles(self,rpose,scan_poses):
+        N=scan_poses.shape[0]
+        distances=-1*np.ones(N)
+        for i in range(N):
+            distances[i]=round(pu.T(rpose,scan_poses[i,:]),6)
+        pose_tally=np.asarray(np.unique(distances, return_counts=True)).T
+        equidist_distances = pose_tally[pose_tally[:,1] >1]
+        equidistant_pairs=[]
+        if equidist_distances.shape[0]:
+            scan_poses[np.where(pose_tally == equidist_distances[i,0]),:]
+            equidist_distances+=[scan_poses[np.where(pose_tally == equidist_distances[i,0]),:] for i in range(equidist_distances.shape[0]) if equidist_distances[i,0] !=-1]
+        rospy.logerr(equidist_distances)
+
+
+    def process_scan_now(self, current_pose):
+        self.process_scan=True
+        self.current_pose =current_pose
+
+    def augment_graph(self, new_graph,scan_pose):
+        """
+        Add new subgraph to the existing graph
+        :param new_graph:
+        :param scan_pose:
+        :return:
+        """
+
+        # Get nodes from both graphs, which are closest to the current pose
+        vid1=self.get_closest_vertex_on_graph(self.current_pose,self.augmented_graph)
+        vid2=self.get_closest_vertex_on_graph(self.current_pose,new_graph)
+
+        # Create an edge between the two nodes such that the two subgraphs are connected.
+        bridge_id=len(self.augmented_graph.vs)
+        self.augmented_graph.add_vertex(coord=new_graph.vs['coord'][vid2],name=bridge_id, pose=new_graph.vs['pose'][vid2])
+        self.augmented_graph.add_edge(vid1, bridge_id,weight=euclidean_distance(self.augmented_graph.vs['coord'][vid1], new_graph.vs['coord'][vid2]))
+
+        # Add all edges on the new graph into the main graph
+        new_vertex_id=bridge_id
+        old_new_ids={vid2:bridge_id}
+        for edge in new_graph.es:
+            sid = edge.source
+            tid = edge.target
+            new_sid=-1
+            new_tid=-1
+            if sid in old_new_ids:
+                new_sid=old_new_ids[sid]
+            if tid in old_new_ids:
+                new_tid=old_new_ids[tid]
+            if new_sid==-1:
+                new_vertex_id+=1
+                new_sid=new_vertex_id
+                old_new_ids[sid]=new_sid
+                self.augmented_graph.add_vertex(coord=new_graph.vs['coord'][sid],name=new_sid, pose=new_graph.vs['pose'][sid])
+            if new_tid ==-1:
+                new_vertex_id+=1
+                new_tid=new_vertex_id
+                old_new_ids[tid]=new_tid
+                self.augmented_graph.add_vertex(coord=new_graph.vs['coord'][tid],name=new_tid, pose=new_graph.vs['pose'][tid])
+            self.augmented_graph.add_edge(new_sid, new_tid,weight=euclidean_distance(new_graph.vs['coord'][sid], new_graph.vs['coord'][tid]))
+        rospy.logerr("old_graph: {}, subgraph: {}, new graph: {}".format(bridge_id,len(new_graph.vs),new_vertex_id))
+
+    def get_closest_vertex_on_graph(self, robot_pose, graph):
+        """
+        Get the closest vertex to robot_pose (x,y) in frame_id from a given graph
+        :param robot_pose:
+        :param graph:
+        :return vertex id:
+        """
+        robot_grid = self.latest_map.pose_to_grid(robot_pose)
+        vertices = np.asarray(graph.vs["coord"])
+        vertex_id,_ =pu.get_closest_point(robot_grid, vertices)
+        return vertex_id
+
     def pose_scan_callback(self, pose_msg, scan_msg):
         """Publishing poses of obstacles in the laser scans.
 
@@ -1330,27 +1408,36 @@ class Graph:
             robot_pose (x,y,quaternion)
             scan_msg (LaserScan)
         """
-        robot_pose = (pose_msg.pose.pose.position.x, pose_msg.pose.pose.position.y, (pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y, pose_msg.pose.pose.orientation.z,pose_msg.pose.pose.orientation.w))
-        scan_msg_stamp = scan_msg.header.stamp.to_sec()
-        scan_time = scan_msg.scan_time
-        ranges = scan_msg.ranges
-        n=len(ranges)
-        (roll, pitch, yaw) = euler_from_quaternion (robot_pose[2])
-        angles = np.array([scan_msg.angle_min+yaw]*n)+np.arange(n)*scan_msg.angle_increment
-        pose_vals = np.array([robot_pose[0],robot_pose[1],robot_pose[2][0], robot_pose[2][1], robot_pose[2][2],robot_pose[2][3]])
-        robot_poses=np.repeat(pose_vals,[n]*len(pose_vals),axis=0).reshape(-1,n).T
-        obstacle_poses = np.concatenate((np.multiply(ranges,np.cos(angles)).reshape(-1,1),np.multiply(ranges,np.sin(angles)).reshape(-1,1),np.zeros((n,4))), axis=1)
-        scan_positions=robot_poses+obstacle_poses
-        scan_poses=np.array([(scan_positions[i,0],scan_positions[i,1]) for i in range(n) if scan_msg.range_min<=ranges[i]<scan_msg.range_max])
-        self.publish_obstacles(scan_poses)
-        if self.latest_map:
-            obstacles=[self.latest_map.pose_to_grid(scan_poses[i]) for i in range(len(scan_poses))]
-        try:
-            self.generate_gvg(obstacles)
-        except:
-            rospy.logerr("Error while processing graph")
+        if self.process_scan:
+            robot_pose = (pose_msg.pose.pose.position.x, pose_msg.pose.pose.position.y, (pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y, pose_msg.pose.pose.orientation.z,pose_msg.pose.pose.orientation.w))
+            scan_msg_stamp = scan_msg.header.stamp.to_sec()
+            scan_time = scan_msg.scan_time
+            ranges = scan_msg.ranges
+            n=len(ranges)
+            (roll, pitch, yaw) = euler_from_quaternion (robot_pose[2])
+            angles = np.array([scan_msg.angle_min+yaw]*n)+np.arange(n)*scan_msg.angle_increment
+            pose_vals = np.array([robot_pose[0],robot_pose[1],robot_pose[2][0], robot_pose[2][1], robot_pose[2][2],robot_pose[2][3]])
+            robot_poses=np.repeat(pose_vals,[n]*len(pose_vals),axis=0).reshape(-1,n).T
+            obstacle_poses = np.concatenate((np.multiply(ranges,np.cos(angles)).reshape(-1,1),np.multiply(ranges,np.sin(angles)).reshape(-1,1),np.zeros((n,4))), axis=1)
+            scan_positions=robot_poses+obstacle_poses
+            scan_poses=np.array([(scan_positions[i,0],scan_positions[i,1]) for i in range(n) if scan_msg.range_min<=ranges[i]<scan_msg.range_max])
+            self.publish_obstacles(scan_poses)
+            if self.latest_map:
+                obstacles=[self.latest_map.pose_to_grid(scan_poses[i]) for i in range(len(scan_poses))]
+                # try:
+                new_graph=self.generate_gvg(obstacles)
 
-
+                self.augmented_graph=new_graph #TODO remove this after testing
+                # if not self.augmented_graph:
+                #     self.augmented_graph=new_graph
+                # else:
+                #     self.augment_graph(new_graph,robot_pose)
+                # Publish GVG.
+                self.publish_scan_edges()
+                self.process_scan=False
+                self.current_pose=None
+                # except:
+                #     rospy.logerr("Error while processing graph")
 
     def generate_gvg(self,obstacles):
         """
@@ -1358,11 +1445,15 @@ class Graph:
         :param obstacles:
         :return voronoi graph:
         """
+        start_id=0  # set starting vertex id for new graph so that the new graph has unique ids
+        if self.augmented_graph:
+            start_id = max(self.augmented_graph.vs['name'])+1
+
         vor = Voronoi(obstacles)
         # Initializing the graph.
-        graph = igraph.Graph()
+        online_graph = igraph.Graph()
         # Correspondance between graph vertex and Voronoi vertex IDs.
-        voronoi_graph_correspondance = {}
+        gvg_correspondance = {}
 
         # Simplifying access of Voronoi data structures.
         vertices = vor.vertices
@@ -1396,27 +1487,30 @@ class Graph:
 
                 # Determining graph vertex ID if existing or not.
                 for point_id in xrange(len(graph_vertex_ids)):
-                    if ridge_vertex[point_id] not in voronoi_graph_correspondance:
+                    if ridge_vertex[point_id] not in gvg_correspondance:
                         # if not existing, add new vertex.
-                        graph_vertex_ids[point_id] = graph.vcount()
-                        graph.add_vertex(coord=vertices[ridge_vertex[point_id]],name=graph_vertex_ids[point_id])
-                        voronoi_graph_correspondance[ridge_vertex[point_id]] = graph_vertex_ids[point_id]
+                        graph_vertex_ids[point_id] = online_graph.vcount()
+                        p_t = self.latest_map.grid_to_pose(vertices[ridge_vertex[point_id]])
+                        p_ros = (p_t[0],p_t[1])
+                        online_graph.add_vertex(coord=vertices[ridge_vertex[point_id]],name=graph_vertex_ids[point_id]+start_id, pose=p_ros)
+
+                        gvg_correspondance[ridge_vertex[point_id]] = graph_vertex_ids[point_id]
                     else:
                         # Otherwise, already added before.
-                        graph_vertex_ids[point_id] = voronoi_graph_correspondance[ridge_vertex[point_id]]
+                        graph_vertex_ids[point_id] = gvg_correspondance[ridge_vertex[point_id]]
 
                 # Add edge.
-                graph.add_edge(graph_vertex_ids[0], graph_vertex_ids[1],
+                online_graph.add_edge(graph_vertex_ids[0], graph_vertex_ids[1],
                                     weight=euclidean_distance(p1, p2))
             else:
                 # Otherwise, edge not added.
                 continue
 
         # Take only the largest component.
-        cl = graph.clusters()
-        graph = cl.giant()
-        # Publish GVG.
-        self.publish_scan_edges(graph)
+        cl = online_graph.clusters()
+        online_graph = cl.giant()
+        return online_graph
+
 
     def publish_obstacles(self,scan_poses):
         # Publish visited vertices
@@ -1439,7 +1533,7 @@ class Graph:
         self.obstacle_pose_pub.publish(m)
 
 
-    def publish_scan_edges(self, graph):
+    def publish_scan_edges(self):
         """For debug, publishing of GVG."""
         # Marker that will contain line sequences.
         m = Marker()
@@ -1453,10 +1547,9 @@ class Graph:
         elif self.robot_id==1:
             m.color.g = 0.5
 
-        for edge in graph.get_edgelist():
+        for edge in self.augmented_graph.get_edgelist():
             for vertex_id in edge:
-                p = graph.vs["coord"][vertex_id]
-                p_t = self.latest_map.grid_to_pose(p)
+                p_t = self.augmented_graph.vs["pose"][vertex_id]
                 p_ros = Point(x=p_t[0], y=p_t[1])
                 m.points.append(p_ros)
         self.scan_marker_pub.publish(m)

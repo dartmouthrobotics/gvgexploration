@@ -105,6 +105,7 @@ class GVGExplore:
         self.idle_feedback_pub = rospy.Publisher("/robot_{}/gvgexplore/idle".format(self.robot_id), Pose,queue_size=1)
 
 
+
         rospy.loginfo("Robot {}: Exploration server online...".format(self.robot_id))
 
     # def start_stop(self, req):
@@ -165,7 +166,6 @@ class GVGExplore:
     def feedback_motion_cb(self, feedback):
         if self.current_state == self.MOVE_TO_LEAF:
             self.prev_pose.append(self.get_robot_pose())
-
         if (np.isclose(self.last_distance, feedback.distance) or \
                 np.isclose(feedback.distance, self.last_distance)):
             self.same_location_counter += 1
@@ -215,11 +215,11 @@ class GVGExplore:
         while not rospy.is_shutdown():
             if self.current_state == self.DECISION:
                 self.graph.generate_graph()
-                pu.log_msg(self.robot_id,"Graph generated",self.debug_mode)
-
+                pu.log_msg(self.robot_id,"Graph generated",1- self.debug_mode)
+                self.graph.process_scan_now(self.current_pose)
                 start_time_clock = time.clock()
-                self.path_to_leaf = self.graph.get_successors(self.current_pose,
-                                                              self.prev_pose,self.gate_poses)
+                self.path_to_leaf = self.graph.get_successors(self.current_pose,self.prev_pose,self.gate_poses)
+                self.graph.process_scan_now(self.current_pose)
                 end_time_clock = time.clock()
                 gvg_time=end_time_clock - start_time_clock
                 pu.log_msg(self.robot_id,"next path time {}".format(gvg_time),self.debug_mode)
@@ -237,7 +237,7 @@ class GVGExplore:
                 else:
                     pu.log_msg(self.robot_id,"no more leaves",self.debug_mode)
                     self.current_state = self.IDLE
-                    # Added by @Kizito: Robot creates a new gate and go else where
+                    # Added by @Kizito: Robot create a new gate and go else where
                     if len(self.explored_leaves)<=len(self.other_leaves):
                        self.create_new_gate()
                     else:
@@ -254,7 +254,6 @@ class GVGExplore:
 
 
     def create_new_gate(self):
-        """ Create a new gate when the robot has exhaustively explored the assigned region"""
         cpose=self.get_robot_pose()
         cp = Pose()
         cp.position.x = cpose[INDEX_FOR_X]
