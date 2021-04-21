@@ -1,10 +1,10 @@
-include "city.world"
+include "lake.world"
 
 pioneer3at
 (
   name "robot1"
   color "purple"
-  pose [18.0 -4.0 0.0 0.0]
+  pose [43.0 25 0.0 0.0]
 )
 
 # Put two robots into the world
@@ -12,18 +12,18 @@ pioneer3at
 (
   name "robot2"
   color "purple"
-  pose [18.0 -6.0 0.0 0.0]
+  pose [43.0 21.0 0.0 0.0]
 )
 pioneer3at
 (
   name "robot3"
   color "purple"
-  pose [24. -4.0 0.0 0.0]
+  pose [47.0 21.0 0.0 0.0]
 )
 
 pioneer3at
 (
   name "robot4"
   color "purple"
-  pose [24.0 -6.0 0.0 0.0]
+  pose [47.0 24.0 0.0 0.0]
 )

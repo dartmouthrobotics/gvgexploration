@@ -1,4 +1,4 @@
 gvgexploration/MessageHeader msg_header
-geometry_msgs/Pose frontier
-geometry_msgs/Pose[] other_frontiers
+int32 frontier_id
+geometry_msgs/Pose[] frontiers
 string session_id

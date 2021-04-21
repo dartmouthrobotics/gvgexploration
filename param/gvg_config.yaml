@@ -13,7 +13,7 @@ lidar_fov: 360   # range scanner field of view
 slope_bias: 0.1   # allowed error margin in slope comparisons
 opposite_vector_bias: 0.25  # allowed error margin in vector comparisons (direction)
 separation_bias: 2  # allowed error margin in comparisons of corridor width
-max_coverage: 1.0   # allowed maximum coverage
+max_coverage: 0.91   # allowed maximum coverage
 max_common_coverage: 0.8
 max_exploration_time: 20
 termination_metric: 1 # 1: TOTAL COVERAGE, 2: MAXIMUM_EXPLORATION_TIME 3: COMMON_COVERAGE, 4: FULL_COVERAGE

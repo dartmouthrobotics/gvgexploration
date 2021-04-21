@@ -20,7 +20,7 @@ import copy
 from threading import Thread
 import project_utils as pu
 from std_msgs.msg import String
-
+from scipy.optimize import linear_sum_assignment
 
 MAX_COVERAGE_RATIO = 0.8
 
@@ -56,6 +56,7 @@ class Robot:
         self.robot_state = ACTIVE_STATE
         self.publisher_map = {}
         self.allocation_pub = {}
+        self.change_gate_alert = {}
         self.shared_data_srv_map = {}
         self.shared_point_srv_map = {}
         self.auction_feedback_pub = {}
@@ -85,11 +86,6 @@ class Robot:
         self.comm_session_time = 0
         self.auction_session_time = 0
         self.time_after_bidding = 0
-        self.auction_waiting_time = 0
-        self.waiting_for_auction_feedback = False
-        self.waiting_for_frontier_point = False
-        self.waiting_for_auction = False
-        self.waiting_for_response = False
         self.session_id = None
         self.feedback_count = 0
         self.goal_count = 0
@@ -117,124 +113,94 @@ class Robot:
         self.sent_messages = []
         self.received_messages = []
         self.newest_msg_ts = 0
-        self.received_msgs_ts={}
-        self.last_saved_msg_ts={}
+        self.received_msgs_ts = {}
+        self.last_saved_msg_ts = {}
 
-        self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,self.shared_data_handler)
-        self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,self.shared_point_handler)
-        self.alloc_point_srv = rospy.Service("/robot_{}/allocated_point".format(self.robot_id), SharedFrontier,self.shared_frontier_handler)
-        rospy.Subscriber('/robot_{}/initial_data'.format(self.robot_id), BufferedData,self.initial_data_callback)  # just for initial data *
+        self.buff_data_srv = rospy.Service('/robot_{}/shared_data'.format(self.robot_id), SharedData,
+                                           self.shared_data_handler)
+        self.auction_points_srv = rospy.Service("/robot_{}/auction_points".format(self.robot_id), SharedPoint,
+                                                self.shared_point_handler)
+        self.alloc_point_srv = rospy.Service("/robot_{}/allocated_point".format(self.robot_id), SharedFrontier,
+                                             self.shared_frontier_handler)
+        rospy.Service('/robot_{}/gate_change_alert'.format(self.robot_id), GateChange, self.gate_change_handler)
+        rospy.Subscriber('/robot_{}/initial_data'.format(self.robot_id), BufferedData,
+                         self.initial_data_callback)  # just for initial data *
         self.karto_pub = rospy.Publisher("/robot_{}/karto_in".format(self.robot_id), LocalizedScan, queue_size=10)
         self.signal_strength_srv = rospy.ServiceProxy("/signal_strength".format(self.robot_id), HotSpot)
         self.signal_strength_srv.wait_for_service()
-        self.fetch_frontier_points = rospy.ServiceProxy('/robot_{}/frontier_points'.format(self.robot_id),FrontierPoint)
-        self.check_intersections = rospy.ServiceProxy('/robot_{}/check_intersections'.format(self.robot_id),Intersections)
-        rospy.Subscriber('/robot_{}/coverage'.format(self.robot_id), Coverage, self.coverage_callback)
-        rospy.Subscriber('/robot_{}/map'.format(self.robot_id), OccupancyGrid, self.map_update_callback)
+        self.fetch_frontier_points = rospy.ServiceProxy('/robot_{}/frontier_points'.format(self.robot_id),
+                                                        FrontierPoint)
 
-        # For real robots. # TODO make it uniform.
-        # rospy.Subscriber('/robot_{}/wifi_chatter'.format(self.robot_id), WifiStrength, self.wifi_strength_callback)
-        #rospy.Subscriber('/robot_{}/master_discovery/linkstats'.format(self.robot_id), LinkStatesStamped,
-        #                 self.discovery_callback)
+        self.graph_distance_srv = rospy.ServiceProxy('/robot_{}/graph_distance'.format(self.robot_id),
+                                                     GraphDistance)
 
+        self.check_intersections = rospy.ServiceProxy('/robot_{}/check_intersections'.format(self.robot_id),
+                                                      Intersections)
         rospy.Subscriber('/robot_{}/gvgexplore/feedback'.format(self.robot_id), Pose, self.explore_feedback_callback)
         self.data_size_pub = rospy.Publisher('/shared_data_size', DataSize, queue_size=10)
         for rid in self.candidate_robots:
             received_data_clt = rospy.ServiceProxy("/robot_{}/shared_data".format(rid), SharedData)
             action_points_clt = rospy.ServiceProxy("/robot_{}/auction_points".format(rid), SharedPoint)
             alloc_point_clt = rospy.ServiceProxy("/robot_{}/allocated_point".format(rid), SharedFrontier)
+            gate_change_clt = rospy.ServiceProxy("/robot_{}/gate_change_alert".format(rid), GateChange)
             pub = rospy.Publisher("/robot_{}/initial_data".format(rid), BufferedData, queue_size=10)
             self.publisher_map[rid] = pub
             self.allocation_pub[rid] = alloc_point_clt
+            self.change_gate_alert[rid] = gate_change_clt
             self.shared_data_srv_map[rid] = received_data_clt
             self.shared_point_srv_map[rid] = action_points_clt
-        rospy.Subscriber('/karto_out'.format(self.robot_id), LocalizedScan, self.robots_karto_out_callback,queue_size=10)
+        rospy.Subscriber('/karto_out'.format(self.robot_id), LocalizedScan, self.robots_karto_out_callback,
+                         queue_size=10)
         self.is_shutdown_caller = False
 
         self.trans_matrices = {}
         self.inverse_trans_matrices = {}
         self.prev_intersects = []
-        self.poses_to_next_leaf=[]
+        self.poses_to_next_leaf = []
 
         # ======= pose transformations====================
         self.listener = tf.TransformListener()
-        self.gvgexplore_goal_pub = rospy.Publisher('/robot_{}/gvgexplore/goal'.format(self.robot_id), Frontier,queue_size=1)
-        self.goal_cancel_srv = rospy.ServiceProxy('/robot_{}/gvgexplore/cancel'.format(self.robot_id),CancelExploration)
-        rospy.Subscriber('/robot_{}/gvgexplore/idle'.format(self.robot_id),Pose,self.idle_callback)
+        self.gvgexplore_goal_pub = rospy.Publisher('/robot_{}/gvgexplore/goal'.format(self.robot_id), Frontier,
+                                                   queue_size=1)
+        self.goal_cancel_srv = rospy.ServiceProxy('/robot_{}/gvgexplore/cancel'.format(self.robot_id),
+                                                  CancelExploration)
+        self.current_gate_srv = rospy.ServiceProxy('/robot_{}/gvgexplore/gate_leaf'.format(self.robot_id), CurrentGate)
+        self.change_gate_srv = rospy.ServiceProxy('/robot_{}/gvgexplore/change_gate'.format(self.robot_id), GateChange)
+
+        rospy.Subscriber('/robot_{}/gvgexplore/idle'.format(self.robot_id), Pose, self.idle_callback)
         rospy.Subscriber("/robot_{}/gvgexplore/feedback".format(self.robot_id), Pose, self.explore_feedback_callback)
+        rospy.Subscriber("/shutdown", String, self.save_all_data)
+        rospy.Subscriber("intersection", Pose, self.check_data_sharing_status)
         rospy.loginfo("Robot {} Initialized successfully!!".format(self.robot_id))
-        rospy.Subscriber("/shutdown",String,self.save_all_data)
-        rospy.Subscriber("intersection",Pose,self.check_data_sharing_status)
 
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
             try:
-                # if self.is_initial_data_sharing:
-                #     if len(self.get_close_devices()) == len(self.candidate_robots): # For real robot. # TODO
-                #         pu.log_msg(self.robot_id,"Sending initial data to all robots...",self.debug_mode)
-                #         self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
-                #         self.is_initial_data_sharing = False
-
                 pu.log_msg(self.robot_id, "Is exploring: {}, Session ID: {}".format(self.is_exploring, self.session_id),
                            self.debug_mode)
             except Exception as e:
                 pu.log_msg(self.robot_id, "Throwing error: {}".format(e), self.debug_mode)
             r.sleep()
 
-
-    # For real robot. # TODO: make it consistent.
-    # def wifi_strength_callback(self, data):
-    #     src_mac = data.src
-    #     dst_mac = data.dst
-    #     if src_mac in self.mac_id and dst_mac in self.mac_id and self.mac_id[dst_mac] == self.robot_id:
-    #         self.signal_strength[self.mac_id[src_mac]] = data.signal
-
-    #def discovery_callback(self, data):
-    #    for d in data.links:
-    #        self.master_links.add(d.destination)
-
-    def evaluate_exploration(self):
-        # lapsed_time = rospy.Time.now().to_sec() - self.last_evaluation_time
-        its_time = False
-        # if lapsed_time > 10:  # secs
-        if self.coverage:
-            if self.termination_metric == pu.MAXIMUM_EXPLORATION_TIME:
-                time = rospy.Time.now().to_sec() - self.exploration_time
-                its_time = time >= self.max_exploration_time * 60
-            elif self.termination_metric == pu.TOTAL_COVERAGE:
-                # if not self.robot_id:
-                #     pu.log_msg(self.robot_id, "Coverage: {}".format(self.coverage.coverage), 1)
-                its_time = self.coverage.coverage >= self.max_coverage
-            elif self.termination_metric == pu.FULL_COVERAGE:
-                its_time = self.coverage.coverage >= self.coverage.expected_coverage
-            elif self.termination_metric == pu.COMMON_COVERAGE:
-                its_time = self.coverage.common_coverage >= self.max_common_coverage
-                if not self.robot_id:
-                    pu.log_msg(self.robot_id, "Common Coverage: {}".format(self.coverage.common_coverage), 1)
-            # self.last_evaluation_time = rospy.Time.now().to_sec()
-        return its_time
-
-
     def check_data_sharing_status(self, data):
         if self.is_exploring:
             pu.log_msg(self.robot_id, "Intersec callback, session: {}".format(self.session_id), self.debug_mode)
             close_devices = self.get_close_devices()
             if close_devices and not self.session_id:  # devices available and you're not in session
-                pu.log_msg(self.robot_id, "Before calling intersection: {}".format(self.session_id),self.debug_mode)
-                # self.send_data(close_devices)
+                pu.log_msg(self.robot_id, "Before calling intersection: {}".format(self.session_id), self.debug_mode)
+                self.send_data(close_devices)
         else:
             pu.log_msg(self.robot_id, "Can't communicate. Robot not exploring", self.debug_mode)
 
-
     def send_data(self, current_devices):
-        pu.log_msg(self.robot_id, "RECEIVED INTERSECTION CALLBACK",self.debug_mode)
+        pu.log_msg(self.robot_id, "RECEIVED INTERSECTION CALLBACK", self.debug_mode)
         # self.cancel_exploration()
         self.is_sender = True
         self.session_id = '{}_{}'.format(self.robot_id, rospy.Time.now().to_sec())
         session_devices = []
         buff_data = {}
-        current_goals={int(self.robot_id):self.poses_to_next_leaf}
+        current_gates = {int(self.robot_id): self.current_gate_srv().gate_leaf}
         local_data_size = 0
         for rid in current_devices:
             message_data = self.load_data_for_id(rid)
@@ -245,34 +211,62 @@ class Robot:
             if not response.in_session:
                 session_devices.append(rid)
                 buff_data[rid] = response.res_data
-                current_goals[int(rid)]=response.path_to_next_goal
+                current_gates[int(rid)] = response.gate_leaf
                 self.delete_data_for_id(rid)
             else:
                 pu.log_msg(self.robot_id, "Robot {} is in another session".format(rid), self.debug_mode)
         self.process_data(buff_data, session_id=self.session_id, sent_data=local_data_size)
-        self.decide_on_next_goal(current_goals,current_devices)
+        self.decide_on_next_goal(current_gates)
 
+    def decide_on_next_goal(self, current_gates):
+        common_gates = []
+        for i, p1 in current_gates.items():
+            for j, p2 in current_gates.items():
+                if i != j and (j, i) not in common_gates and p1 == p2:
+                    common_gates.append((i, j))
 
-    def decide_on_next_goal(self,next_goals,current_devices):
-        # def _send_goal(rid, pose):
-        #     frontier=self.create_frontier(rid,pose)
-        #     self.allocation_pub[str(rid)](SharedFrontierRequest(frontier=frontier))
-        #
-        # current_robot_paths=[GoalPath(robot_id=rid,goal_path=p) for rid,p in next_goals.items()]
-        # pu.log_msg(self.robot_id, "Evaluating paths: {}".format(len(current_robot_paths)),self.debug_mode)
-        # frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(current_robot_paths),current_paths=current_robot_paths))
-        # frontier_points = frontier_point_response.frontiers
-        # for rid in range(len(frontier_points)):
-        #     if rid !=self.robot_id and rid in next_goals:
-        #         _send_goal(rid,(frontier_points[rid].position.x,frontier_points[rid].position.y))
-        # self.frontier_ridge=frontier_points[self.robot_id]
-        # self.start_exploration_action(self.frontier_ridge)
-        self.session_id=None
+        alerted_robots = []
+        pu.log_msg(self.robot_id,
+                   "Current gates: {}, Common gates: {}, Alert srvs: {}".format(current_gates, common_gates,
+                                                                                self.change_gate_alert),
+                   1 - self.debug_mode)
+        for c in common_gates:
+            if c[0] not in alerted_robots and c[1] not in alerted_robots:
+                flagged_rid = current_gates[c[0]]
+                if c[0] == self.robot_id:
+                    self.change_gate_srv(GateChangeRequest(flagged_gates=[flagged_rid]))
+                else:
+                    self.change_gate_alert[str(c[0])](GateChangeRequest(flagged_gates=[flagged_rid]))
+                alerted_robots.append(c[0])
+
+        if self.robot_id not in alerted_robots:
+            self.change_gate_srv(GateChangeRequest(flagged_gates=[]))
+
+        pu.log_msg(self.robot_id, "Simillar gates: {}, Alerted robots: {}".format(common_gates, alerted_robots),
+                   1 - self.debug_mode)
+        self.session_id = None
         self.is_sender = False
+
     #
     def idle_callback(self, pose):
-        pu.log_msg(self.robot_id,"Assigned region is complete. Robot is idle",1-self.debug_mode)
+        pu.log_msg(self.robot_id, "Assigned region is complete. Robot is idle", 1 - self.debug_mode)
 
+    def hungarian_assignment(self, bgraph, frontiers):
+        rids = list(bgraph)
+        rids.sort()
+        rcosts = []
+        for i in rids:
+            rcosts.append(bgraph[i])
+        cost = np.array(rcosts)
+        row_ind, col_ind = linear_sum_assignment(cost)
+        assignments = {}
+        for i in range(len(row_ind)):
+            if i != self.robot_id:
+                frontier = self.create_frontier(i, col_ind[i], frontiers)
+                res = self.allocation_pub[str(i)](SharedFrontierRequest(frontier=frontier))
+            assignments[i] = col_ind[i]
+        rospy.logerr("Do hungarian assignment: {}".format(assignments))
+        return assignments
 
     def handle_intersection(self, current_devices):
         # pu.log_msg(self.robot_id, "RECEIVED INTERSECTION CALLBACK",self.debug_mode)
@@ -295,58 +289,35 @@ class Robot:
             else:
                 pu.log_msg(self.robot_id, "Robot {} is in another session".format(rid), self.debug_mode)
         self.process_data(buff_data, session_id=self.session_id, sent_data=local_data_size)
-        pu.log_msg(self.robot_id,"Received and processed the data",self.debug_mode)
-        frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(current_devices) + 1,current_paths=[]))
-        frontier_points = frontier_point_response.frontiers # self.parse_frontier_response(frontier_point_response)
-        pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)
-        taken_poses = []
-        pu.log_msg(self.robot_id, "Received frontier points: {}".format(len(frontier_points)), self.debug_mode)
+        frontier_point_response = self.fetch_frontier_points(
+            FrontierPointRequest(count=len(current_devices) + 1, current_paths=[]))
+        frontier_points = frontier_point_response.frontiers
+        robot_assignments = {}
         if frontier_points:
+            distances = self.compute_distances(self.get_robot_pose(), frontier_points)
+            bgraph = {self.robot_id: [distances[i] for i in range(len(frontier_points))]}
             if session_devices:
-                auction = self.create_auction(frontier_points)
-                auction_feedback = {}
+                auction = self.create_auction(frontier_points, self.session_id)
                 pu.log_msg(self.robot_id, "session devices: {}".format(session_devices), self.debug_mode)
-                taken_points=[]
                 for rid in session_devices:
                     pu.log_msg(self.robot_id, "Action Request to Robot {}".format(rid), self.debug_mode)
                     auction_response = self.shared_point_srv_map[rid](SharedPointRequest(req_data=auction))
-                    if auction_response.auction_accepted==1:
+                    if auction_response.auction_accepted == 1:
                         data = auction_response.res_data
-                        self.all_feedbacks[rid] = data
-                        m = len(data.distances)
-                        min_dist = max(data.distances)
-                        min_pose = Pose()
-                        for i in range(m):
-                            if min_dist >= data.distances[i] and (data.poses[i].position.x,data.poses[i].position.y) not in taken_poses:
-                                min_pose = data.poses[i]
-                                min_dist = data.distances[i]
-                        rospy.logerr("current session device: {}".format(rid))
-                        taken_points.append((min_pose.position.x,min_pose.position.y))
-                        auction_feedback[rid] = (min_dist, min_pose)
-                        pu.log_msg(self.robot_id, "received auction feedback", self.debug_mode)
-                pu.log_msg(self.robot_id, "All received auction feedbacks: {}".format(auction_feedback), self.debug_mode)
-                taken_poses = self.compute_and_share_auction_points(auction_feedback, frontier_points)
+                        bgraph[int(rid)] = [data.distances[i] for i in range(len(data.distances))]
+
+                robot_assignments = self.hungarian_assignment(bgraph, frontier_points)
             else:
                 pu.log_msg(self.robot_id, "All robots are busy..", self.debug_mode)
         else:
             pu.log_msg(self.robot_id, "Just send an empty message so that the robots move on", self.debug_mode)
             for rid in current_devices:
-                # auction = self.create_auction(frontier_points)
                 frontier = self.create_frontier(rid, [])
-                # pu.log_msg(self.robot_id, "Sharing point with {}".format(i),self.debug_mode)
                 res = self.allocation_pub[rid](SharedFrontierRequest(frontier=frontier))
 
-                # self.shared_point_srv_map[rid](SharedPointRequest(req_data=auction))
         pu.log_msg(self.robot_id, "Point allocation complete", self.debug_mode)
-        ridge = self.compute_next_frontier(taken_poses, frontier_points) # TODO renaming
-        if ridge:
-            self.frontier_ridge = ridge
-        if not self.frontier_ridge and frontier_points:
-            self.frontier_ridge = frontier_points[0]
-            pu.log_msg(self.robot_id, "Going to new frontier now: {}".format((self.frontier_ridge.position.x,self.frontier_ridge.position.y)), self.debug_mode)
 
-        self.start_exploration_action(self.frontier_ridge,frontier_points)
-        pu.log_msg(self.robot_id, "Action sent to gvgexplore", self.debug_mode)
+        self.start_exploration_action(robot_assignments[self.robot_id], frontier_points)
         self.is_sender = False
         self.all_feedbacks.clear()
         # =============Ends here ==============
@@ -373,121 +344,61 @@ class Robot:
             self.intersections_requested = False
             pu.log_msg(self.robot_id, "Received goal feedback", self.debug_mode)
 
-    def map_update_callback(self, data):
-        self.last_map_update_time = rospy.Time.now().to_sec()
-
-    def wait_for_updates(self):
-        sleep_time = rospy.Time.now().to_sec() - self.last_map_update_time
-        while sleep_time < 5:
-            rospy.sleep(sleep_time)
-            sleep_time = rospy.Time.now().to_sec() - self.last_map_update_time
-
-    def coverage_callback(self, data):
-        self.coverage = data
+    def gate_change_handler(self, req):
+        res = self.change_gate_srv(GateChangeRequest(flagged_gates=req.flagged_gates)).result
+        return GateChangeResponse(result=res)
 
     def shared_frontier_handler(self, req):
         data = req.frontier
-        pu.log_msg(self.robot_id, "Received new frontier point: {}".format((data.frontier.position.x,data.frontier.position.y)), self.debug_mode)
         if not self.is_sender and data.session_id == self.session_id:
-            # reset waiting for frontier point flags
-            self.waiting_for_frontier_point = False
-            self.time_after_bidding = rospy.Time.now().to_sec()
-            # ============ End here =================
-            p_in_sender = PoseStamped()
-            p_in_sender.header = data.msg_header.header
-            p_in_sender.pose = data.frontier
-            self.frontier_ridge = self.listener.transformPose("robot_{}/map".format(self.robot_id), p_in_sender).pose
-            other_frontiers=[]
-            for fp in data.other_frontiers:
+            other_frontiers = []
+            for fp in data.frontiers:
                 fp_in_sender = PoseStamped()
                 fp_in_sender.header = data.msg_header.header
                 fp_in_sender.pose = fp
-                other_frontiers.append(self.listener.transformPose("robot_{}/map".format(self.robot_id), fp_in_sender).pose)
-            self.start_exploration_action(self.frontier_ridge,other_frontiers)
+                other_frontiers.append(
+                    self.listener.transformPose("robot_{}/map".format(self.robot_id), fp_in_sender).pose)
+            self.start_exploration_action(data.frontier_id, other_frontiers)
         pu.log_msg(self.robot_id, "Received allocated points", self.debug_mode)
         return SharedFrontierResponse(success=1)
 
-    def compute_and_share_auction_points(self, auction_feedback, frontier_points):
-        all_robots = list(auction_feedback)
-        pu.log_msg(self.robot_id, "All robots: {}".format(auction_feedback), self.debug_mode)
-        taken_poses = []
-        for i in all_robots:
-            pose_i = (auction_feedback[i][1].position.x, auction_feedback[i][1].position.y)
-            conflicts = []
-            for j in all_robots:
-                if i != j:
-                    pose_j = (auction_feedback[j][1].position.x, auction_feedback[j][1].position.y)
-                    if pose_i == pose_j:
-                        conflicts.append((i, j))
-            rpose = auction_feedback[i][1]
-            frontier = self.create_frontier(i, (rpose.position.x, rpose.position.y),frontier_points)
-            # pu.log_msg(self.robot_id, "Sharing point with {}".format(i),self.debug_mode)
-            res = self.allocation_pub[i](SharedFrontierRequest(frontier=frontier))
-            pu.log_msg(self.robot_id, "Shared a frontier point with robot {}: {}".format(i, res), self.debug_mode)
-            taken_poses.append(pose_i)
-            for c in conflicts:
-                conflicting_robot_id = c[1]
-                feedback_for_j = self.all_feedbacks[conflicting_robot_id]
-                rob_poses = feedback_for_j.poses
-                rob_distances = feedback_for_j.distances
-                remaining_poses = {}
-                for k in range(len(rob_poses)):
-                    p = (rob_poses[k].position.x, rob_poses[k].position.y)
-                    if p != pose_i and p not in taken_poses:
-                        remaining_poses[rob_distances[k]] = rob_poses[k]
-                if remaining_poses:
-                    next_closest_dist = min(list(remaining_poses))
-                    auction_feedback[conflicting_robot_id] = (next_closest_dist, remaining_poses[next_closest_dist])
-        return taken_poses
-
-    def create_frontier(self, receiver, frontier_point,frontier_points):
+    def create_frontier(self, receiver, frontier_id, frontier_points):
         frontier = Frontier()
         frontier.msg_header.header.frame_id = 'robot_{}/map'.format(self.robot_id)
         frontier.msg_header.header.stamp = rospy.Time.now()
         frontier.msg_header.sender_id = str(self.robot_id)
         frontier.msg_header.receiver_id = str(receiver)
         frontier.msg_header.topic = 'allocated_point'
-        p = Pose()
-        if frontier_point:
-            p.position.x = frontier_point[0]
-            p.position.y = frontier_point[1]
-        else:
-            rp =self.get_robot_pose()
-            p.position.x = rp[pu.INDEX_FOR_X]
-            p.position.y = rp[pu.INDEX_FOR_Y]
-
-        frontier.frontier = p #
-        frontier.other_frontiers=[]
-        for fp in frontier_points:
-            if (fp.position.x, fp.position.y) != (frontier_point[0], frontier_point[1]):
-                frontier.other_frontiers.append(fp)
+        frontier.frontier_id = frontier_id  #
+        frontier.frontiers = frontier_points
         frontier.session_id = self.session_id
         return frontier
 
-    def create_auction(self, rendezvous_poses, distances=[]):
+    def create_auction(self, rendezvous_poses, session_id, distances=[]):
         auction = Auction()
         auction.msg_header.header.frame_id = 'robot_{}/map'.format(self.robot_id)
         auction.msg_header.sender_id = str(self.robot_id)
         auction.msg_header.topic = 'auction_points'
         auction.msg_header.header.stamp = rospy.Time.now()
-        if not self.session_id:
+        if not session_id:
             auction.session_id = ''
-        auction.session_id = self.session_id
+        auction.session_id = session_id
         auction.distances = distances
         auction.poses = []
-        self.all_feedbacks.clear()
         for f in rendezvous_poses:
             auction.poses.append(f)
         return auction
 
     def robots_karto_out_callback(self, data):
-        if data.robot_id-1 ==self.robot_id:
-            pu.log_msg(self.robot_id,"ROBOT received a message Robot is saving a karto message: {}".format(data.robot_id),self.debug_mode)
+        if data.robot_id - 1 == self.robot_id:
+            pu.log_msg(self.robot_id,
+                       "ROBOT received a message Robot is saving a karto message: {}".format(data.robot_id),
+                       self.debug_mode)
             for rid in self.candidate_robots:
                 self.add_to_file(rid, [data])
             if self.is_initial_data_sharing:
-               self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
-               self.is_initial_data_sharing = False
+                self.push_messages_to_receiver(self.candidate_robots, None, initiator=1)
+                self.is_initial_data_sharing = False
 
     def push_messages_to_receiver(self, receiver_ids, session_id, is_alert=0, initiator=0):
         for receiver_id in receiver_ids:
@@ -522,27 +433,23 @@ class Robot:
             devices.append(str(rs.robot_id))
         return set(devices)
 
-
-    def save_message(self,karto):
-        rid = karto.robot_id -1
+    def save_message(self, karto):
+        rid = karto.robot_id - 1
         ts = karto.scan.header.stamp.to_sec()
-        should_save=False
+        should_save = False
         if rid not in self.received_msgs_ts:
-            self.received_msgs_ts[rid]=ts
-            should_save=True
+            self.received_msgs_ts[rid] = ts
+            should_save = True
         else:
-            if self.received_msgs_ts[rid]<ts:
-                self.received_msgs_ts[rid]=ts
-                should_save=True
+            if self.received_msgs_ts[rid] < ts:
+                self.received_msgs_ts[rid] = ts
+                should_save = True
         if should_save:
-            self.add_to_file(rid,[karto])
+            self.add_to_file(rid, [karto])
         return should_save
 
-
-
-
     def process_data(self, buff_data, session_id=None, sent_data=0):
-        #rospy.logerr("data to process: {}".format(buff_data))
+        # rospy.logerr("data to process: {}".format(buff_data))
         # self.lock.acquire()
         self.map_updating = True
         for rid, rdata in buff_data.items():
@@ -552,7 +459,7 @@ class Robot:
                     self.karto_pub.publish(scan)
             sent_data += len(data_vals)
         self.map_updating = False
-        if session_id:
+        if self.is_sender:
             data_size = DataSize()
             data_size.header.frame_id = 'robot_{}/map'.format(self.robot_id)
             data_size.header.stamp = rospy.Time.now()
@@ -577,14 +484,15 @@ class Robot:
         message_data = self.load_data_for_id(sender_id)
         self.session_id = session_id
         self.process_data(received_data)
-        mynext_goal_path=[]
+        mynext_goal_path = []
         # if self.is_exploring:
         #     self.cancel_exploration()
         buff_data = self.create_buffered_data_msg(message_data, session_id, sender_id)
         self.delete_data_for_id(sender_id)
         if self.is_exploring:
             self.session_id = None
-        return SharedDataResponse(in_session=0, res_data=buff_data,path_to_next_goal=self.poses_to_next_leaf)
+        gate_leaf = self.current_gate_srv().gate_leaf
+        return SharedDataResponse(in_session=0, res_data=buff_data, gate_leaf=gate_leaf)
 
     def shared_point_handler(self, auction_data):
         pu.log_msg(self.robot_id, "Received auction", self.debug_mode)
@@ -592,44 +500,27 @@ class Robot:
         session_id = data.session_id
         if self.is_sender or not self.session_id or session_id != self.session_id:
             return SharedPointResponse(auction_accepted=0)
-        pu.log_msg(self.robot_id,"creating auction response",self.debug_mode)
+        pu.log_msg(self.robot_id, "creating auction response", self.debug_mode)
         sender_id = data.msg_header.sender_id
         poses = data.poses
         if not poses and self.frontier_ridge:
             pu.log_msg(self.robot_id, "No poses received. Proceeding to my next frontier", self.debug_mode)
             self.start_exploration_action(self.frontier_ridge)
             return SharedPointResponse(auction_accepted=1, res_data=None)
+
+        # convert received poses into this robot's reference frame and get its topological distances
         received_points = []
-        distances = []
-        pu.log_msg(self.robot_id,"Getting robot pose",self.debug_mode)
-        robot_pose = self.get_robot_pose()
-        pu.log_msg(self.robot_id,"Received robot pose: {}".format(robot_pose),self.debug_mode)
         p_in_sender = PoseStamped()
         p_in_sender.header = data.msg_header.header
         for p_from_sender in poses:
             p_in_sender.pose = p_from_sender
             p = self.listener.transformPose("robot_{}/map".format(self.robot_id), p_in_sender)
-            received_points.append(p)
-            point = (p.pose.position.x, p.pose.position.y)
-                     #self.get_elevation((p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w)))
-            distance = pu.D(robot_pose, point)
-            distances.append(distance)
-        auction = Auction()
-        auction.msg_header.header.frame_id = data.msg_header.header.frame_id
-        auction.msg_header.header.stamp = rospy.Time.now()
-        auction.msg_header.sender_id = str(self.robot_id)
-        auction.msg_header.receiver_id = str(sender_id)
-        auction.msg_header.topic = 'auction_feedback'
-        auction.poses = poses
-        auction.distances = distances
-        auction.session_id = data.session_id
-        # start waiting for location after bidding
-        self.time_after_bidding = rospy.Time.now().to_sec()
-        self.waiting_for_frontier_point = True
-
-        # reset waiting for auction flags
-        self.waiting_for_auction = False
-        self.auction_waiting_time = rospy.Time.now().to_sec()
+            pose = Pose()
+            pose.position.x = p.pose.position.x
+            pose.position.y = p.pose.position.y
+            received_points.append(pose)
+        distances = self.compute_distances(self.get_robot_pose(), received_points)
+        auction = self.create_auction(poses, data.session_id, distances)
         pu.log_msg(self.robot_id, "sending auction data back", self.debug_mode)
         return SharedPointResponse(auction_accepted=1, res_data=auction)
 
@@ -638,9 +529,8 @@ class Robot:
         self.process_data({sender_id: buff_data})
         # ============ used during initialization ============
         if self.initial_receipt:
-            # self.wait_for_updates()
             self.initial_data.add(sender_id)
-            pu.log_msg(self.robot_id,"Counts: {}".format(len(self.initial_data)),self.debug_mode)
+            pu.log_msg(self.robot_id, "Counts: {}".format(len(self.initial_data)), self.debug_mode)
             if len(self.initial_data) == len(self.candidate_robots):
                 self.initial_receipt = False
                 if self.i_have_least_id():
@@ -649,19 +539,27 @@ class Robot:
                     self.comm_session_time = rospy.Time.now().to_sec()
                     self.waiting_for_response = True
                     close_devices = self.get_close_devices()
-                    pu.log_msg(self.robot_id,"Close devices {}:".format(close_devices),self.debug_mode)
+                    pu.log_msg(self.robot_id, "Close devices {}:".format(close_devices), self.debug_mode)
                     if close_devices:
                         self.handle_intersection(close_devices)
                 else:
                     pu.log_msg(self.robot_id, "Waiting for frontier points...", self.debug_mode)
 
-    def start_exploration_action(self, frontier_ridge,other_leaves):
+    def compute_distances(self, robot_pose, target_poses):
+        rpose = Pose()
+        rpose.position.x = robot_pose[0]
+        rpose.position.y = robot_pose[1]
+        self.graph_distance_srv.wait_for_service()
+        distances = self.graph_distance_srv(GraphDistanceRequest(source=rpose, targets=target_poses)).distances
+        return distances
+
+    def start_exploration_action(self, frontier_id, other_leaves):
         while self.map_updating:  # wait for map to update
             sleep(1)
         self.feedback_count = 0
-        front=Frontier()
-        front.frontier=frontier_ridge
-        front.other_frontiers=other_leaves
+        front = Frontier()
+        front.frontier_id = frontier_id
+        front.frontiers = other_leaves
         self.gvgexplore_goal_pub.publish(front)
 
     def chosen_point_callback(self, data):
@@ -705,8 +603,8 @@ class Robot:
                                                                      "robot_{}/base_link".format(self.robot_id),
                                                                      rospy.Time(0))
                 robot_pose = (math.floor(robot_loc_val[0]), math.floor(robot_loc_val[1]), robot_loc_val[2])
-                pu.log_msg(self.robot_id,"Robot pose: {}".format(robot_pose),self.debug_mode)
-            #except: # TODO: catch proper exceptions.
+                pu.log_msg(self.robot_id, "Robot pose: {}".format(robot_pose), self.debug_mode)
+            # except: # TODO: catch proper exceptions.
             #    pass
         return robot_pose
 
@@ -717,7 +615,7 @@ class Robot:
                 self.poses_to_next_leaf = self.goal_cancel_srv(CancelExplorationRequest(req=1)).path_to_next_leaf
                 pu.log_msg(self.robot_id, "Canceling exploration ...", self.debug_mode)
             except:
-                  pu.log_msg(self.robot_id,"Error while cancelling..",self.debug_mode)
+                pu.log_msg(self.robot_id, "Error while cancelling..", self.debug_mode)
             self.is_exploring = False
             # return poses_to_next_leaf
 
@@ -763,7 +661,7 @@ class Robot:
         yaw = euler[2]
         return yaw
 
-    def save_all_data(self,data):
+    def save_all_data(self, data):
         rospy.signal_shutdown("Shutting down Robot")
 
 

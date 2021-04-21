@@ -135,6 +135,7 @@ class roscbt:
 
             # self.listener = tf.TransformListener()
         self.shared_data_size = []
+        self.established_connections = 1
         rospy.Subscriber('/shared_data_size', DataSize, self.shared_data_callback)
         rospy.Subscriber('/shutdown', String, self.save_all_data)
         rospy.loginfo("ROSCBT Initialized Successfully!")
@@ -169,7 +170,9 @@ class roscbt:
         return HotSpotResponse(hot_spots=signal_strength)
 
     def shared_data_callback(self, data):
-        self.shared_data_size.append({'time': rospy.Time.now().to_sec(), 'data_size': data.size})
+        self.established_connections += 1
+        self.shared_data_size.append(
+            {'time': rospy.Time.now().to_sec(), 'data_size': data.size, 'connections': self.established_connections})
 
     def main_callback(self, data):
         sender_id = data.msg_header.sender_id
@@ -313,13 +316,15 @@ class roscbt:
         self.coverage.append(result)
         return result
 
-    def save_all_data(self,data):
+    def save_all_data(self, data):
         save_data(self.exploration_data,
-                  '{}/exploration_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count, self.run,
-                                                             self.termination_metric,self.max_target_info_ratio))
+                  '{}/exploration_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count,
+                                                                self.run,
+                                                                self.termination_metric, self.max_target_info_ratio))
         save_data(self.shared_data_size,
                   '{}/roscbt_data_shared_{}_{}_{}_{}_{}.pickle'.format(self.method, self.environment, self.robot_count,
-                                                                    self.run, self.termination_metric,self.max_target_info_ratio))
+                                                                       self.run, self.termination_metric,
+                                                                       self.max_target_info_ratio))
 
         rospy.signal_shutdown("Shutting down ROSCBT")
 

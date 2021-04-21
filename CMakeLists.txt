@@ -87,6 +87,9 @@ add_service_files(
   SharedFrontier.srv
   RendezvousPoints.srv
   CancelExploration.srv
+  GraphDistance.srv
+  CurrentGate.srv
+  GateChange.srv
 #  Service2.srv
 )
 

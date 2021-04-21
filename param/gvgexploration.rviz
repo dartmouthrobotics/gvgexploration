@@ -8,6 +8,10 @@ Panels:
         - /R1:Map1
         - /R2:Map1
         - /R3:Map1
+        - /V1:Marker1
+        - /V2:Marker1
+        - /G1:Marker1
+        - /G2:Marker1
       Splitter Ratio: 0.5
     Tree Height: 720
   - Class: rviz/Selection
@@ -137,6 +141,8 @@ Visualization Manager:
           Value: true
         robot_2/odom:
           Value: true
+        robot_2/offset:
+          Value: true
         robot_3/base_footprint:
           Value: true
         robot_3/base_laser_link:
@@ -146,6 +152,8 @@ Visualization Manager:
         robot_3/map:
           Value: true
         robot_3/odom:
+          Value: true
+        robot_3/offset:
           Value: true
         robot_4/base_footprint:
           Value: true
@@ -157,6 +165,8 @@ Visualization Manager:
           Value: true
         robot_4/odom:
           Value: true
+        robot_4/offset:
+          Value: true
         robot_5/base_footprint:
           Value: true
         robot_5/base_laser_link:
@@ -167,6 +177,8 @@ Visualization Manager:
           Value: true
         robot_5/odom:
           Value: true
+        robot_5/offset:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
@@ -176,19 +188,79 @@ Visualization Manager:
         map:
           robot_0/map:
             robot_0/offset:
-              {}
+              robot_0/odom:
+                robot_0/base_footprint:
+                  robot_0/base_link:
+                    robot_0/base_laser_link:
+                      {}
           robot_1/map:
             robot_1/offset:
-              {}
+              robot_1/odom:
+                robot_1/base_footprint:
+                  robot_1/base_link:
+                    robot_1/base_laser_link:
+                      {}
           robot_2/map:
-            {}
+            robot_2/offset:
+              robot_2/odom:
+                robot_2/base_footprint:
+                  robot_2/base_link:
+                    robot_2/base_laser_link:
+                      {}
           robot_3/map:
-            {}
+            robot_3/offset:
+              robot_3/odom:
+                robot_3/base_footprint:
+                  robot_3/base_link:
+                    robot_3/base_laser_link:
+                      {}
           robot_4/map:
-            {}
+            robot_4/offset:
+              robot_4/odom:
+                robot_4/base_footprint:
+                  robot_4/base_link:
+                    robot_4/base_laser_link:
+                      {}
           robot_5/map:
-            {}
+            robot_5/offset:
+              robot_5/odom:
+                robot_5/base_footprint:
+                  robot_5/base_link:
+                    robot_5/base_laser_link:
+                      {}
       Update Interval: 0
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot_0/voronoi
+      Name: V1:Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot_1/voronoi
+      Name: V2:Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot_0/gate
+      Name: G1:Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot_1/gate
+      Name: G2:Marker
+      Namespaces:
+        {}
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
@@ -205,7 +277,10 @@ Visualization Manager:
     - Class: rviz/FocusCamera
     - Class: rviz/Measure
     - Class: rviz/SetInitialPose
+      Theta std deviation: 0.2617993950843811
       Topic: /initialpose
+      X std deviation: 0.5
+      Y std deviation: 0.5
     - Class: rviz/SetGoal
       Topic: /robot_1/goal
     - Class: rviz/PublishPoint
@@ -224,7 +299,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 9.888815879821777
+      Scale: 12.73510456085205
       Target Frame: dxl_base
       Value: TopDownOrtho (rviz)
       X: 48.382469177246094

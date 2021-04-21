@@ -2,4 +2,4 @@ gvgexploration/BufferedData req_data
 ---
 int32 in_session
 gvgexploration/BufferedData res_data
-geometry_msgs/Pose[] path_to_next_goal
+int32 gate_leaf

@@ -22,8 +22,8 @@ interval_sim 100  # simulation timestep in milliseconds
 
 window
 (
-  size [ 600.0 700.0 ]
-  center [ 20.0  14.0 ]
+  size [ 900.0 800.0 ]
+  center [ 40.0 15.0 ]
   rotate [ 0.0 0.0 ]
   scale 10
 )
@@ -32,8 +32,8 @@ window
 floorplan
 (
   name "tutorial"
-  bitmap "city_na.png"
-  size [ 65.0 65.0 10.0 ]
-  pose [ 10.0  7.00 0.0 0.0 ]
+  bitmap "lake2.png"
+  size [ 92.1 47.7 2.0 ]
+  pose [  41.05  17.35 0.0 0.0 ]
 )
 
