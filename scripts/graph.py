@@ -949,60 +949,43 @@ class Graph:
 
     def create_new_gate(self, initial_pose, current_pose, previous_poses, other_leaves, flagged_gate_leaves):
         """ Find the next region to explore using the gate nodes"""
+        if not len(other_leaves):
+            pu.log_msg(self.robot_id, "No gates left", 1 - self.debug_mode)
+            return [], [], [], -1
+
         self.generate_graph()
         self.lock.acquire()
 
-        # 1. localize initial pose and current pose on to the current graph
-        init_vid, _ = self.get_closest_vertex(initial_pose)
-        current_vid, _ = self.get_closest_vertex(current_pose)
-
-        # 2. find alternative gate, while excluding those that have been flagged or explored
-        other_gates = {}
-        for lid, lpose in other_leaves.items():
-            if lid not in flagged_gate_leaves:
-                gate = self.get_graph_path_to_leaf(initial_pose, lpose)
-                other_gates[lid] = gate
-        # 3. If there's any gate left, go ahead and pick one whose leaf is closest
+        # If there's any gate left, go ahead and pick one whose leaf is closest
         new_gate = []
         goal_grid = []
         prev_goal_grid = []
-        prev_poses = []
         gate_id = -1
-        if len(other_gates):
-            closest_gate = []
-            min_gate_len = np.inf
-            closest_path = []
-            for lid, gate in other_gates.items():
-                # check if there are
+        closest_path = []
+        min_gate_len = np.inf
+        prev_poses = []
+        for lid, lpose in other_leaves.items():
+            if lid not in flagged_gate_leaves:
+                gate = self.get_graph_path_to_leaf(initial_pose, lpose)
                 prev_poses = [gate[0], gate[-1]]
                 self.lock.release()
                 path_to_leaf = self.get_graph_path_to_leaf(current_pose, gate[-1])
                 self.lock.acquire()
                 if path_to_leaf:
-                    gate_ids = [self.get_closest_vertex(p)[0] for p in gate]
                     path_len = len(path_to_leaf)
                     if path_len < min_gate_len:
-                        closest_gate = gate_ids
                         gate_id = lid
+                        new_gate = gate
                         min_gate_len = path_len
                         closest_path = path_to_leaf
-                else:
-                    pu.log_msg(self.robot_id, "No valid path on this gate: {}".format(path_to_leaf),1 - self.debug_mode)
-            if gate_id != -1:
-                pu.log_msg(self.robot_id,
-                           "Found a new goal: {}, Previous goal: {}".format(gate_id, flagged_gate_leaves),
-                           1 - self.debug_mode)
-                new_gate = other_gates[gate_id]
-                goal_grid = self.graph.vs["coord"][self.get_closest_vertex(closest_path[-1])[0]]
-                prev_goal_grid = self.graph.vs["coord"][self.get_closest_vertex(closest_path[-2])[0]]
-                del previous_poses[:]  # clear previous history so that you don't revisit the previous region
-                prev_poses += [closest_path[-2], closest_path[-1]]
-                previous_poses += prev_poses
-                self.publish_gate_vertices(closest_gate, test=True)
-            else:
-                pu.log_msg(self.robot_id, "No valid gate",1 - self.debug_mode)
+        if gate_id != -1:
+            goal_grid = self.graph.vs["coord"][self.get_closest_vertex(closest_path[-1])[0]]
+            prev_goal_grid = self.graph.vs["coord"][self.get_closest_vertex(closest_path[-2])[0]]
+            del previous_poses[:]  # clear previous history so that you don't revisit the previous region
+            prev_poses += [closest_path[-2], closest_path[-1]]
+            previous_poses += prev_poses
         else:
-            pu.log_msg(self.robot_id, "No gates left", 1 - self.debug_mode)
+            pu.log_msg(self.robot_id, "No valid gate", 1 - self.debug_mode)
         self.lock.release()
 
         return new_gate, goal_grid, prev_goal_grid, gate_id
