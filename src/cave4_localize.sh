@@ -10,7 +10,7 @@ rostopic pub -1 /robot_1/initialpose geometry_msgs/PoseWithCovarianceStamped "he
   frame_id: 'map'
 pose:
   pose:
-    position: {x: 20.0, y: 8.0, z: 0.0}
+    position: {x: 52.4, y: 7.0, z: 0.0}
     orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
   covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -25,7 +25,7 @@ rostopic pub -1 /robot_2/initialpose geometry_msgs/PoseWithCovarianceStamped "he
   frame_id: 'map'
 pose:
   pose:
-    position: {x: 22.0, y: 6.0, z: 0.0}
+    position: {x: 46.0, y: 13.7, z: 0.0}
     orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
   covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -40,7 +40,7 @@ rostopic pub -1 /robot_3/initialpose geometry_msgs/PoseWithCovarianceStamped "he
   frame_id: 'map'
 pose:
   pose:
-    position: {x: 28.0, y: 8.0, z: 0.0}
+    position: {x: 46.6, y: 10.7, z: 0.0}
     orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
   covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,

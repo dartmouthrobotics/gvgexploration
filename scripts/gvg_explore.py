@@ -270,9 +270,9 @@ class GVGExplore:
             self.goal_grid = goal_grid
             self.prev_goal_grid = prev_goal_grid
             self.current_leaf_id = current_leaf_id
-            self.current_state = self.MOVE_TO_LEAF
-            self.move_robot_to_goal(np.array(self.all_gate_leaves[self.current_leaf_id]))
-            self.share_when_idle_flag = False
+            self.current_state = self.DECISION
+            # self.move_robot_to_goal(np.array(self.all_gate_leaves[self.current_leaf_id]))
+            # self.share_when_idle_flag = False
 
     def alert_sharing(self):
         pu.log_msg(self.robot_id, "communicate", 1 - self.debug_mode)
