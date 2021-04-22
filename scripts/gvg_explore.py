@@ -80,9 +80,8 @@ class GVGExplore:
         self.goal_grid = []
         self.explored_gates = []
         self.explored_leaves = []
-        self.current_leaf_id = None
+        self.current_leaf_id = -1
         self.previous_point = []
-        self.share_when_idle_flag = False
 
         self.gate_poses = []
         # nav2d MoveTo action.
@@ -122,9 +121,8 @@ class GVGExplore:
         flagged_gates = [p for p in request.flagged_gates]
         pu.log_msg(self.robot_id, "Finding closest gate", 1 - self.debug_mode)
         if len(flagged_gates) or self.current_state == self.IDLE:
-            self.explored_leaves += flagged_gates
-            self.client_motion.cancel_goal()
-            self.current_state = self.IDLE
+            all_explored = set(self.explored_leaves + flagged_gates)
+            self.explored_leaves = list(all_explored)
             self.get_closest_gate()
         return GateChangeResponse(result=1)
 
@@ -137,7 +135,7 @@ class GVGExplore:
     def move_robot_to_goal(self, goal, theta=0):
         if len(self.previous_point) == 0:
             self.previous_point = self.get_robot_pose()
-        pu.log_msg(self.robot_id, "Prev: {}, Current: {}".format(self.previous_point, goal), 1)
+        pu.log_msg(self.robot_id, "Prev: {}, Current: {}".format(self.previous_point, goal), 1 - self.debug_mode)
         self.traveled_distance.append(
             {'time': rospy.Time.now().to_sec(), 'traved_distance': pu.D(self.previous_point, goal)})
         self.previous_point = goal
@@ -162,6 +160,7 @@ class GVGExplore:
                     self.prev_pose += self.path_to_leaf[1:]
                     self.current_pose = goal
                 else:
+                    pu.log_msg(self.robot_id, "Robot motion failed. Do something", 1 - self.debug_mode)
                     self.current_pose = self.get_robot_pose()
                     self.prev_pose += self.path_to_leaf[
                                       1:pu.get_closest_point(self.current_pose, np.array(self.path_to_leaf))[0] + 1]
@@ -206,7 +205,6 @@ class GVGExplore:
                     self.goal_grid, self.graph.min_range_radius):
                 self.client_motion.cancel_goal()
 
-
     def get_robot_pose(self):
         robot_pose = None
         while not robot_pose:
@@ -250,11 +248,13 @@ class GVGExplore:
                     self.current_state = self.MOVE_TO
                     self.move_robot_to_goal(self.path_to_leaf[-1], pu.angle_pq_line(self.path_to_leaf[-1], prev_pose))
                 else:
-                    pu.log_msg(self.robot_id, "ROBOT RETURNED NO PATH. IT'S NOW IDLE", 1 - self.debug_mode)
                     self.current_state = self.IDLE
                     if self.current_leaf_id not in self.explored_leaves:
                         self.explored_leaves.append(self.current_leaf_id)
-                    self.alert_sharing()
+                    if len(self.explored_leaves) < len(self.all_gate_leaves):
+                        self.alert_sharing()
+                    else:
+                        pu.log_msg(self.robot_id, "ROBOT IS NOW IDLE", 1 - self.debug_mode)
             r.sleep()
 
     def get_closest_gate(self):
@@ -270,9 +270,10 @@ class GVGExplore:
             self.goal_grid = goal_grid
             self.prev_goal_grid = prev_goal_grid
             self.current_leaf_id = current_leaf_id
-            self.current_state = self.DECISION
-            # self.move_robot_to_goal(np.array(self.all_gate_leaves[self.current_leaf_id]))
-            # self.share_when_idle_flag = False
+            self.current_state = self.IDLE
+            self.client_motion.cancel_goal()
+            self.current_state = self.MOVE_TO_LEAF
+            self.move_robot_to_goal(np.array(self.all_gate_leaves[self.current_leaf_id]))
 
     def alert_sharing(self):
         pu.log_msg(self.robot_id, "communicate", 1 - self.debug_mode)
@@ -281,7 +282,6 @@ class GVGExplore:
         cp.position.x = cpose[INDEX_FOR_X]
         cp.position.x = cpose[INDEX_FOR_X]
         self.intersec_pub.publish(cp)
-        self.share_when_idle_flag = True
 
     def save_all_data(self, data):
         """ Save data and kill yourself"""

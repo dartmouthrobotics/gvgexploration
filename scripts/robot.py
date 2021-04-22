@@ -187,7 +187,7 @@ class Robot:
         if self.is_exploring:
             pu.log_msg(self.robot_id, "Intersec callback, session: {}".format(self.session_id), self.debug_mode)
             close_devices = self.get_close_devices()
-            if close_devices and not self.session_id:  # devices available and you're not in session
+            if not self.session_id:  # devices available and you're not in session
                 pu.log_msg(self.robot_id, "Before calling intersection: {}".format(self.session_id), self.debug_mode)
                 self.send_data(close_devices)
         else:

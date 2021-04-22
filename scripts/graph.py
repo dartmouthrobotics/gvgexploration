@@ -1243,12 +1243,16 @@ class Graph:
                 scount += 1
 
         frontiers = []
+        coords = []
         for leaf_id in selected_leaves:
             p = self.latest_map.grid_to_pose(self.graph.vs["coord"][leaf_id])
-            p_ros = Pose()
-            p_ros.position.x = p[0]
-            p_ros.position.y = p[1]
-            frontiers.append(p_ros)
+            pcoord = (p[0], p[1])
+            if pcoord not in coords:
+                coords.append(pcoord)
+                p_ros = Pose()
+                p_ros.position.x = p[0]
+                p_ros.position.y = p[1]
+                frontiers.append(p_ros)
         now = time.clock()
         t = (now - start_time)
         pu.log_msg(self.robot_id, 'COMPUTED FRONTIER RESULTS: {}'.format(frontiers), self.debug_mode)
