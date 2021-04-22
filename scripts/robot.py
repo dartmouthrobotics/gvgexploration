@@ -227,8 +227,7 @@ class Robot:
 
         alerted_robots = []
         pu.log_msg(self.robot_id,
-                   "Current gates: {}, Common gates: {}, Alert srvs: {}".format(current_gates, common_gates,
-                                                                                self.change_gate_alert),
+                   "Current gates: {}, Common gates: {}".format(current_gates, common_gates),
                    1 - self.debug_mode)
         for c in common_gates:
             if c[0] not in alerted_robots and c[1] not in alerted_robots:

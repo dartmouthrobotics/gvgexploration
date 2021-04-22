@@ -176,6 +176,8 @@ class GVGExplore:
                 pose.position.y = self.current_pose[INDEX_FOR_Y]
                 self.goal_feedback_pub.publish(pose)
             # rospy.sleep(1)
+        else:
+            rospy.logerr("UNABLE TO INITIATE NAVIGATION")
 
     def feedback_motion_cb(self, feedback):
         if self.current_state == self.MOVE_TO_LEAF:
@@ -248,13 +250,10 @@ class GVGExplore:
                     self.current_state = self.MOVE_TO
                     self.move_robot_to_goal(self.path_to_leaf[-1], pu.angle_pq_line(self.path_to_leaf[-1], prev_pose))
                 else:
-                    pu.log_msg(self.robot_id, "ROBOT RETURNED NOT PATH. IT'S NOW IDLE: {}".format(self.share_when_idle_flag), 1 - self.debug_mode)
+                    pu.log_msg(self.robot_id, "ROBOT RETURNED NO PATH. IT'S NOW IDLE", 1 - self.debug_mode)
                     self.current_state = self.IDLE
-
                     if self.current_leaf_id not in self.explored_leaves:
                         self.explored_leaves.append(self.current_leaf_id)
-                    # if not self.share_when_idle_flag:
-                    #     pu.log_msg(self.robot_id, "In IDLE state. Trigger data sharing. Explored: {}".format(self.explored_leaves), 1 - self.debug_mode)
                     self.alert_sharing()
             r.sleep()
 

@@ -949,6 +949,7 @@ class Graph:
 
     def create_new_gate(self, initial_pose, current_pose, previous_poses, other_leaves, flagged_gate_leaves):
         """ Find the next region to explore using the gate nodes"""
+        self.generate_graph()
         self.lock.acquire()
 
         # 1. localize initial pose and current pose on to the current graph
@@ -975,19 +976,18 @@ class Graph:
                 # check if there are
                 prev_poses = [gate[0], gate[-1]]
                 self.lock.release()
-                path_to_leaf = self.get_successors(current_pose, prev_poses, gate, get_any=True)
+                path_to_leaf = self.get_graph_path_to_leaf(current_pose, gate[-1])
                 self.lock.acquire()
-                if not path_to_leaf:
-                    path_to_leaf = gate
-                leaf_id, _ = self.get_closest_vertex(path_to_leaf[-1])
-                if leaf_id != -1:
+                if path_to_leaf:
                     gate_ids = [self.get_closest_vertex(p)[0] for p in gate]
-                    in_region, path_len = self.leaf_in_assigned_region(leaf_id, gate_ids)
-                    if in_region and path_len < min_gate_len:
+                    path_len = len(path_to_leaf)
+                    if path_len < min_gate_len:
                         closest_gate = gate_ids
                         gate_id = lid
                         min_gate_len = path_len
                         closest_path = path_to_leaf
+                else:
+                    pu.log_msg(self.robot_id, "No valid path on this gate: {}".format(path_to_leaf),1 - self.debug_mode)
             if gate_id != -1:
                 pu.log_msg(self.robot_id,
                            "Found a new goal: {}, Previous goal: {}".format(gate_id, flagged_gate_leaves),
@@ -999,9 +999,12 @@ class Graph:
                 prev_poses += [closest_path[-2], closest_path[-1]]
                 previous_poses += prev_poses
                 self.publish_gate_vertices(closest_gate, test=True)
+            else:
+                pu.log_msg(self.robot_id, "No valid gate",1 - self.debug_mode)
         else:
             pu.log_msg(self.robot_id, "No gates left", 1 - self.debug_mode)
         self.lock.release()
+
         return new_gate, goal_grid, prev_goal_grid, gate_id
 
     def explored_gate(self, init_pose, leaf_pose):
@@ -1056,7 +1059,6 @@ class Graph:
             paths_to_all_leaves += [self.latest_map.grid_to_pose(self.graph.vs["coord"][self.current_vertex_id])]
 
         # Find other leaves to visit
-        pu.log_msg(self.robot_id, "Non visited leaves: {}".format(non_visited_leaves), 1 - self.debug_mode)
         paths_to_all_leaves = self.graph.get_shortest_paths(self.current_vertex_id,
                                                             to=non_visited_leaves, weights=self.graph.es["weight"],
                                                             mode=igraph.ALL)
