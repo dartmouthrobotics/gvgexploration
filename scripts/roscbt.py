@@ -194,7 +194,7 @@ class roscbt:
             self.publisher_map[topic][receiver_id].publish(data)
             now = rospy.Time.now().to_sec()
             data_size = self.get_data_size(topic, data)  # sys.getsizeof(data)
-            self.shared_data_size.append({'time': now, 'data_size': data_size})
+            self.shared_data_size.append({'time': now, 'data_size': data_size, 'connections': self.established_connections})
             if combn in self.sent_data:
                 self.sent_data[combn][current_time] = data_size
             else:

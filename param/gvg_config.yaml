@@ -1,4 +1,4 @@
-debug_mode: 0
+debug_mode: 1
 method: $(arg method) # method that is running
 data_share_threshold: 10
 max_target_info_ratio: $(arg max_target_info_ratio) #0.5
@@ -23,7 +23,7 @@ image_resolution: 0.05     # scale of the map
 bs_pose: $(arg bs_pose)  # basic
 map_inflation_radius: 1   # inflation radius of the robot
 map_file: '$(find gvgexploration)/world/$(arg environment).png'    # environment file
-target_distance: 0.5
+target_distance: 2.0
 target_angle: 1.57
 environment: $(arg environment)
 max_wait_time: 120 # secs

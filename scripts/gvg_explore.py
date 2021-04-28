@@ -118,12 +118,16 @@ class GVGExplore:
         return CurrentGateResponse(gate_leaf=self.current_leaf_id)
 
     def change_gate_handler(self, request):
+        "Once a flagged gate is received, check if you have other options before you can consider moving to a different gate"
         flagged_gates = [p for p in request.flagged_gates]
         pu.log_msg(self.robot_id, "Finding closest gate", 1 - self.debug_mode)
         if len(flagged_gates) or self.current_state == self.IDLE:
             all_explored = set(self.explored_leaves + flagged_gates)
-            self.explored_leaves = list(all_explored)
-            self.get_closest_gate()
+            gates = set(list(self.all_gate_leaves))
+            if len(all_explored.intersection(gates)) < len(
+                    gates):  # first check if you still have enough gates available
+                self.explored_leaves = list(all_explored)
+                self.get_closest_gate()
         return GateChangeResponse(result=1)
 
     def start_stop(self, req):
@@ -249,6 +253,7 @@ class GVGExplore:
                     self.move_robot_to_goal(self.path_to_leaf[-1], pu.angle_pq_line(self.path_to_leaf[-1], prev_pose))
                 else:
                     self.current_state = self.IDLE
+                    # Now that you've run out of leaves region belonging to current gate, you can share data
                     if self.current_leaf_id not in self.explored_leaves:
                         self.explored_leaves.append(self.current_leaf_id)
                     if len(self.explored_leaves) < len(self.all_gate_leaves):

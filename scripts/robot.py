@@ -259,12 +259,61 @@ class Robot:
         cost = np.array(rcosts)
         row_ind, col_ind = linear_sum_assignment(cost)
         assignments = {}
+        sent_frontiers = []
         for i in range(len(row_ind)):
             if i != self.robot_id:
                 frontier = self.create_frontier(i, col_ind[i], frontiers)
                 res = self.allocation_pub[str(i)](SharedFrontierRequest(frontier=frontier))
+                sent_frontiers.append(frontier)
             assignments[i] = col_ind[i]
+
+        while len(assignments) < len(rids) - 1:
+            for rid in rids:
+                for i in range(len(frontiers)):
+                    if rid != self.robot_id and rid not in assignments:
+                        frontier = self.create_frontier(rid, i, frontiers)
+                        res = self.allocation_pub[str(rid)](SharedFrontierRequest(frontier=frontier))
+                        rospy.logerr("Assignments: {}, rids: {}".format(assignments, rids))
+                        assignments[rid] = i
+
         rospy.logerr("Do hungarian assignment: {}".format(assignments))
+        return assignments
+
+    def sequential_auction_assignment(self, bgraph, frontiers):
+        """ Sequentially assign a robot to its closest location according to their bids in bgraph values"""
+        rids = list(bgraph)
+        rids.sort()
+        dists = []  # create a 2D arrau
+        for i in range(len(frontiers)):
+            dists.append([])
+            for rid in rids:
+                dists[i].append(bgraph[rid][i])
+        dists = np.array(dists)
+        sent_frontiers = []
+        assignments = {}
+        rospy.logerr("Dists: {}".format(dists))
+        while len(assignments) < len(rids) and len(assignments) < len(frontiers):
+            indexes = np.argmin(dists, axis=0)
+            for rid in range(len(indexes)):
+                idx = indexes[rid]
+                if rid not in assignments and idx not in sent_frontiers:
+                    if rid != self.robot_id:
+                        frontier = self.create_frontier(rid, idx, frontiers)
+                        res = self.allocation_pub[str(rid)](SharedFrontierRequest(frontier=frontier))
+                    assignments[rid] = idx
+                    dists[idx, :] = np.inf
+                    sent_frontiers.append(idx)
+        rospy.logerr("Do sequential auction assignment: {}, remaining: {}".format(assignments, dists))
+
+        #  frontier locations aren't enough, send unassigned robots to their respective closest frontiers
+        for rid in rids:
+            if rid not in assignments:
+                idx = np.argmin(bgraph[rid])
+                assignments[rid] = idx
+                if rid != self.robot_id:
+                    frontier = self.create_frontier(rid, idx, frontiers)
+                    res = self.allocation_pub[str(rid)](SharedFrontierRequest(frontier=frontier))
+
         return assignments
 
     def handle_intersection(self, current_devices):
@@ -305,7 +354,8 @@ class Robot:
                         data = auction_response.res_data
                         bgraph[int(rid)] = [data.distances[i] for i in range(len(data.distances))]
 
-                robot_assignments = self.hungarian_assignment(bgraph, frontier_points)
+                # robot_assignments = self.hungarian_assignment(bgraph, frontier_points)
+                robot_assignments = self.sequential_auction_assignment(bgraph, frontier_points)
             else:
                 pu.log_msg(self.robot_id, "All robots are busy..", self.debug_mode)
         else:
