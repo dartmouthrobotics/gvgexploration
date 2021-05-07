@@ -87,7 +87,6 @@ class roscbt:
 
         # difference in center of map image and actual simulation
         self.exploration_data = []
-        self.received_messages = []
 
         # import message types
         for topic in self.topics:
@@ -143,7 +142,6 @@ class roscbt:
     def spin(self):
         r = rospy.Rate(0.1)
         while not rospy.is_shutdown():
-            self.get_coverage()
             self.compute_performance()
             r.sleep()
 
@@ -179,9 +177,6 @@ class roscbt:
         receiver_id = data.msg_header.receiver_id
         topic = data.msg_header.topic
         start_time = rospy.Time.now().to_sec()
-        self.received_messages.append(
-            {'time': start_time, 'message_time': data.msg_header.header.stamp.to_sec(), 'sender_id': sender_id,
-             'receiver_id': receiver_id, 'session_id': data.session_id, 'topic': topic})
         current_time = rospy.Time.now().to_sec()
         combn = (sender_id, receiver_id)
         # handle all message types
@@ -194,7 +189,8 @@ class roscbt:
             self.publisher_map[topic][receiver_id].publish(data)
             now = rospy.Time.now().to_sec()
             data_size = self.get_data_size(topic, data)  # sys.getsizeof(data)
-            self.shared_data_size.append({'time': now, 'data_size': data_size, 'connections': self.established_connections})
+            self.shared_data_size.append(
+                {'time': now, 'data_size': data_size, 'connections': self.established_connections})
             if combn in self.sent_data:
                 self.sent_data[combn][current_time] = data_size
             else:
@@ -235,18 +231,12 @@ class roscbt:
         return rssi
 
     def compute_performance(self):
-        self.lock.acquire()
-        try:
+        if len(self.robot_pose) == self.robot_count:
             data = {'start_time': rospy.Time.now().to_sec()}
-            if not self.coverage:
-                data['coverage'] = [0, 0]
-            else:
-                data['coverage'] = [np.nanmean(self.coverage), np.nanvar(self.coverage)]
-
-            if not self.connected_robots:
-                data['connected'] = [0, 0]
-            else:
-                data['connected'] = [np.nanmean(self.connected_robots), np.nanvar(self.connected_robots)]
+            dispersion, connected_robots = self.get_coverage()
+            data['dispersion_mean'] = dispersion[0]
+            data['dispersion_std'] = dispersion[1]
+            data['connected'] = connected_robots
 
             robot_poses = copy.deepcopy(self.robot_pose)
             distances = []
@@ -255,17 +245,11 @@ class roscbt:
                 if rid in self.prev_poses:
                     d = self.D(self.prev_poses[rid], p)
                 distances.append(d)
-            data['distance'] = np.nansum(distances)
-            self.prev_poses = robot_poses
+                self.prev_poses[rid] = p
+            data['travelled_distance_mean'] = np.nanmean(distances)
+            data['travelled_distance_std'] = np.nanstd(distances)
             self.exploration_data.append(data)
-            del self.coverage[:]
-            del self.connected_robots[:]
-            self.lasttime_before_performance_calc = rospy.Time.now().to_sec()
-        except Exception as e:
-            rospy.logerr("getting error: {}".format(e))
-        finally:
-            pass
-        self.lock.release()
+
 
     '''
       computes euclidean distance between two cartesian coordinates
@@ -290,31 +274,27 @@ class roscbt:
     def get_coverage(self):
         distances = []
         connected = {}
-        if self.robot_pose:
-            for i in self.robot_ids:
-                pose1 = self.get_robot_pose(i)
-                if pose1:
-                    for j in self.robot_ids:
-                        if i != j:
-                            pose2 = self.get_robot_pose(j)
-                            if pose2:
-                                distance, in_range = self.robots_inrange(pose1, pose2)
-                                distances.append(distance)
-                                if in_range:
-                                    if i in connected:
-                                        connected[i] += 1
-                                    else:
-                                        connected[i] = 1
-        if not distances:
-            result = [0, 0]
-        else:
-            result = [np.nanmean(distances), np.nanstd(distances)]
+        result = [0, 0]
+        connected_robots = self.robot_count
+        for i in self.robot_ids:
+            for j in self.robot_ids:
+                if i != j:
+                    pose1 = self.robot_pose[int(i)]
+                    pose2 = self.robot_pose[int(j)]
+                    distance, in_range = self.robots_inrange(pose1, pose2)
+                    distances.append(distance)
+                    if in_range:
+                        if i in connected:
+                            connected[i] += 1
+                        else:
+                            connected[i] = 1
+        if distances:
+            result[0] = np.nanmean(distances)
+            result[1] = np.nanstd(distances)
         if connected:
             key = max(connected, key=connected.get)
-            max_connected = connected[key] + 1
-            self.connected_robots.append(max_connected)
-        self.coverage.append(result)
-        return result
+            connected_robots = connected[key] + 1
+        return result, connected_robots
 
     def save_all_data(self, data):
         save_data(self.exploration_data,

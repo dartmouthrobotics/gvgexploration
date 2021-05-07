@@ -204,17 +204,20 @@ class Robot:
         local_data_size = 0
         for rid in current_devices:
             message_data = self.load_data_for_id(rid)
-            local_data_size += len(message_data)  # self.get_message_size(message_data)
-            buffered_data = self.create_buffered_data_msg(message_data, self.session_id, rid)
-            response = self.shared_data_srv_map[rid](SharedDataRequest(req_data=buffered_data))
-            pu.log_msg(self.robot_id, "received feedback from robot: {}".format(response.in_session), self.debug_mode)
-            if not response.in_session:
-                session_devices.append(rid)
-                buff_data[rid] = response.res_data
-                current_gates[int(rid)] = response.gate_leaf
-                self.delete_data_for_id(rid)
+            if len(message_data):
+                local_data_size += len(message_data)  # self.get_message_size(message_data)
+                buffered_data = self.create_buffered_data_msg(message_data, self.session_id, rid)
+                response = self.shared_data_srv_map[rid](SharedDataRequest(req_data=buffered_data))
+                pu.log_msg(self.robot_id, "received feedback from robot: {}".format(response.in_session), self.debug_mode)
+                if not response.in_session:
+                    session_devices.append(rid)
+                    buff_data[rid] = response.res_data
+                    current_gates[int(rid)] = response.gate_leaf
+                    self.delete_data_for_id(rid)
+                else:
+                    pu.log_msg(self.robot_id, "Robot {} is in another session".format(rid), self.debug_mode)
             else:
-                pu.log_msg(self.robot_id, "Robot {} is in another session".format(rid), self.debug_mode)
+                pu.log_msg(self.robot_id, "No data for Robot {}".format(rid), self.debug_mode)
         self.process_data(buff_data, session_id=self.session_id, sent_data=local_data_size)
         self.decide_on_next_goal(current_gates)
 
@@ -283,7 +286,7 @@ class Robot:
         """ Sequentially assign a robot to its closest location according to their bids in bgraph values"""
         rids = list(bgraph)
         rids.sort()
-        dists = []  # create a 2D arrau
+        dists = []
         for i in range(len(frontiers)):
             dists.append([])
             for rid in rids:

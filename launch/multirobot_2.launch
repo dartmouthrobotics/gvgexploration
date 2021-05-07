@@ -15,9 +15,13 @@
     <param name="robot_count" value="$(arg robot_count)" />
     <rosparam command="load" file="$(find gvgexploration)/param/gvg_config.yaml" subst_value="true"/>
 
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find gvgexploration)/param/$(arg environment)_map.yaml">
+        <remap from="map" to="latched_map"/>
+    </node>
+
     <group ns="robot_0">
         <include file="$(find gvgexploration)/launch/nodes.launch">
-            <arg name="robot_name" value="1"/>
+            <arg name="robot" value="1"/>
         </include>
 
         <include file="$(find gvgexploration)/launch/robot.launch">
@@ -30,7 +34,7 @@
 
     <group ns="robot_1">
         <include file="$(find gvgexploration)/launch/nodes.launch">
-            <arg name="robot_name" value="2"/>
+            <arg name="robot" value="2"/>
         </include>
 
         <include file="$(find gvgexploration)/launch/robot.launch">

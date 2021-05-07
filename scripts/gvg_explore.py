@@ -15,6 +15,7 @@ from geometry_msgs.msg import Pose, Point
 from std_srvs.srv import Trigger, TriggerResponse
 from nav2d_navigator.msg import MoveToPosition2DAction, MoveToPosition2DGoal
 from std_msgs.msg import String
+from threading import Thread
 # Custom modules
 from graph import Graph
 import project_utils as pu
@@ -120,15 +121,22 @@ class GVGExplore:
     def change_gate_handler(self, request):
         "Once a flagged gate is received, check if you have other options before you can consider moving to a different gate"
         flagged_gates = [p for p in request.flagged_gates]
-        pu.log_msg(self.robot_id, "Finding closest gate", 1 - self.debug_mode)
-        if len(flagged_gates) or self.current_state == self.IDLE:
-            all_explored = set(self.explored_leaves + flagged_gates)
-            gates = set(list(self.all_gate_leaves))
-            if len(all_explored.intersection(gates)) < len(
-                    gates):  # first check if you still have enough gates available
-                self.explored_leaves = list(all_explored)
-                self.get_closest_gate()
+        thread = Thread(target=self.compute_gate, args=(flagged_gates,))
+        thread.start()
         return GateChangeResponse(result=1)
+
+    def compute_gate(self, flagged_gates):
+        try:
+            pu.log_msg(self.robot_id, "Finding closest gate", self.debug_mode)
+            # if len(flagged_gates) or self.current_state == self.IDLE:
+            #     all_explored = set(self.explored_leaves + flagged_gates)
+            #     gates = set(list(self.all_gate_leaves))
+            #     if len(all_explored.intersection(gates)) < len(
+            #             gates):  # first check if you still have enough gates available
+            #         self.explored_leaves = list(all_explored)
+            self.get_closest_gate()
+        except:
+              pu.log_msg(self.robot_id, "Error: Finding closest gate", 1 - self.debug_mode)
 
     def start_stop(self, req):
         if self.current_state != self.IDLE:

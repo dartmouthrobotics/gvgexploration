@@ -1,4 +1,6 @@
 import math
+import os
+
 import numpy as np
 import pickle
 from os import path
@@ -33,9 +35,10 @@ LOST = 9  # An action client can determine that a goal is LOST. This should not 
 
 def save_data(data, file_name):
     saved_data = []
-    if not path.exists(file_name):
-        f = open(file_name, "wb")
-        f.close()
+    if path.exists(file_name):
+        os.unlink(file_name)
+    f = open(file_name, "wb")
+    f.close()
     with open(file_name, 'wb') as fp:
         pickle.dump(data, fp, protocol=pickle.HIGHEST_PROTOCOL)
         fp.close()

@@ -1,13 +1,9 @@
 #!/usr/bin/python
 
 import time
-import math
 import numpy as np
 from numpy.linalg import norm
-from sklearn.metrics import mean_squared_error
 from scipy.spatial import Voronoi, voronoi_plot_2d
-import tf
-from message_filters import TimeSynchronizer
 import message_filters
 import igraph
 from bresenham import bresenham
@@ -27,27 +23,17 @@ from gvgexploration.msg import *
 from gvgexploration.srv import *
 import project_utils as pu
 from project_utils import euclidean_distance
-import tf
 from graham_scan import graham_scan
-import shapely.geometry as sg
-from nav_msgs.msg import *
 from nav2d_navigator.msg import *
-from std_srvs.srv import *
 from project_utils import INDEX_FOR_X, INDEX_FOR_Y, save_data
 from std_msgs.msg import String
-
-import shapely.geometry as sg
-from shapely.geometry.polygon import Polygon
 from visualization_msgs.msg import Marker
 from tf import TransformListener
 from geometry_msgs.msg import Point
 from scipy.ndimage import minimum_filter
 
 from nav_msgs.srv import GetMap
-
-from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
-from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 INF = 100000
 SCALE = 10
@@ -173,7 +159,10 @@ class Grid:
         return obstacles
 
     def is_frontier(self, previous_cell, current_cell,
-                    distance):
+                    distance, fc_count=1):
+        if fc_count == 0:
+            rospy.logerr("FRONTIER CHECK: PASSED")
+            return True
         """current_cell a frontier?"""
         v = previous_cell - current_cell
         u = v / np.linalg.norm(v)
@@ -295,7 +284,8 @@ class Grid:
                     p_in_sender.point.x = p[0]
                     p_in_sender.point.y = p[1]
 
-                    p_in_common_ref_frame = self.tf_listener.transformPoint("robot_0/map", p_in_sender).point
+                    p_in_common_ref_frame = self.tf_listener.transformPoint("robot_0/map",
+                                                                            p_in_sender).point
                     poses.add((nearest_multiple(p_in_common_ref_frame.x), nearest_multiple(p_in_common_ref_frame.y)))
         return poses
 
@@ -407,7 +397,9 @@ class Graph:
         self.assigned_frontier_leaves = PQueue()
         self.assigned_visited_leaves = {}
         self.assigned_visited_leaves = {}
-
+        self.fc_count = 0
+        if self.robot_id !=0:
+            self.fc_count=1
         # edges
         self.deleted_nodes = {}
         self.deleted_obstacles = {}
@@ -461,7 +453,7 @@ class Graph:
             # and distance between obstacle points is large enough for the robot
             if self.latest_map.is_free(p1[INDEX_FOR_X], p1[INDEX_FOR_Y]) and \
                     self.latest_map.is_free(p2[INDEX_FOR_X], p2[INDEX_FOR_Y]) and \
-                    euclidean_distance(q1, q2) > self.min_edge_length:
+                    euclidean_distance(q1, q2) > 4*self.min_edge_length:
 
                 # Add vertex and edge.
                 graph_vertex_ids = [-1, -1]  # temporary for finding verted IDs.
@@ -546,10 +538,10 @@ class Graph:
                 neighbor = graph.vs["coord"][neighbor_id]
                 current_vertex = graph.vs["coord"][current_vertex_id]
                 if not self.latest_map.is_frontier(
-                        neighbor, current_vertex, self.min_range_radius):  # TODO parameter.
+                        neighbor, current_vertex, 2 * self.min_range_radius):  # TODO parameter.
                     self.graph.delete_vertices(current_vertex_id)
-                # else:
-                #     self.leaves[current_vertex_id] = self.latest_map.unknown_area_approximate(current_vertex)
+                else:
+                    self.leaves[current_vertex_id] = self.latest_map.unknown_area_approximate(current_vertex)
             # else:
             #     if graph.degree(current_vertex_id) > 2:
             #         self.intersections[current_vertex_id] = graph.vs["coord"][current_vertex_id]
@@ -619,14 +611,15 @@ class Graph:
                 neighbor_id = self.graph.neighbors(current_vertex_id)[0]
                 neighbor = self.graph.vs["coord"][neighbor_id]
                 current_vertex = self.graph.vs["coord"][current_vertex_id]
-                if not self.latest_map.is_frontier(neighbor, current_vertex, self.min_range_radius):  # TODO parameter.
+                if not self.latest_map.is_frontier(neighbor, current_vertex, self.min_range_radius,
+                                                   fc_count=self.fc_count):  # TODO parameter.
                     self.graph.delete_vertices(current_vertex_id)
                 else:
                     self.leaves[current_vertex_id] = self.latest_map.unknown_area_approximate(current_vertex)
                     current_vertex_id += 1
             else:
-                if self.graph.degree(current_vertex_id) > 2:
-                    self.intersections[current_vertex_id] = self.graph.vs["coord"][current_vertex_id]
+                #     if self.graph.degree(current_vertex_id) > 2:
+                #         self.intersections[current_vertex_id] = self.graph.vs["coord"][current_vertex_id]
                 current_vertex_id += 1
         self.publish_leaves()
 
@@ -1253,8 +1246,9 @@ class Graph:
                 p_ros.position.x = p[0]
                 p_ros.position.y = p[1]
                 frontiers.append(p_ros)
-        now = time.clock()
-        t = (now - start_time)
+
+        self.fc_count += 1
+        rospy.logerr("New FC count: {}".format(self.fc_count))
         pu.log_msg(self.robot_id, 'COMPUTED FRONTIER RESULTS: {}'.format(frontiers), self.debug_mode)
         return FrontierPointResponse(frontiers=frontiers)
 

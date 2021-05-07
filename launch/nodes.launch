@@ -1,9 +1,9 @@
 <!-- Robot nodes with parameters for simulation. -->
 <launch>
-<arg name="robot_name"/>
-<arg name="robot_id" value="$(eval arg('robot_name') - 1)"/>
+<arg name="robot"/>
+<arg name="robot_id" value="$(eval arg('robot') - 1)"/>
 
-<param name="robot_id" value="$(arg robot_name)" />
+<param name="robot_id" value="$(arg robot)" />
 <param name="tf_prefix" type="string" value="robot_$(arg robot_id)"/>
 
 <rosparam command="load" file="$(find gvgexploration)/param/ros.yaml" subst_value="true"/>
@@ -24,7 +24,7 @@
 
 <node pkg="nav2d_navigator" type="navigator" name="navigator">
     <rosparam command="load" file="$(find gvgexploration)/param/navigation.yaml" subst_value="true"/>
-    <param name="robot_id" value="$(arg robot_name)"/>
+    <param name="robot_id" value="$(arg robot)"/>
 </node>
 
 <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />
