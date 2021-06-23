@@ -15,7 +15,7 @@ opposite_vector_bias: 0.25  # allowed error margin in vector comparisons (direct
 separation_bias: 2  # allowed error margin in comparisons of corridor width
 max_coverage: 0.91   # allowed maximum coverage
 max_common_coverage: 0.8
-max_exploration_time: 20
+max_exploration_time: 30
 termination_metric: 1 # 1: TOTAL COVERAGE, 2: MAXIMUM_EXPLORATION_TIME 3: COMMON_COVERAGE, 4: FULL_COVERAGE
 map_scale: 1.0     # scale of the map
 graph_scale: 1.0     # scale of the map
@@ -28,3 +28,6 @@ target_angle: 1.57
 environment: $(arg environment)
 max_wait_time: 120 # secs
 run: $(arg run)
+
+robot_colors: {'0': [0.65, 0.69, 0.1], '1': [0.0, 0.0, 1.0], '2': [0.62, 0.12, 0.94], '3':[0.8, 0.5, 0.1]}
+comm_color: [0.0, 1.0, 0.0,1.0]

@@ -5,27 +5,6 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /R1:Map1
-        - /R2:Map1
-        - /NP:Marker1
-        - /NP:Marker1/Namespaces1
-        - /EDGE:Marker1
-        - /Leaves:Marker1
-        - /NP1:Marker1
-        - /EDGE1:Marker1
-        - /Leaves1:Marker1
-        - /L1:Map1
-        - /Leaf:Marker1
-        - /Marker1
-        - /Marker2
-        - /R3:Map1
-        - /R4:Map1
-        - /G1:Marker1
-        - /G2:Marker1
-        - /Scan:Marker1
-        - /Scan1:Marker1
-        - /Marker3
-        - /Marker4
       Splitter Ratio: 0.5
     Tree Height: 1804
   - Class: rviz/Selection
@@ -74,102 +53,6 @@ Visualization Manager:
       Unreliable: false
       Use Timestamp: false
       Value: true
-    - Class: rviz/TF
-      Enabled: false
-      Frame Timeout: 15
-      Frames:
-        All Enabled: true
-      Marker Scale: 1
-      Name: TF
-      Show Arrows: true
-      Show Axes: true
-      Show Names: true
-      Tree:
-        {}
-      Update Interval: 0
-      Value: false
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /robot_0/navigator/markers
-      Name: NP:Marker
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /robot_0/explore/edges
-      Name: EDGE:Marker
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /robot_0/explore/vertices
-      Name: Leaves:Marker
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /robot_1/navigator/markers
-      Name: NP1:Marker
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /robot_1/explore/edges
-      Name: EDGE1:Marker
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /robot_1/explore/vertices
-      Name: Leaves1:Marker
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: true
-    - Alpha: 0.699999988079071
-      Class: rviz/Map
-      Color Scheme: map
-      Draw Behind: false
-      Enabled: false
-      Name: L1:Map
-      Topic: /robot_0/operator/local_map/costmap
-      Unreliable: false
-      Use Timestamp: false
-      Value: false
-    - Class: rviz/Marker
-      Enabled: false
-      Marker Topic: /robot_0/explore/leaf_region
-      Name: Leaf:Marker
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: false
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /robot_0/voronoi
-      Name: Marker
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /robot_1/voronoi
-      Name: Marker
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
     - Alpha: 0.699999988079071
       Class: rviz/Map
       Color Scheme: map
@@ -192,16 +75,64 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /robot_0/border_edge
-      Name: G1:Marker
+      Marker Topic: /robot_0/voronoi
+      Name: V1
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot_1/voronoi
+      Name: V2
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot_2/voronoi
+      Name: V3
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot_3/voronoi
+      Name: V4
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /communication
+      Name: COM1
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /communication
+      Name: COM2
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot_2/communication
+      Name: COM3
       Namespaces:
         {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /robot_1/border_edge
-      Name: G2:Marker
+      Marker Topic: /robot_3/communication
+      Name: COM4
       Namespaces:
         {}
       Queue Size: 100
@@ -209,33 +140,79 @@ Visualization Manager:
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /robot_0/gate
-      Name: Scan:Marker
+      Name: G1
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /robot_1/gate
-      Name: Scan1:Marker
+      Name: G2
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /robot_2/gate
-      Name: Marker
+      Name: G3
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot_3/gate
+      Name: G4
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/TF
+      Enabled: false
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        {}
+      Update Interval: 0
+      Value: false
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot_0/robot_pose
+      Name: P1
       Namespaces:
         "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /robot_3/gate
-      Name: Marker
+      Marker Topic: /robot_1/robot_pose
+      Name: P2
       Namespaces:
-        {}
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot_2/robot_pose
+      Name: P3
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot_3/robot_pose
+      Name: P4
+      Namespaces:
+        "": true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -275,7 +252,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 18.795654296875
+      Scale: 28.315982818603516
       Target Frame: dxl_base
       Value: TopDownOrtho (rviz)
       X: 20.313045501708984

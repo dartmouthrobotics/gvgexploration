@@ -3,15 +3,15 @@ include "office.world"
 pioneer3at
 (
   name "robot1"
-  color "purple"
-  pose [33.0 15 0.0 0.0]
+  color "green"
+  pose [33.0 15.0 0.0 0.0]
 )
 
 # Put two robots into the world
 pioneer3at
 (
   name "robot2"
-  color "purple"
+  color "blue"
   pose [33.0 17.0 0.0 0.0]
 )
 pioneer3at
@@ -24,6 +24,6 @@ pioneer3at
 pioneer3at
 (
   name "robot4"
-  color "purple"
+  color "orange"
   pose [33.0 21.0 0.0 0.0]
 )

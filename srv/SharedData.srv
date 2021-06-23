@@ -2,4 +2,4 @@ gvgexploration/BufferedData req_data
 ---
 int32 in_session
 gvgexploration/BufferedData res_data
-int32 gate_leaf
+int32[] gate_leaf

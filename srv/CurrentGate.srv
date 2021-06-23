@@ -1,2 +1,2 @@
 ---
-int32 gate_leaf
+int32[] gate_leaf

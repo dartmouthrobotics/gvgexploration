@@ -82,6 +82,7 @@ class MapAnalyzer:
             self.get_explored_region(rid)
             common_points.append(self.all_maps[rid])
         common_area = set.intersection(*common_points)
+        rospy.logerr('New poses explored: {},'.format(len(self.all_explored_points)))
         explored_ratio = len(self.all_explored_points) / self.total_free_area
         common_coverage = len(common_area) / self.total_free_area
         self.current_explored_ratio = explored_ratio
@@ -121,7 +122,11 @@ class MapAnalyzer:
             grid = Grid(occ_grid)
             poses = grid.get_explored_region()
             self.total_free_area = float(len(poses))
-            rospy.logerr("Free ratio: {}, Width: {}, Height: {}".format(self.total_free_area, occ_grid.info.width, occ_grid.info.height))
+            area = occ_grid.info.width * occ_grid.info.height
+            rospy.logerr("Free ratio: {}, Width: {}, Height: {}, percentage: {}".format(self.total_free_area,
+                                                                                        occ_grid.info.width,
+                                                                                        occ_grid.info.height,
+                                                                                        self.total_free_area / float(area)))
             self.is_raw_map_read = True
 
     def check_kill_process(self, pstring):

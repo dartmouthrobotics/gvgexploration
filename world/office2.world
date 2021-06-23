@@ -3,7 +3,7 @@ include "office.world"
 pioneer3at
 (
   name "robot1"
-  color "purple"
+  color "green"
   pose [33.0 20.0 0.0 0.0]
 )
 
@@ -11,6 +11,6 @@ pioneer3at
 pioneer3at
 (
   name "robot2"
-  color "purple"
+  color "blue"
   pose [33.0 18.0 0.0 0.0]
 )

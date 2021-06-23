@@ -51,6 +51,8 @@
 
     <node name="localizer" pkg="gvgexploration" type="$(arg world)_localize.sh" />
     <node name="map_analyzer" pkg="gvgexploration" type="map_analyzer.py"/>
+    <node name="comm_viz" pkg="gvgexploration" type="communication_visual.py"/>
+
 
     <!-- RVIZ to view the visualization -->
     <node name="RVIZ" pkg="rviz" type="rviz" args=" -d $(find gvgexploration)/param/maze.rviz" output="screen" />

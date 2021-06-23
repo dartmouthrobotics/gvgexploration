@@ -32,22 +32,7 @@ window
 floorplan
 (
     name "tutorial"
-    bitmap "basic.png"
-    size [ 30.0 21.5 2.0 ]
-    pose [  14.85  12.55 0.0 0.0 ]
-)
-
-pioneer3at
-(
-  name "robot1"
-  color "blue"
-  pose [4.0 12.0 0.0 0.0]
-)
-
-# Put two robots into the world
-pioneer3at
-(
-  name "robot2"
-  color "purple"
-  pose [4.0 10.0 0.0 0.0]
+    bitmap "basic.bmp"
+    size [ 44.0 27.0 2.0 ]
+    pose [  21.85  18.55 0.0 0.0 ]
 )

@@ -1,14 +1,15 @@
 #!/usr/bin/python
 import numpy as np
-
 import rospy
 import tf
 from message_filters import TimeSynchronizer
 import message_filters
-
+from std_msgs.msg import ColorRGBA
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
+from visualization_msgs.msg import Marker
+from geometry_msgs.msg import Point
 
 
 class ScanFilter:
@@ -47,6 +48,10 @@ class ScanFilter:
         self.scan.ranges = list(self.scan.ranges)
         self.scan_ranges_size = len(self.scan.ranges)
 
+        self.pose_pub = rospy.Publisher('/robot_{}/robot_pose'.format(self.robot_id), Marker, queue_size=0)
+        self.marker_colors = rospy.get_param('/robot_colors')
+        self.marker_id = self.robot_id
+
         # Subscriber of the own robot.
         self.base_pose_subscriber = message_filters.Subscriber('base_pose_ground_truth', Odometry)
         self.scan_subscriber = message_filters.Subscriber('base_scan', LaserScan)
@@ -66,12 +71,14 @@ class ScanFilter:
             pose_msg (Odometry)
             scan_msg (LaserScan)
         """
+
         # If got the pose of other robots, then the scan message can be processed.
         if len(self.all_poses) == self.robot_count - 1:
             robot_pose = (pose_msg.pose.pose.position.x, pose_msg.pose.pose.position.y, (
-            pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y, pose_msg.pose.pose.orientation.z,
-            pose_msg.pose.pose.orientation.w))
+                pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y, pose_msg.pose.pose.orientation.z,
+                pose_msg.pose.pose.orientation.w))
 
+            self.publish_visited_vertices(self.robot_id, robot_pose)
             scan_msg_stamp = scan_msg.header.stamp.to_sec()
             scan_time = scan_msg.scan_time  # time (sec) between scans
 
@@ -179,6 +186,25 @@ class ScanFilter:
             return mTr  # np.linalg.inv(mTr)
         else:
             return mTr
+
+    def publish_visited_vertices(self, robot_id, pose):
+        rid = str(robot_id)
+        m = Marker()
+        m.id = self.marker_id
+        m.header.frame_id = 'robot_{}/map'.format(self.robot_id)
+        m.type = Marker.POINTS
+        # TODO constant values set at the top.
+        m.color.a = 1.0
+        m.color.b = self.marker_colors[rid][2]
+        m.color.g = self.marker_colors[rid][1]
+        m.color.r = self.marker_colors[rid][0]
+        m.scale.x = 0.5
+        m.scale.y = 0.5
+        m.lifetime = rospy.rostime.Duration(0.01)
+        p_ros = Point(x=pose[0], y=pose[1])
+        m.points.append(p_ros)
+        self.pose_pub.publish(m)
+        self.marker_id += 1
 
     def save_all_data(self, data):
         rospy.signal_shutdown("Shutting down Scan filter")

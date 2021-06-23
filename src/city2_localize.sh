@@ -8,7 +8,7 @@ rostopic pub -1 /robot_1/initialpose geometry_msgs/PoseWithCovarianceStamped "he
   frame_id: 'map'
 pose:
   pose:
-    position: {x: -12.74, y: -19.21, z: 0.0}
+    position: {x: -12.74, y: -14.21, z: 0.0}
     orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
   covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,

@@ -10,12 +10,12 @@ import rospy
 import rosgraph
 import rospkg
 
-nrobots_all = [6,4]  # ,4,6
+nrobots_all = [2]  # ,4,6
 
-methods = ["gvgexploration"]  # "gvgexploration","recurrent_connectivity",continuous_connectivity
-runs = [0, 1, 2, 3, 4]
-envs = {"office": [33.0, 18.6], "cave": [50.5, 7.5], "city": [-6.0, -24.0]}  #, "city": [20.0, -8.0]
-target_ratios = [ 0.5,0.05]  # , 0.5
+methods = ["continuous_connectivity"]  # "gvgexploration","recurrent_connectivity",continuous_connectivity
+runs = [0,3]
+envs = {"office": [33.0, 18.6]} #"office": [33.0, 18.6], "cave": [50.5, 7.5], 
+target_ratios = [0.9]  # , 0.5
 rospack = rospkg.RosPack()
 package_path = rospack.get_path('gvgexploration') + "/log/errors.log"
 home_dir = "/home/masaba/.ros/"

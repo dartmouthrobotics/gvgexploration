@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 # Python modules
+import copy
+
 import numpy as np
 import time  # clock.
 
@@ -79,8 +81,7 @@ class GVGExplore:
         self.all_gate_leaves = {}
         self.prev_goal_grid = []
         self.goal_grid = []
-        self.explored_gates = []
-        self.explored_leaves = []
+        self.explored_gates = set()
         self.current_leaf_id = -1
         self.previous_point = []
 
@@ -105,7 +106,6 @@ class GVGExplore:
         rospy.Subscriber('/robot_{}/gvgexplore/goal'.format(self.robot_id), Frontier, self.initial_action_handler)
         rospy.Service('/robot_{}/gvgexplore/cancel'.format(self.robot_id), CancelExploration,
                       self.received_prempt_handler)
-        # rospy.Service('/robot_{}/gvgexplore/goal_path'.format(self.robot_id), CancelExploration, self.goal_path_handler)
         self.goal_feedback_pub = rospy.Publisher("/robot_{}/gvgexplore/feedback".format(self.robot_id), Pose,
                                                  queue_size=1)
 
@@ -116,27 +116,36 @@ class GVGExplore:
         rospy.loginfo("Robot {}: Exploration server online...".format(self.robot_id))
 
     def current_gate_handler(self, request):
-        return CurrentGateResponse(gate_leaf=self.current_leaf_id)
+        all_explored = copy.deepcopy(self.explored_gates)
+        all_explored.add(self.current_leaf_id)
+        rospy.logerr("Requested explored nodes: {}".format(all_explored))
+        return CurrentGateResponse(gate_leaf=list(all_explored))
 
     def change_gate_handler(self, request):
         "Once a flagged gate is received, check if you have other options before you can consider moving to a different gate"
-        flagged_gates = [p for p in request.flagged_gates]
-        thread = Thread(target=self.compute_gate, args=(flagged_gates,))
+        flagged_gates = list(request.flagged_gates)
+        explored_gates = list(request.explored_gates)
+        thread = Thread(target=self.compute_gate, args=(flagged_gates, explored_gates))
         thread.start()
         return GateChangeResponse(result=1)
 
-    def compute_gate(self, flagged_gates):
-        try:
-            pu.log_msg(self.robot_id, "Finding closest gate", self.debug_mode)
-            # if len(flagged_gates) or self.current_state == self.IDLE:
-            #     all_explored = set(self.explored_leaves + flagged_gates)
-            #     gates = set(list(self.all_gate_leaves))
-            #     if len(all_explored.intersection(gates)) < len(
-            #             gates):  # first check if you still have enough gates available
-            #         self.explored_leaves = list(all_explored)
-            self.get_closest_gate()
-        except:
-              pu.log_msg(self.robot_id, "Error: Finding closest gate", 1 - self.debug_mode)
+    def compute_gate(self, flagged_gates, explored_gates):
+        # try:
+        all_explored = set([f for f in explored_gates if f != self.current_leaf_id])
+        self.explored_gates.update(all_explored)
+        pu.log_msg(self.robot_id,
+                   "My own explored gates: {}, All explored gates: {}".format(self.explored_gates, self.explored_gates),
+                   1 - self.robot_id)
+        valid_gates = [f for f in flagged_gates if f != self.current_leaf_id]
+        if len(valid_gates) or self.current_state == self.IDLE:
+            self.explored_gates.update(set(valid_gates))
+            gates = set(list(self.all_gate_leaves))
+            if len(self.explored_gates.intersection(gates)) < len(
+                    gates) and self.current_state == self.IDLE:  # first check if you still have enough gates available
+                self.get_closest_gate()
+
+        # except:
+        #       pu.log_msg(self.robot_id, "Error: Finding closest gate", 1 - self.debug_mode)
 
     def start_stop(self, req):
         if self.current_state != self.IDLE:
@@ -161,7 +170,6 @@ class GVGExplore:
         move.target_pose.theta = theta
         move.target_distance = self.target_distance
         move.target_angle = self.target_angle
-
         self.last_distance = -1
         self.client_motion.send_goal(move, feedback_cb=self.feedback_motion_cb)
         self.prev_pose.append(self.current_pose)
@@ -236,7 +244,7 @@ class GVGExplore:
         return robot_pose
 
     def spin(self):
-        r = rospy.Rate(1)  # TODO frequency as parameter
+        r = rospy.Rate(1)  # TODO frequency as parameter change this to 1
         self.current_pose = self.get_robot_pose()
         while not rospy.is_shutdown():
             if self.current_state == self.DECISION:
@@ -262,9 +270,9 @@ class GVGExplore:
                 else:
                     self.current_state = self.IDLE
                     # Now that you've run out of leaves region belonging to current gate, you can share data
-                    if self.current_leaf_id not in self.explored_leaves:
-                        self.explored_leaves.append(self.current_leaf_id)
-                    if len(self.explored_leaves) < len(self.all_gate_leaves):
+                    if self.current_leaf_id not in self.explored_gates:
+                        self.explored_gates.add(self.current_leaf_id)
+                    if len(self.explored_gates) < len(self.all_gate_leaves):
                         self.alert_sharing()
                     else:
                         pu.log_msg(self.robot_id, "ROBOT IS NOW IDLE", 1 - self.debug_mode)
@@ -276,15 +284,16 @@ class GVGExplore:
                                                                                             self.current_pose,
                                                                                             self.prev_pose,
                                                                                             self.all_gate_leaves,
-                                                                                            self.explored_leaves)
+                                                                                            self.explored_gates)
         if current_leaf_id != -1:
             # if no more leaves left, head back to base
             self.gate_poses = gate_poses
             self.goal_grid = goal_grid
             self.prev_goal_grid = prev_goal_grid
             self.current_leaf_id = current_leaf_id
-            self.current_state = self.IDLE
+            # self.current_state = self.DECISION
             self.client_motion.cancel_goal()
+            self.graph.publish_gate_vertices(self.gate_poses)
             self.current_state = self.MOVE_TO_LEAF
             self.move_robot_to_goal(np.array(self.all_gate_leaves[self.current_leaf_id]))
 
@@ -315,6 +324,10 @@ class GVGExplore:
         self.all_gate_leaves = {i: (req.frontiers[i].position.x, req.frontiers[i].position.y) for i in
                                 range(len(req.frontiers))}
         self.current_leaf_id = req.frontier_id
+        self.explored_gates.update(set(req.explored_gates))
+        pu.log_msg(self.robot_id,
+                   "GVGExplore. Explored: {}, current: {}".format(self.explored_gates, self.current_leaf_id),
+                   1 - self.debug_mode)
         pu.log_msg(self.robot_id, "GVGExplore received new goal", self.debug_mode)
         self.graph.generate_graph()
         self.initial_pose = self.get_robot_pose()
@@ -323,6 +336,7 @@ class GVGExplore:
         self.gate_poses = self.graph.get_graph_path_to_leaf(self.initial_pose,
                                                             self.all_gate_leaves[self.current_leaf_id])
 
+        self.graph.publish_gate_vertices(self.gate_poses)
         self.current_state = self.MOVE_TO_LEAF
         self.move_robot_to_goal(np.array(self.all_gate_leaves[self.current_leaf_id]))
 

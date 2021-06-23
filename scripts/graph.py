@@ -7,7 +7,7 @@ from scipy.spatial import Voronoi, voronoi_plot_2d
 import message_filters
 import igraph
 from bresenham import bresenham
-
+from std_msgs.msg import ColorRGBA
 import copy
 import matplotlib
 import heapq
@@ -312,10 +312,14 @@ class Graph:
         self.tf_listener = TransformListener()  # Transformation listener.
 
         # ROS publisher
+        self.marker_colors = rospy.get_param('/robot_colors')
         self.marker_pub = rospy.Publisher('voronoi', Marker, queue_size=0)  # log.
         self.scan_marker_pub = rospy.Publisher('scan_voronoi', Marker, queue_size=0)  # log.
         self.border_edge_pub = rospy.Publisher('border_edge', Marker, queue_size=0)
         self.gate_marker_pub = rospy.Publisher('gate', Marker, queue_size=0)  # log.
+
+        self.marker_colors = rospy.get_param('/robot_colors')
+        self.alpha = [1.0, 0.5, 0]
 
         # TO CHECK WHAT IS NEEDED.
         self.min_hallway_width = None
@@ -326,6 +330,7 @@ class Graph:
         self.map_resolution = 0.05
         self.plot_intersection_active = False
         self.plot_data_active = False
+        self.is_first_gate_request = True
         self.lock = Lock()
 
         self.obstacles = {}
@@ -398,8 +403,8 @@ class Graph:
         self.assigned_visited_leaves = {}
         self.assigned_visited_leaves = {}
         self.fc_count = 0
-        if self.robot_id !=0:
-            self.fc_count=1
+        if self.robot_id != 0:
+            self.fc_count = 1
         # edges
         self.deleted_nodes = {}
         self.deleted_obstacles = {}
@@ -453,7 +458,7 @@ class Graph:
             # and distance between obstacle points is large enough for the robot
             if self.latest_map.is_free(p1[INDEX_FOR_X], p1[INDEX_FOR_Y]) and \
                     self.latest_map.is_free(p2[INDEX_FOR_X], p2[INDEX_FOR_Y]) and \
-                    euclidean_distance(q1, q2) > 4*self.min_edge_length:
+                    euclidean_distance(q1, q2) > 4 * self.min_edge_length:
 
                 # Add vertex and edge.
                 graph_vertex_ids = [-1, -1]  # temporary for finding verted IDs.
@@ -545,7 +550,7 @@ class Graph:
             # else:
             #     if graph.degree(current_vertex_id) > 2:
             #         self.intersections[current_vertex_id] = graph.vs["coord"][current_vertex_id]
-        self.publish_leaves()
+        # self.publish_leaves()
 
     def merge_similar_edges(self):
         graph_cp = copy.deepcopy(self.graph)
@@ -621,7 +626,7 @@ class Graph:
                 #     if self.graph.degree(current_vertex_id) > 2:
                 #         self.intersections[current_vertex_id] = self.graph.vs["coord"][current_vertex_id]
                 current_vertex_id += 1
-        self.publish_leaves()
+        # self.publish_leaves()
 
     def publish_edges(self):
         """For debug, publishing of GVG."""
@@ -649,42 +654,17 @@ class Graph:
         # Publish marker.
         self.marker_pub.publish(m)
 
-    def publish_edges2(self, graph):  # Kizito testing updated graph
-        """For debug, publishing of GVG."""
-
-        # Marker that will contain line sequences.
-        m = Marker()
-        m.id = 0
-        m.header.frame_id = self.latest_map.header.frame_id
-        m.type = Marker.LINE_LIST
-        # TODO constant values set at the top.
-        m.color.a = 1.0
-        m.color.r = 1.0
-        m.scale.x = 0.1
-
-        # Plot each edge.
-        for edge in graph.get_edgelist():
-            for vertex_id in edge:
-                # Grid coordinate for the vertex.
-                p = graph.vs["coord"][vertex_id]
-                p_t = self.latest_map.grid_to_pose(p)
-                p_ros = Point(x=p_t[0], y=p_t[1])
-
-                m.points.append(p_ros)
-
-        # Publish marker.
-        self.marker_pub.publish(m)
-
     def publish_current_vertex(self, vertex_id, marker_id=1):
         # Publish current vertex
+        rid = str(self.robot_id)
         m = Marker()
         m.id = marker_id
         m.header.frame_id = self.latest_map.header.frame_id
         m.type = Marker.SPHERE
         m.color.a = 1.0
-        m.color.g = 1.0
-        if marker_id == 5:
-            m.color.b = 1.0
+        m.color.r = self.marker_colors[rid][0]
+        m.color.g = self.marker_colors[rid][1]
+        m.color.b = self.marker_colors[rid][2]
         # TODO constant values set at the top.
         m.scale.x = 0.5
         m.scale.y = 0.5
@@ -696,7 +676,7 @@ class Graph:
         self.marker_pub.publish(m)
 
     def publish_visited_vertices(self):
-
+        rid = str(self.robot_id)
         # Publish visited vertices
         m = Marker()
         m.id = 2
@@ -704,9 +684,9 @@ class Graph:
         m.type = Marker.POINTS
         # TODO constant values set at the top.
         m.color.a = 0.5
-        m.color.b = 0.5
-        if self.robot_id == 1:
-            m.color.g = 1.0
+        m.color.b = self.marker_colors[rid][2]
+        m.color.g = self.marker_colors[rid][1]
+        m.color.r = self.marker_colors[rid][0]
         m.scale.x = 0.5
         m.scale.y = 0.5
         for vertex_id in self.visited_vertices:
@@ -717,8 +697,10 @@ class Graph:
             m.points.append(p_ros)
         self.marker_pub.publish(m)
 
-    def publish_gate_vertices(self, gate, test=False):
+    def publish_gate_vertices(self, gate_poses):
         # Publish visited vertices
+        gate = self.localize_gate(gate_poses)
+        rid = str(self.robot_id)
         m = Marker()
         m.id = 2
         # if test:
@@ -727,25 +709,12 @@ class Graph:
         m.type = Marker.POINTS
         # TODO constant values set at the top.
         m.color.a = 1.0
-        m.color.b = 0.5
-        # if test:
-        #     m.color.a = 0.5
-        #     m.color.b = 0.8
-        if self.robot_id == 0:
-            m.color.b = 0.5
-            # if not test:
-            #     m.color.r = 0.5
-        elif self.robot_id == 1:
-            m.color.g = 0.5
-        elif self.robot_id == 3:
-            m.color.r = 0.5
-        elif self.robot_id == 1:
-            m.color.g = 0.8
-            # if not test:
-            #     m.color.r = 0.5
-        m.scale.x = 1.0
-        m.scale.y = 1.0
-        for vertex_id in gate:
+        m.color.b = self.marker_colors[rid][2]
+        m.color.g = self.marker_colors[rid][1]
+        m.color.r = self.marker_colors[rid][0]
+        m.scale.x = 1.5
+        m.scale.y = 1.5
+        for vertex_id in [gate[-1]]:
             # Grid coordinate for the vertex.
             p = self.graph.vs["coord"][vertex_id]
             p_t = self.latest_map.grid_to_pose(p)
@@ -881,11 +850,9 @@ class Graph:
         gate_vids = []
         source_id, distance_source = self.get_closest_vertex(gate_poses[0])
         first_leaf_id, distance_leaf = self.get_closest_vertex(gate_poses[-1])
-        pu.log_msg(self.robot_id, "gate ids: {}".format(gate_vids), self.debug_mode)
         gate_vids = \
             self.graph.get_shortest_paths(source_id, to=first_leaf_id, weights=self.graph.es["weight"],
                                           mode=igraph.ALL)[0]
-        self.publish_gate_vertices(gate_vids)
         return gate_vids
 
     def leaf_in_assigned_region(self, k, gate):
@@ -918,7 +885,6 @@ class Graph:
         gate_leaf, dvertext = self.get_closest_vertex(frontier_pose)
         new_gate = \
             self.graph.get_shortest_paths(source, to=gate_leaf, weights=self.graph.es["weight"], mode=igraph.ALL)[0]
-        self.publish_gate_vertices(new_gate)
         new_gate_poses = [self.latest_map.grid_to_pose(self.graph.vs["coord"][vid]) for vid in new_gate]
         return new_gate_poses
 
@@ -980,7 +946,6 @@ class Graph:
         else:
             pu.log_msg(self.robot_id, "No valid gate", 1 - self.debug_mode)
         self.lock.release()
-
         return new_gate, goal_grid, prev_goal_grid, gate_id
 
     def explored_gate(self, init_pose, leaf_pose):
@@ -997,7 +962,7 @@ class Graph:
         start_time = time.clock()
         # Get current vertex.
         self.current_vertex_id, distance_current_vertex = self.get_closest_vertex(robot_pose)
-        self.publish_current_vertex(self.current_vertex_id)
+        # self.publish_current_vertex(self.current_vertex_id)
 
         # find visited vertices
         self.visited_vertices = set()
@@ -1021,7 +986,7 @@ class Graph:
                                                               weights=self.graph.es["weight"],
                                                               mode=igraph.ALL)
             self.visited_vertices.update(path_prev_current[0][:-1])
-        self.publish_visited_vertices()
+        # self.publish_visited_vertices()
 
         # find next node
         non_visited_leaves = []
@@ -1041,7 +1006,7 @@ class Graph:
 
         # Pick out only those in assigned region TODO @Kizito
         paths_to_leaves = []
-        self.publish_visited_vertices()
+        # self.publish_visited_vertices()
         gate = self.localize_gate(gate_poses)
         for path in paths_to_all_leaves:
             in_region, _ = self.leaf_in_assigned_region(path[-1], gate)
@@ -1051,11 +1016,12 @@ class Graph:
         if not get_any and not paths_to_leaves:
             pu.log_msg(self.robot_id,
                        "No paths. checking for leaves among those on stack: {}".format(self.other_leaves),
-                       1 - self.debug_mode)
+                       self.debug_mode)
             paths_to_leaves = self.get_paths_to_remaining_leaves(self.current_vertex_id)
 
         # after getting candidate paths, find the closest one
         full_path = []
+        next_leaf = -1
         if paths_to_leaves:
             path_costs = [0] * len(paths_to_leaves)
             depth = 1
@@ -1082,6 +1048,7 @@ class Graph:
 
             for v in paths_to_leaves[path_to_leaf]:
                 full_path.append(self.latest_map.grid_to_pose(self.graph.vs["coord"][v]))
+                next_leaf = v
 
             # # save other leaves @Kizito
             if not get_any:
@@ -1090,7 +1057,9 @@ class Graph:
                         self.other_leaves.append((self.graph.vs["coord"][paths_to_leaves[i][-1]]))
         else:
             if not get_any:
-                pu.log_msg(self.robot_id, "NO MORE LEAVES LEFT: {}".format(self.other_leaves), 1 - self.debug_mode)
+                pu.log_msg(self.robot_id, "NO MORE LEAVES LEFT: {}".format(self.other_leaves), self.debug_mode)
+        if next_leaf != -1:
+            self.publish_current_vertex(next_leaf)
         self.lock.release()
         return full_path
 
@@ -1180,7 +1149,7 @@ class Graph:
                              line_regress[1] + line_regress[0] * self.graph.vs["coord"][current_vertex_id][0]]
                         q = [self.graph.vs["coord"][l_vertex_id][0],
                              line_regress[1] + line_regress[0] * self.graph.vs["coord"][l_vertex_id][0]]
-                        self.publish_line(p, q)  # TODO disable
+                        # self.publish_line(p, q)  # TODO disable
                         self.lock.release()
                         return True
         end_time = time.clock()
@@ -1443,7 +1412,6 @@ class Graph:
             scan_poses[np.where(pose_tally == equidist_distances[i, 0]), :]
             equidist_distances += [scan_poses[np.where(pose_tally == equidist_distances[i, 0]), :] for i in
                                    range(equidist_distances.shape[0]) if equidist_distances[i, 0] != -1]
-        rospy.logerr(equidist_distances)
 
     def augment_graph(self, new_graph, vid1, vid2):
         """
@@ -1506,49 +1474,6 @@ class Graph:
         vertices = np.asarray(graph.vs["coord"])
         vertex_id, _ = pu.get_closest_point(robot_grid, vertices)
         return vertex_id
-
-    # def pose_scan_callback(self, pose_msg, scan_msg):
-    #     """Publishing poses of obstacles in the laser scans.
-    #
-    #     Args:
-    #         robot_pose (x,y,quaternion)
-    #         scan_msg (LaserScan)
-    #     """
-    #     pass
-    # if self.process_scan:
-    #     robot_pose = (pose_msg.pose.pose.position.x, pose_msg.pose.pose.position.y, (pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y, pose_msg.pose.pose.orientation.z,pose_msg.pose.pose.orientation.w))
-    #     scan_msg_stamp = scan_msg.header.stamp.to_sec()
-    #     scan_time = scan_msg.scan_time
-    #     ranges = scan_msg.ranges
-    #     n=len(ranges)
-    #     (roll, pitch, yaw) = euler_from_quaternion (robot_pose[2])
-    #     angles = np.array([scan_msg.angle_min+yaw]*n)+np.arange(n)*scan_msg.angle_increment
-    #     pose_vals = np.array([robot_pose[0],robot_pose[1],robot_pose[2][0], robot_pose[2][1], robot_pose[2][2],robot_pose[2][3]])
-    #     robot_poses=np.repeat(pose_vals,[n]*len(pose_vals),axis=0).reshape(-1,n).T
-    #     obstacle_poses = np.concatenate((np.multiply(ranges,np.cos(angles)).reshape(-1,1),np.multiply(ranges,np.sin(angles)).reshape(-1,1),np.zeros((n,4))), axis=1)
-    #     scan_positions=robot_poses+obstacle_poses
-    #     scan_poses=np.array([(scan_positions[i,0],scan_positions[i,1]) for i in range(n) if scan_msg.range_min<=ranges[i]<scan_msg.range_max])
-    #     self.publish_obstacles(scan_poses)
-    #     if self.latest_map:
-    #         obstacles=[self.latest_map.pose_to_grid(scan_poses[i]) for i in range(len(scan_poses))]
-    #         grid_pose=self.latest_map.pose_to_grid(robot_pose)
-    #         pose_yaw=[grid_pose[0],grid_pose[1],yaw]
-    #         # try:
-    #         new_graph,vid1,vid2=self.generate_gvg(obstacles,pose_yaw)
-    #
-    #         # self.augmented_graph=new_graph #TODO remove this after testing
-    #         if not self.augmented_graph:
-    #             self.augmented_graph=new_graph
-    #         else:
-    #             self.augment_graph(new_graph,vid1,vid2)
-    #         self.process_scan=False
-    #         self.current_pose=None
-    #         # except:
-    #         #     rospy.logerr("Error while processing graph")
-    #
-    #         # Publish GVG.
-    #         self.publish_border_edge(vid2,self.augmented_graph)
-    #         self.publish_scan_edges(vid2,self.augmented_graph)
 
     def generate_gvg(self, obstacles, robot_pose):
         """
@@ -1659,16 +1584,16 @@ class Graph:
     def publish_scan_edges(self, s, graph):
         """For debug, publishing of GVG."""
         # Marker that will contain line sequences.
+        rid = str(self.robot_id)
         m = Marker()
         m.id = 0
         m.header.frame_id = self.latest_map.header.frame_id
         m.type = Marker.LINE_LIST
         m.color.a = 1.0
         m.scale.x = 0.1
-        if self.robot_id == 0:
-            m.color.b = 0.5
-        elif self.robot_id == 1:
-            m.color.g = 0.5
+        m.color.r = self.marker_colors[rid][0]
+        m.color.g = self.marker_colors[rid][1]
+        m.color.b = self.marker_colors[rid][2]
         self.find_shortest_path(s, graph)
         for edge in graph.get_edgelist():
             for vertex_id in edge:
@@ -1680,16 +1605,16 @@ class Graph:
     def publish_border_edge(self, vertex_id, graph):
         """For debug, publishing of GVG."""
         # Marker that will contain line sequences.
+        rid = str(self.robot_id)
         m = Marker()
         m.id = 0
         m.header.frame_id = self.latest_map.header.frame_id
         m.type = Marker.POINTS
         m.color.a = 1.0
         m.scale.x = 1.0
-        if self.robot_id == 0:
-            m.color.r = 0.5
-        elif self.robot_id == 1:
-            m.color.r = 0.5
+        m.color.r = self.marker_colors[rid][0]
+        m.color.g = self.marker_colors[rid][1]
+        m.color.b = self.marker_colors[rid][2]
         p_t = graph.vs["coord"][vertex_id]
         p_ros = Point(x=p_t[0], y=p_t[1])
         m.points.append(p_ros)
