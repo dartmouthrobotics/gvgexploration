@@ -24,7 +24,7 @@
 
 <node pkg="nav2d_navigator" type="navigator" name="navigator">
     <rosparam command="load" file="$(find gvgexploration)/param/navigation.yaml" subst_value="true"/>
-    <param name="robot_id" value="$(arg robot_name)"/>
+<!--     <param name="robot_id" value="$(arg robot_name)"/> -->
 </node>
 
 <node name="GetMap" pkg="nav2d_navigator" type="get_map_client" />

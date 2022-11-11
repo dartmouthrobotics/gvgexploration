@@ -5,7 +5,7 @@ rostopic pub -1 /robot_1/initialpose geometry_msgs/PoseWithCovarianceStamped "he
   stamp:
     secs: 0
     nsecs: 0
-  frame_id: 'robot_0/map'
+  frame_id: 'map'
 pose:
   pose:
     position: {x: 33.0, y: 18.0, z: 0.0}
