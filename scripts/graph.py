@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import time
 import math
@@ -196,7 +196,7 @@ class Grid:
         cell_x = int(cell[INDEX_FOR_X])
         cell_y = int(cell[INDEX_FOR_Y])
         for d in np.arange(1, self.cell_radius): # TODO orientation
-            for x in xrange(cell_x-d, cell_x+d+1): # go over x axis
+            for x in range(cell_x-d, cell_x+d+1): # go over x axis
                 for y in range(cell_y-d,cell_y+d+1): # go over y axis
                     if self.within_boundaries(x, y):
                         angle = np.around(np.rad2deg(pu.theta(cell, [x,y])),decimals=1) # TODO parameter
@@ -351,18 +351,18 @@ class Graph:
     def compute_gvg(self):
         """Compute GVG for exploration."""
 
-        start_time_clock = time.clock()
+        start_time_clock = rospy.Time.now().to_sec()
         # Get only wall cells for the Voronoi.
         obstacles = self.latest_map.wall_cells()
-        end_time_clock = time.clock()
+        end_time_clock = rospy.Time.now().to_sec()
         pu.log_msg(self.robot_id,"generate obstacles2 {}".format(end_time_clock - start_time_clock),self.debug_mode)
 
-        start_time_clock = time.clock()
+        start_time_clock = rospy.Time.now().to_sec()
         # Get Voronoi diagram.
         vor = Voronoi(obstacles)
-        end_time_clock = time.clock()
+        end_time_clock = rospy.Time.now().to_sec()
         pu.log_msg(self.robot_id,"voronoi {}".format(end_time_clock - start_time_clock),self.debug_mode)
-        start_time_clock = time.clock()
+        start_time_clock = rospy.Time.now().to_sec()
         # Initializing the graph.
         self.graph = igraph.Graph()
         # Correspondance between graph vertex and Voronoi vertex IDs.
@@ -376,7 +376,7 @@ class Graph:
         edges = []
         weights = []
         # Create a graph based on ridges.
-        for i in xrange(len(ridge_vertices)):
+        for i in range(len(ridge_vertices)):
             ridge_vertex = ridge_vertices[i]
             # If any of the ridge vertices go to infinity, then don't add.
             if ridge_vertex[0] == -1 or ridge_vertex[1] == -1:
@@ -399,7 +399,7 @@ class Graph:
                 graph_vertex_ids = [-1, -1] # temporary for finding verted IDs.
 
                 # Determining graph vertex ID if existing or not.
-                for point_id in xrange(len(graph_vertex_ids)):
+                for point_id in range(len(graph_vertex_ids)):
                     if ridge_vertex[point_id] not in voronoi_graph_correspondance:
                         # if not existing, add new vertex.
                         graph_vertex_ids[point_id] = self.graph.vcount()
@@ -425,7 +425,7 @@ class Graph:
         # self.connect_subtrees()
 
         self.prune_leaves()
-        end_time_clock = time.clock()
+        end_time_clock = rospy.Time.now().to_sec()
         pu.log_msg(self.robot_id,"ridge {}".format(end_time_clock - start_time_clock),self.debug_mode)
 
         # Publish GVG.
@@ -597,7 +597,7 @@ class Graph:
 
     def generate_graph(self):
         self.lock.acquire()
-        start_time = time.clock()
+        start_time = time.time()
         try:
             self.latest_map = Grid(self.get_map().map)
         except rospy.ServiceException:
@@ -608,7 +608,7 @@ class Graph:
         self.min_edge_length = self.robot_radius / self.latest_map.resolution
         self.compute_gvg()
         self.lock.release()
-        now = time.clock()
+        now = time.time()
         t = now - start_time
         self.performance_data.append(
             {'time': rospy.Time.now().to_sec(), 'type': 0, 'robot_id': self.robot_id, 'computational_time': t})
@@ -618,12 +618,12 @@ class Graph:
         """Get the closest vertex to robot_pose (x,y) in frame_id."""
         robot_grid = self.latest_map.pose_to_grid(robot_pose) 
         vertices = np.asarray(self.graph.vs["coord"])
-
+        rospy.logerr(robot_grid)
         return pu.get_closest_point(robot_grid, vertices)
 
     def get_successors(self, robot_pose, previous_pose=None):
         self.lock.acquire()
-        start_time = time.clock()
+        start_time = rospy.Time.now().to_sec()
         # Get current vertex.
         self.current_vertex_id, distance_current_vertex = self.get_closest_vertex(robot_pose)
         current_vertex_id = self.current_vertex_id
@@ -740,7 +740,7 @@ class Graph:
     def should_communicate(self, robot_pose):
         """Return True if should communicate; false otherwise."""
         self.lock.acquire()
-        start_time = time.clock()
+        start_time = rospy.Time.now().to_sec()
 
         #self.merge_similar_edges2()
 
@@ -790,7 +790,7 @@ class Graph:
                         self.publish_line(p, q) # TODO disable
                         self.lock.release()
                         return True
-        end_time = time.clock()
+        end_time = rospy.Time.now().to_sec()
         t = (end_time - start_time)
         pu.log_msg(self.robot_id,"should_communicate {}".format(t),self.debug_mode)
         self.performance_data.append(
@@ -804,7 +804,7 @@ class Graph:
         pu.log_msg(self.robot_id,"received a request: {}".format(request.count),self.debug_mode)
         count = request.count
         self.generate_graph()
-        start_time = time.clock()
+        start_time = rospy.Time.now().to_sec()
         if (self.leaves):
             best_leaf= max(self.leaves,key=self.leaves.get)
             rospy.logerr(best_leaf)
@@ -832,7 +832,7 @@ class Graph:
             p_ros.position.x = p[0]
             p_ros.position.y = p[1]
             frontiers.append(p_ros)
-        now = time.clock()
+        now = rospy.Time.now().to_sec()
         t = (now - start_time)
         pu.log_msg(self.robot_id,'COMPUTED FRONTIER RESULTS: {}'.format(frontiers),self.debug_mode)
         return FrontierPointResponse(frontiers=frontiers)
@@ -862,12 +862,12 @@ class Graph:
     def map_callback(self, map_msg):
         """Callback for Occupancy Grid."""
         pu.log_msg(self.robot_id,"Received map message",self.debug_mode)
-        start_time_clock = time.clock()
+        start_time_clock = rospy.Time.now().to_sec()
         # Create a 2D grid.
         self.latest_map = Grid(map_msg)
         # Adjust min distance between obstacles in cells.
         self.min_edge_length = self.robot_radius / self.latest_map.resolution
-        end_time_clock = time.clock()
+        end_time_clock = rospy.Time.now().to_sec()
         pu.log_msg(self.robot_id,"generate obstacles1 {}".format(end_time_clock - start_time_clock),self.debug_mode)
         # just for testing
         self.generate_graph()

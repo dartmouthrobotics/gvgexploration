@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import numpy as np
 
 import rospy
@@ -30,7 +30,7 @@ class ScanFilter:
         self.all_poses = {} # Poses of other robots in the world reference frame.
 
         # Get pose from other robots.        
-        for i in xrange(0, self.robot_count):
+        for i in range(0, self.robot_count):
             if i != self.robot_id:
                 s = "def a_{0}(self, data): self.all_poses[{0}] = (data.pose.pose.position.x," \
                     "data.pose.pose.position.y," \
@@ -129,7 +129,7 @@ class ScanFilter:
         ranges = scan_msg.ranges
         new_ranges = self.scan.ranges
         # Check each range, whether is hitting a robot or not.
-        for i in xrange(self.scan_ranges_size):
+        for i in range(self.scan_ranges_size):
             r = ranges[i]
 
             # If valid range value.

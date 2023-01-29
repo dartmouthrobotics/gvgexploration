@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import time
 import sys
@@ -249,6 +249,8 @@ class Robot:
                 pu.log_msg(self.robot_id, "Robot {} is in another session".format(rid), self.debug_mode)
         self.process_data(buff_data, session_id=self.session_id, sent_data=local_data_size)
         pu.log_msg(self.robot_id,"Received and processed the data",self.debug_mode)
+        self.fetch_frontier_points.wait_for_service()
+        rospy.logerr("Service is ONLINE!")
         frontier_point_response = self.fetch_frontier_points(FrontierPointRequest(count=len(current_devices) + 1))
         frontier_points = frontier_point_response.frontiers # self.parse_frontier_response(frontier_point_response)
         pu.log_msg(self.robot_id, "Received frontier points".format(frontier_points), self.debug_mode)

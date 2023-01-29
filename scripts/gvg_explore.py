@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Python modules
 import numpy as np
@@ -194,10 +194,10 @@ class GVGExplore:
                 self.graph.generate_graph()
                 pu.log_msg(self.robot_id,"Graph generated",self.debug_mode)
 
-                start_time_clock = time.clock()
+                start_time_clock = rospy.Time.now().to_sec()
                 self.path_to_leaf = self.graph.get_successors(self.current_pose,
                                                               self.prev_pose)
-                end_time_clock = time.clock()
+                end_time_clock = rospy.Time.now().to_sec()
                 gvg_time=end_time_clock - start_time_clock
                 pu.log_msg(self.robot_id,"next path time {}".format(gvg_time),self.debug_mode)
                 self.explore_computation.append({'time': rospy.Time.now().to_sec(),'robot_id':self.robot_id,'gvg_compute': gvg_time})

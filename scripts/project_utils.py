@@ -102,7 +102,6 @@ def angle_pq_line(p, q):
 
 def get_closest_point(point, set_of_points):
     """Get the closest point to a set of points."""
-
     dist_2 = np.sum((set_of_points - point)**2, axis=1)
     closest_point_id = np.argmin(dist_2)
 
